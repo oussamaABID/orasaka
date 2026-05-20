@@ -1,0 +1,25 @@
+type Query {
+    me: User
+}
+
+type Mutation {
+    chat(prompt: String!, conversationId: String): ChatResponse
+}
+
+type Subscription {
+    chatStream(prompt: String!, conversationId: String): ChatResponse
+}
+
+type User {
+    id: ID!
+    username: String!
+    preferences: Map
+}
+
+type ChatResponse {
+    content: String!
+    conversationId: String
+    metadata: Map
+}
+
+scalar Map

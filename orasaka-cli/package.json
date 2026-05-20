@@ -1,0 +1,24 @@
+{
+  "name": "orasaka-cli",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@types/node": "^25.8.0",
+    "@types/ws": "^8.18.1",
+    "event-source-polyfill": "^1.0.31",
+    "graphql": "^16.14.0",
+    "graphql-request": "^7.4.0",
+    "graphql-ws": "^6.0.8",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3",
+    "ws": "^8.20.1"
+  }
+}

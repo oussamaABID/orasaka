@@ -1,0 +1,92 @@
+# ====================================================================
+# ORASAKA MONOREPO GLOBAL GITIGNORE
+# ====================================================================
+
+# --------------------------------------------------------------------
+# ☕ JAVA & MAVEN (Core, Gateway, Identity, Tools)
+# --------------------------------------------------------------------
+**/target/
+**.class
+**.jar
+**.war
+**.ear
+**.nar
+*.vtbl
+
+# Maven Wrapper
+.mvn/wrapper/
+**/mvnw
+**/mvnw.cmd
+
+# --------------------------------------------------------------------
+# ⚛️ JAVASCRIPT / TYPESCRIPT / NODE (UI & CLI)
+# --------------------------------------------------------------------
+# Dependencies
+**/node_modules/
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Next.js build artifacts
+**/.next/
+**/out/
+
+# Production builds & tools
+**/build/
+**/.vercel
+**/*.tsbuildinfo
+**/next-env.d.ts
+
+# Logs
+**/*debug.log*
+**/*error.log*
+yarn-error.log*
+
+# --------------------------------------------------------------------
+# 🖥️ IDE & TOOLS (IntelliJ, VS Code, Cursor)
+# --------------------------------------------------------------------
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# VS Code / Cursor
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# --------------------------------------------------------------------
+# 🔒 SECURITY & ENVIRONMENTS (Strict Guardrails)
+# --------------------------------------------------------------------
+# Local environment variables (Never commit real secrets)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+**/.env*.local
+
+# Certificates and private keys
+*.pem
+*.key
+*.pub
+*.p12
+*.jks
+
+# --------------------------------------------------------------------
+# 🍏 OS SPECIFIC
+# --------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
