@@ -1,4 +1,4 @@
-# ORASAKA - Native IA Orchestrator Engine
+# ORASAKA - Native IA Orchestration Engine
 
 ![Orasaka Logo](docs/assets/logo.svg)
 
