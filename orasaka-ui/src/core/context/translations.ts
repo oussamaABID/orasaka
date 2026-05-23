@@ -11,6 +11,7 @@ export interface TranslationDictionary {
     chatSessions: string;
     logout: string;
     memoryBlocks: string;
+    playground: string;
   };
   header: {
     profile: string;
@@ -113,6 +114,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       chatSessions: "Chat Sessions",
       logout: "Log out",
       memoryBlocks: "Memory Blocks",
+      playground: "Playground",
     },
     header: {
       profile: "Profile",
@@ -193,7 +195,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       creativePersona: "Creative & Exploratory",
       tenantBranding: "Tenant Branding (Inversion of Control)",
       appName: "App Name (displayName)",
-      appNamePlaceholder: "e.g. CinePulse, ChefPulse, FinTrack",
+      appNamePlaceholder: "e.g. Workspace, Assistant, Developer",
       tagline: "Tagline (tagline)",
       taglinePlaceholder: "Tagline displayed on application headers",
       tenantId: "Tenant ID (tenantId)",
@@ -216,6 +218,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       chatSessions: "Sessions de chat",
       logout: "Se déconnecter",
       memoryBlocks: "Blocs de mémoire",
+      playground: "Playground",
     },
     header: {
       profile: "Profil",
@@ -297,7 +300,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       creativePersona: "Créative & Exploratoire",
       tenantBranding: "Marque Locataire (Inversion de Contrôle)",
       appName: "Nom de l'application (displayName)",
-      appNamePlaceholder: "ex. CinePulse, ChefPulse, FinTrack",
+      appNamePlaceholder: "ex. Workspace, Assistant, Developer",
       tagline: "Slogan (tagline)",
       taglinePlaceholder: "Slogan affiché dans les en-têtes",
       tenantId: "ID Locataire (tenantId)",

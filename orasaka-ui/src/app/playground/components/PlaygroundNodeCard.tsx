@@ -1,0 +1,266 @@
+import React, { useState } from "react";
+import { OperationNode } from "../types";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import {
+  Lock,
+  Upload,
+  Play,
+  FileText,
+  Image as ImageIcon,
+  Music,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+
+interface PlaygroundNodeCardProps {
+  node: OperationNode;
+}
+
+export function PlaygroundNodeCard({ node }: PlaygroundNodeCardProps) {
+  const [inputs, setInputs] = useState<Record<string, string>>({});
+  const [result, setResult] = useState<{
+    success: boolean;
+    data: string;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const idLower = node.id.toLowerCase();
+  const kind =
+    idLower.includes("image") ||
+    idLower.includes("vision") ||
+    node.icon === "image"
+      ? "image"
+      : idLower.includes("audio") ||
+          idLower.includes("speech") ||
+          node.icon === "mic"
+        ? "audio"
+        : "text";
+
+  const template = node.executionDetails.payloadTemplate;
+  const placeholders = template
+    ? (template.match(/\${(.*?)}/g) || []).map((m) => m.replace(/\${|}/g, ""))
+    : [];
+
+  const handleInputChange = (field: string, value: string) => {
+    setInputs((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleFileUpload = (field: string, file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result && typeof e.target.result === "string") {
+        handleInputChange(field, e.target.result.split(",")[1]);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const executeNode = async () => {
+    let payload = "";
+    if (template) {
+      let temp = template;
+      for (const p of placeholders) {
+        temp = temp.replace(`\${${p}}`, inputs[p] || "");
+      }
+      payload = temp;
+    }
+    setIsLoading(true);
+    setResult(null);
+    try {
+      const response = await fetch(node.executionDetails.uriPath, {
+        method: node.executionDetails.httpMethod,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer user-mock",
+        },
+        body: node.executionDetails.httpMethod !== "GET" ? payload : undefined,
+      });
+      if (!response.ok) {
+        throw new Error(
+          response.status === 403
+            ? "Access Forbidden: Restricted by gateway protection policy."
+            : `Execution failed with status ${response.status}`,
+        );
+      }
+      const contentType = response.headers.get("content-type") || "";
+      let outputText = "";
+      if (contentType.includes("application/json")) {
+        const json = await response.json();
+        outputText =
+          json.analysis || json.content || JSON.stringify(json, null, 2);
+      } else {
+        outputText = await response.text();
+      }
+      setResult({ success: true, data: outputText });
+    } catch (e: unknown) {
+      setResult({
+        success: false,
+        data: e instanceof Error ? e.message : "Unknown execution error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const isLocked = node.state.type === "LOCKED";
+  const iconStyle = "h-5 w-5 text-amber-500";
+
+  return (
+    <Card
+      className={`p-6 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 flex flex-col gap-5 shadow-sm relative overflow-hidden transition-all duration-200 ${
+        isLocked
+          ? "opacity-75 border-zinc-300 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/40"
+          : ""
+      }`}
+    >
+      {isLocked && (
+        <div className="absolute top-3 right-3 bg-red-500/10 text-red-500 border border-red-500/20 px-2 py-1 rounded-lg flex items-center gap-1.5 text-xs font-semibold select-none">
+          <Lock className="h-3 w-3" /> Locked
+        </div>
+      )}
+
+      <h2 className="text-lg font-semibold flex items-center gap-2 border-b pb-3 border-zinc-100 dark:border-zinc-800">
+        {kind === "image" ? (
+          <ImageIcon className={iconStyle} />
+        ) : kind === "audio" ? (
+          <Music className={iconStyle} />
+        ) : (
+          <FileText className={iconStyle} />
+        )}
+        {node.label}
+      </h2>
+
+      <div className="flex flex-col gap-4 flex-1">
+        {placeholders.map((field) => {
+          const isBase64 =
+            field.toLowerCase().includes("base64") ||
+            field.toLowerCase().includes("image");
+          if (isBase64) {
+            const isAudio = field.toLowerCase().includes("audio");
+            const previewUrl = inputs[field]
+              ? `data:${isAudio ? "audio/mp3" : "image/png"};base64,${inputs[field]}`
+              : "";
+            return (
+              <div key={field} className="flex flex-col gap-2">
+                <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                  Media Payload ({field})
+                </span>
+                <div className="border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center bg-zinc-50/30 dark:bg-zinc-950/10 min-h-[140px]">
+                  {previewUrl ? (
+                    <div className="flex flex-col items-center gap-2 w-full">
+                      {isAudio ? (
+                        <audio
+                          src={previewUrl}
+                          controls
+                          className="w-full max-h-12"
+                        />
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={previewUrl}
+                          alt="Preview"
+                          className="max-h-32 rounded-lg object-contain"
+                        />
+                      )}
+                      <button
+                        onClick={() => handleInputChange(field, "")}
+                        className="text-xs text-red-500 hover:underline"
+                        disabled={isLocked}
+                      >
+                        Remove Asset
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload className="h-8 w-8 text-zinc-400 animate-pulse" />
+                      <p className="text-xs text-zinc-500 text-center">
+                        Drag and drop asset, or{" "}
+                        <label
+                          className={`text-amber-500 ${isLocked ? "pointer-events-none opacity-50" : "cursor-pointer"} hover:underline`}
+                        >
+                          browse
+                          <input
+                            type="file"
+                            disabled={isLocked}
+                            onChange={(e) =>
+                              e.target.files?.[0] &&
+                              handleFileUpload(field, e.target.files[0])
+                            }
+                            accept={isAudio ? "audio/*" : "image/*"}
+                            className="hidden"
+                          />
+                        </label>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={field} className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                {field}
+              </span>
+              <Input
+                value={inputs[field] || ""}
+                disabled={isLocked}
+                onChange={(e) => handleInputChange(field, e.target.value)}
+                placeholder={`Enter ${field} value`}
+                className="bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-sm"
+              />
+            </div>
+          );
+        })}
+
+        {isLocked && node.state.reason && (
+          <div className="p-3 bg-red-500/5 border border-red-500/10 rounded-xl text-xs text-red-600 dark:text-red-400/90 leading-relaxed">
+            {node.state.reason}
+          </div>
+        )}
+      </div>
+
+      <Button
+        onClick={executeNode}
+        disabled={isLoading || isLocked}
+        className="w-full flex items-center justify-center gap-2 mt-2"
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" /> Running Ingestion...
+          </>
+        ) : (
+          <>
+            <Play className="h-4 w-4" /> Execute Ingestion
+          </>
+        )}
+      </Button>
+
+      {result && (
+        <div
+          className={`p-4 rounded-xl border text-sm mt-3 ${
+            result.success
+              ? "bg-zinc-50/50 dark:bg-zinc-950/20 border-zinc-200 dark:border-zinc-800"
+              : "bg-red-50 dark:bg-red-950/10 border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400"
+          }`}
+        >
+          <div className="flex items-center gap-1.5 font-semibold mb-2">
+            {result.success ? (
+              <CheckCircle className="h-4.5 w-4.5 text-green-500" />
+            ) : (
+              <AlertCircle className="h-4.5 w-4.5 text-red-500" />
+            )}
+            {result.success ? "Output Result" : "Gateway Restriction"}
+          </div>
+          <p className="whitespace-pre-line leading-relaxed font-mono text-xs text-zinc-700 dark:text-zinc-300">
+            {result.data}
+          </p>
+        </div>
+      )}
+    </Card>
+  );
+}

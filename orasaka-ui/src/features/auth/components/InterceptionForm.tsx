@@ -24,9 +24,7 @@ interface SchemaDescriptor {
 }
 
 interface InterceptionFormProps {
-  /** The identifier of the interception schema configuration to render. */
   schemaId: string;
-  /** The internal interception type code. Defaults to the schemaId value. */
   interceptionType?: string;
 }
 
@@ -42,7 +40,6 @@ export function InterceptionForm({
   );
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
 
-  // Fetch the JSON schema descriptor dynamically from BFF GraphQL proxy
   const {
     data: schema,
     isLoading,
@@ -54,91 +51,63 @@ export function InterceptionForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query: `
-            query GetInterceptionSchema($schemaId: String!) {
-              interceptionSchema(schemaId: $schemaId)
-            }
-          `,
+          query: `query GetInterceptionSchema($schemaId: String!) { interceptionSchema(schemaId: $schemaId) }`,
           variables: { schemaId },
         }),
       });
-
       if (!response.ok) {
         throw new Error(
           `Failed to load interception schema: ${response.statusText}`,
         );
       }
-
       const resBody = await response.json();
-      if (resBody.errors && resBody.errors.length > 0) {
+      if (resBody.errors?.length > 0) {
         throw new Error(resBody.errors[0].message);
       }
-
       const rawSchema = resBody.data?.interceptionSchema;
-      if (!rawSchema) {
-        throw new Error("No schema returned from server.");
-      }
+      if (!rawSchema) throw new Error("No schema returned from server.");
       return JSON.parse(rawSchema);
     },
     staleTime: 5 * 60 * 1000,
   });
 
-  // Initialize form default values once the schema is loaded
   React.useEffect(() => {
     if (schema?.fields) {
       const defaults: Record<string, string> = {};
       schema.fields.forEach((field) => {
         defaults[field.name] = field.defaultValue || "";
       });
-      Promise.resolve().then(() => {
-        setFormValues(defaults);
-      });
+      Promise.resolve().then(() => setFormValues(defaults));
     }
   }, [schema]);
 
-  // Mutation to submit the responses to the BFF GraphQL proxy
   const resolveMutation = useMutation({
     mutationFn: async (responses: Record<string, string>) => {
       const response = await fetch("/api/graphql", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query: `
-            mutation ResolveInterception($interceptionType: String!, $schemaId: String!, $responses: Map!) {
-              resolveInterception(interceptionType: $interceptionType, schemaId: $schemaId, responses: $responses)
-            }
-          `,
-          variables: {
-            interceptionType,
-            schemaId,
-            responses,
-          },
+          query: `mutation ResolveInterception($interceptionType: String!, $schemaId: String!, $responses: Map!) {
+            resolveInterception(interceptionType: $interceptionType, schemaId: $schemaId, responses: $responses)
+          }`,
+          variables: { interceptionType, schemaId, responses },
         }),
       });
-
       if (!response.ok) {
         throw new Error(`Failed to submit responses: ${response.statusText}`);
       }
-
       const resBody = await response.json();
-      if (resBody.errors && resBody.errors.length > 0) {
+      if (resBody.errors?.length > 0) {
         throw new Error(resBody.errors[0].message);
       }
-
       return resBody.data?.resolveInterception;
     },
     onSuccess: async () => {
       if (session?.user) {
-        const currentInterceptions: string[] =
-          session.user.activeInterceptions || [];
-        const updatedList = currentInterceptions.filter(
+        const updated = (session.user.activeInterceptions || []).filter(
           (id) => id !== schemaId,
         );
-
-        await update({
-          activeInterceptions: updatedList,
-        });
-
+        await update({ activeInterceptions: updated });
         router.push("/");
         router.refresh();
       }
@@ -149,29 +118,23 @@ export function InterceptionForm({
   });
 
   const handleInputChange = (fieldName: string, value: string) => {
-    setFormValues((prev) => ({
-      ...prev,
-      [fieldName]: value,
-    }));
+    setFormValues((prev) => ({ ...prev, [fieldName]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
-
-    if (schema?.fields) {
-      for (const field of schema.fields) {
-        if (field.required && !formValues[field.name]?.trim()) {
-          setErrorMsg(
-            locale === "fr"
-              ? `Le champ "${field.label}" est requis.`
-              : `Field "${field.label}" is required.`,
-          );
-          return;
-        }
-      }
+    const missing = schema?.fields?.find(
+      (f) => f.required && !formValues[f.name]?.trim(),
+    );
+    if (missing) {
+      setErrorMsg(
+        locale === "fr"
+          ? `Le champ "${missing.label}" est requis.`
+          : `Field "${missing.label}" is required.`,
+      );
+      return;
     }
-
     resolveMutation.mutate(formValues);
   };
 

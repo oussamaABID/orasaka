@@ -2,31 +2,45 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useChatStream } from "../hooks/useChatStream";
-import { MessageBubble } from "./MessageBubble";
+import { ChatTimeline } from "./ChatTimeline";
 import { ThreadList } from "./ThreadList";
+import { ChatHeader } from "./ChatHeader";
+import { ChatDrawer } from "./ChatDrawer";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useTranslation } from "@/core/context/LocaleContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ContextPlusMenu, OperationNode } from "./ContextPlusMenu";
+import { ChatMessage } from "../types/chat.types";
 
 interface Props {
   initialConversationId: string;
 }
 
-/**
- * ChatWindow component integrates the message list stream, thread selection drawer,
- * and user text entry layout.
- *
- * @param props Component properties containing the initial conversation session ID.
- * @returns The ChatWindow react node.
- */
+const fetchOperationGraph = async (): Promise<{ nodes: OperationNode[] }> => {
+  const query = `query GetOperationGraph { operationGraph { nodes { id label icon presentationContext state { type reason lockedAt } executionDetails { uriPath httpMethod payloadTemplate } } } }`;
+  const response = await fetch("/api/graphql", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query }),
+  });
+  if (!response.ok) throw new Error("Failed to fetch Operation Graph");
+  const result = await response.json();
+  if (result.errors?.length > 0) throw new Error(result.errors[0].message);
+  return result.data.operationGraph;
+};
+
 export const ChatWindow: React.FC<Props> = ({ initialConversationId }) => {
   const [activeConversationId, setActiveConversationId] = useState<string>(
     initialConversationId,
   );
   const [input, setInput] = useState<string>("");
   const [isThreadDrawerOpen, setIsThreadDrawerOpen] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isPlusMenuOpen, setIsPlusMenuOpen] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const queryKey = ["chatMessages", activeConversationId];
 
   const {
     threads,
@@ -40,81 +54,117 @@ export const ChatWindow: React.FC<Props> = ({ initialConversationId }) => {
     createThread,
   } = useChatStream(activeConversationId);
 
+  const { data: graph } = useQuery({
+    queryKey: ["operationGraph"],
+    queryFn: fetchOperationGraph,
+    refetchOnWindowFocus: false,
+  });
+
+  const addMessageToCache = (content: string, kind: "image" | "audio") => {
+    queryClient.setQueryData<ChatMessage[]>(queryKey, (old = []) => {
+      const updated = [
+        ...old,
+        {
+          id: `assistant-${Date.now()}`,
+          role: "assistant" as const,
+          content,
+          timestamp: Date.now(),
+          kind,
+        },
+      ];
+      localStorage.setItem(
+        `orasaka_messages_${activeConversationId}`,
+        JSON.stringify(updated),
+      );
+      return updated;
+    });
+  };
+
+  const imageMutation = useMutation({
+    mutationFn: async (prompt: string) => {
+      const response = await fetch("/api/graphql", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `mutation GenerateImage($prompt: String!) { image(prompt: $prompt) { content } }`,
+          variables: { prompt },
+        }),
+      });
+      const res = await response.json();
+      if (res.errors) throw new Error(res.errors[0].message);
+      return res.data.image;
+    },
+    onSuccess: (data) => addMessageToCache(data.content, "image"),
+  });
+
+  const speechMutation = useMutation({
+    mutationFn: async (prompt: string) => {
+      const response = await fetch("/api/graphql", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `mutation GenerateSpeech($prompt: String!) { speech(prompt: $prompt) { content } }`,
+          variables: { prompt },
+        }),
+      });
+      const res = await response.json();
+      if (res.errors) throw new Error(res.errors[0].message);
+      return res.data.speech;
+    },
+    onSuccess: (data) => addMessageToCache(data.content, "audio"),
+  });
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isSending, isGenerating]);
+  }, [
+    messages,
+    isSending,
+    isGenerating,
+    imageMutation.isPending,
+    speechMutation.isPending,
+  ]);
 
   const handleSend = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim() || isSending || isGenerating) return;
-
     sendMessage(input.trim());
     setInput("");
   };
 
-  const showTypingIndicator =
-    isGenerating &&
-    messages.length > 0 &&
-    messages[messages.length - 1].role === "user";
+  const handleExecuteNode = (node: OperationNode) => {
+    if (!input.trim()) {
+      alert(`Please type a prompt in the input field first.`);
+      return;
+    }
+    if (node.id === "orasaka.core.chat.image") {
+      imageMutation.mutate(input.trim());
+    } else if (node.id === "orasaka.core.chat.speech") {
+      speechMutation.mutate(input.trim());
+    }
+    setInput("");
+  };
+
+  const plusNodes =
+    graph?.nodes?.filter(
+      (n: OperationNode) => n.presentationContext === "CONTEXT_MENU_PLUS",
+    ) || [];
 
   return (
     <div className="flex h-full w-full bg-zinc-50/30 dark:bg-zinc-950/20 overflow-hidden relative">
-      {/* Mobile Thread Drawer (left slide-out drawer) */}
-      {isThreadDrawerOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
-          {/* Backdrop overlay */}
-          <div
-            className="fixed inset-0 bg-zinc-950/60 backdrop-blur-sm transition-opacity"
-            onClick={() => setIsThreadDrawerOpen(false)}
-          />
-          {/* Drawer Content */}
-          <div className="relative flex flex-col w-72 max-w-[80vw] h-full bg-white/95 dark:bg-zinc-900/95 border-r border-zinc-200/80 dark:border-zinc-800/60 backdrop-blur-md z-50 transform transition-transform duration-300">
-            {/* Close button inside drawer */}
-            <div className="p-4 border-b border-zinc-200/80 dark:border-zinc-800/60 flex justify-between items-center bg-white/50 dark:bg-zinc-900/50">
-              <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                {t.chat.memoryBlocks}
-              </span>
-              <button
-                onClick={() => setIsThreadDrawerOpen(false)}
-                className="p-1 rounded-xl text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="w-5 h-5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6 18 18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <ThreadList
-                threads={threads ?? []}
-                activeId={activeConversationId}
-                onSelectThread={(id) => {
-                  setActiveConversationId(id);
-                  setIsThreadDrawerOpen(false);
-                }}
-                isLoading={isLoadingThreads}
-                onCreateThread={() => {
-                  const newThread = createThread();
-                  setActiveConversationId(newThread.conversationId);
-                  setIsThreadDrawerOpen(false);
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <ChatDrawer
+        isOpen={isThreadDrawerOpen}
+        onClose={() => setIsThreadDrawerOpen(false)}
+        threads={threads ?? []}
+        activeConversationId={activeConversationId}
+        onSelectThread={setActiveConversationId}
+        isLoadingThreads={isLoadingThreads}
+        onCreateThread={() => {
+          const newThread = createThread();
+          setActiveConversationId(newThread.conversationId);
+        }}
+        t={t}
+      />
 
-      {/* Sidebar Threads intégrée de manière standard */}
       <div className="w-72 flex-shrink-0 hidden md:block">
         <ThreadList
           threads={threads ?? []}
@@ -128,104 +178,60 @@ export const ChatWindow: React.FC<Props> = ({ initialConversationId }) => {
         />
       </div>
 
-      {/* Main Chat Area */}
       <div className="flex-1 flex flex-col h-full min-w-0 bg-white/40 dark:bg-zinc-900/10">
-        {/* Header Neutre */}
-        <div className="p-4 border-b border-zinc-200/80 dark:border-zinc-800/60 bg-white/40 dark:bg-zinc-900/20 backdrop-blur-sm flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setIsThreadDrawerOpen(true)}
-              className="p-2 rounded-xl text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 md:hidden border border-zinc-200/80 dark:border-zinc-800/60 transition-all duration-200"
-              aria-label="Toggle Memory Blocks"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-5 h-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-                />
-              </svg>
-            </button>
-            <div className="flex flex-col">
-              <h1 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                {t.chat.sessionTitle}
-              </h1>
-              <span className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5 font-mono">
-                {t.chat.id}: {activeConversationId}
-              </span>
-            </div>
-          </div>
+        <ChatHeader
+          activeConversationId={activeConversationId}
+          onOpenDrawer={() => setIsThreadDrawerOpen(true)}
+          t={t}
+        />
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-zinc-50/10 dark:bg-zinc-900/5 relative">
+          <ChatTimeline
+            messages={messages ?? []}
+            isLoadingMessages={isLoadingMessages}
+            isGenerating={isGenerating}
+            isImagePending={imageMutation.isPending}
+            isSpeechPending={speechMutation.isPending}
+            error={error}
+            messagesEndRef={messagesEndRef}
+          />
+          <ContextPlusMenu
+            isOpen={isPlusMenuOpen}
+            onClose={() => setIsPlusMenuOpen(false)}
+            onExecuteNode={handleExecuteNode}
+            nodes={plusNodes}
+          />
         </div>
 
-        {/* Message Container */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-zinc-50/10 dark:bg-zinc-900/5 animate-in fade-in duration-300">
-          {isLoadingMessages ? (
-            <div className="h-full flex items-center justify-center">
-              <span className="text-zinc-400 dark:text-zinc-500 text-sm animate-pulse">
-                {t.chat.loadingMessages}
-              </span>
-            </div>
-          ) : !messages || messages.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-zinc-400 dark:text-zinc-500 text-sm">
-              {t.chat.noActiveConversation}
-            </div>
-          ) : (
-            <>
-              {messages.map((msg) => (
-                <MessageBubble key={msg.id} message={msg} />
-              ))}
-              {showTypingIndicator && (
-                <div className="flex items-start gap-3 animate-in fade-in duration-200">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/60 flex items-center justify-center text-xs font-semibold text-zinc-500 dark:text-zinc-400 select-none shadow-sm">
-                    {t.chat.ai}
-                  </div>
-                  <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/60 rounded-2xl px-4.5 py-3 max-w-[85%] sm:max-w-[70%] shadow-sm flex items-center gap-1.5 h-10">
-                    <span
-                      className="w-2 h-2 bg-zinc-400 dark:bg-zinc-500 rounded-full animate-bounce"
-                      style={{ animationDelay: "0ms" }}
-                    />
-                    <span
-                      className="w-2 h-2 bg-zinc-400 dark:bg-zinc-500 rounded-full animate-bounce"
-                      style={{ animationDelay: "150ms" }}
-                    />
-                    <span
-                      className="w-2 h-2 bg-zinc-400 dark:bg-zinc-500 rounded-full animate-bounce"
-                      style={{ animationDelay: "300ms" }}
-                    />
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </>
-          )}
-
-          {error && (
-            <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200/80 dark:border-red-900/30 text-red-600 dark:text-red-400 rounded-xl text-sm transition-all duration-200">
-              {t.chat.connectionError} ({(error as Error)?.message || ""})
-            </div>
-          )}
-        </div>
-
-        {/* Input Area épurée qui utilise tes composants de design system */}
         <form
           onSubmit={handleSend}
-          className="p-4 bg-white/50 dark:bg-zinc-900/30 backdrop-blur-sm border-t border-zinc-200/80 dark:border-zinc-800/60 flex gap-3 items-center"
+          className="p-4 bg-white/50 dark:bg-zinc-900/30 border-t border-zinc-200 dark:border-zinc-800 flex gap-3 items-center relative"
         >
+          <button
+            type="button"
+            onClick={() => setIsPlusMenuOpen(!isPlusMenuOpen)}
+            className="p-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-all shadow-sm flex items-center justify-center hover:scale-105 active:scale-95 flex-shrink-0"
+            aria-label="Add Capability"
+          >
+            <svg
+              className={`w-5 h-5 transition-transform duration-200 ${isPlusMenuOpen ? "rotate-45" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 4.5v15m7.5-7.5h-15"
+              />
+            </svg>
+          </button>
           <Input
             value={input}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setInput(e.target.value)
-            }
+            onChange={(e) => setInput(e.target.value)}
             placeholder={isGenerating ? t.chat.typing : t.chat.typeMessage}
-            className="flex-1 bg-white/80 dark:bg-zinc-900/40 border-zinc-200/80 dark:border-zinc-800/60 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-700"
+            className="flex-1 bg-white/80 dark:bg-zinc-900/40 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
             disabled={isSending || isGenerating}
             autoComplete="off"
           />
