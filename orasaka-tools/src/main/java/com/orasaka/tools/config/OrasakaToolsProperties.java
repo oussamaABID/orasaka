@@ -15,7 +15,6 @@ public record OrasakaToolsProperties(Map<String, ToolConfig> configs) {
    *
    * @param cache The caching configuration block.
    * @param rag The RAG chunking and database ingestion configuration block.
-   * @return The tool configuration record.
    */
   public record ToolConfig(CacheConfig cache, RagConfig rag) {}
 
@@ -24,7 +23,6 @@ public record OrasakaToolsProperties(Map<String, ToolConfig> configs) {
    *
    * @param enabled Whether caching is active.
    * @param ttlSeconds Time-To-Live in seconds for cached values.
-   * @return The cache configuration record.
    */
   public record CacheConfig(boolean enabled, long ttlSeconds) {}
 
@@ -34,7 +32,6 @@ public record OrasakaToolsProperties(Map<String, ToolConfig> configs) {
    * @param enabled Whether RAG ingestion is active for the tool.
    * @param chunkerType The type/strategy of the text chunker to use.
    * @param sourceTable The name of the database source table.
-   * @return The RAG configuration record.
    */
   public record RagConfig(boolean enabled, String chunkerType, String sourceTable) {}
 }

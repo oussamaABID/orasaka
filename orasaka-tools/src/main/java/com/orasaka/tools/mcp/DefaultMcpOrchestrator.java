@@ -94,7 +94,7 @@ public class DefaultMcpOrchestrator implements McpOrchestrator {
    * client criteria.
    *
    * @return A list of external tool definition schema configurations.
-   * @see com.orasaka.core.mcp.McpOrchestrator
+   * @see com.orasaka.core.pipeline.McpOrchestrator
    */
   @Override
   public List<Object> resolveExternalTools() {

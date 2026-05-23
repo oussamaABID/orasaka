@@ -37,7 +37,7 @@ public class OrasakaMcpService {
    * <p>Acts as an integration bridge layer for downstream cognitive engines.
    *
    * @return A list of objects representing external tool schemas.
-   * @see com.orasaka.core.mcp.McpOrchestrator#resolveExternalTools()
+   * @see com.orasaka.core.pipeline.McpOrchestrator#resolveExternalTools()
    */
   public List<Object> getMcpTools() {
     return List.of();
@@ -49,7 +49,7 @@ public class OrasakaMcpService {
    * <p>Polls endpoints dynamically to compile external state before LLM execution.
    *
    * @return A consolidated string containing external environment or tool contexts.
-   * @see com.orasaka.core.mcp.McpOrchestrator#resolveExternalContext()
+   * @see com.orasaka.core.pipeline.McpOrchestrator#resolveExternalContext()
    */
   public String getMcpContext() {
     return "";

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Configuration properties for Orasaka CORS (Cognitive Orchestration & Retrieval System). Maps to
+ * Configuration properties for Orasaka CORS (Cognitive Orchestration and Retrieval System). Maps to
  * {@code orasaka.core} in {@code application.yml}.
  *
  * <p>This record defines the structural schema for AI provider orchestration, RAG, and MCP. It
@@ -46,7 +46,6 @@ public record CoreProperties(
    * @param temperature Sampling temperature (0.0 to 1.0).
    * @param maxTokens Maximum number of tokens to generate.
    * @param extra Provider-specific additional parameters.
-   * @return The provider configuration record.
    */
   public record ProviderConfig(
       String model,
@@ -61,7 +60,6 @@ public record CoreProperties(
    * @param enabled Whether RAG context injection is active.
    * @param storeType The type of vector store (e.g., "pg vector").
    * @param topK The number of relevant documents to retrieve.
-   * @return The RAG configuration record.
    */
   public record RagConfig(boolean enabled, String storeType, Integer topK) {}
 
@@ -69,7 +67,6 @@ public record CoreProperties(
    * MCP (Model Context Protocol) configuration.
    *
    * @param endpoints List of external MCP server URLs.
-   * @return The MCP configuration record.
    */
   public record McpConfig(List<String> endpoints) {}
 

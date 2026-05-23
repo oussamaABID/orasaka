@@ -18,7 +18,6 @@ public record GatewayProperties(CorsProperties cors) {
    * CORS policy configuration properties.
    *
    * @param allowedOrigins A comma-separated list of browser origins permitted to cross-communicate.
-   * @return The CorsProperties record.
    */
   public record CorsProperties(String allowedOrigins) {}
 }

@@ -23,8 +23,8 @@ import reactor.core.publisher.Flux;
  * high-concurrency environments.
  *
  * @see com.orasaka.core.engine.AbstractOrasakaEngine
- * @see com.orasaka.core.rag.OrasakaKnowledgeService
- * @see com.orasaka.core.tool.OrasakaToolRegistry
+ * @see com.orasaka.core.pipeline.OrasakaKnowledgeService
+ * @see com.orasaka.core.pipeline.OrasakaToolRegistry
  */
 @Component
 public class OrasakaAiClient {

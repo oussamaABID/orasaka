@@ -79,7 +79,7 @@ public class RateLimitConfig {
    * template to retrieve database tiers.
    *
    * @param proxyManager The remote bucket manager.
-   * @param jdbc The parameter-based JDBC template for PostgreSQL access.
+   * @param tierRepository The repository to retrieve database rate limit tiers.
    * @return The rate limiting servlet filter instance.
    * @see RateLimitFilter
    */

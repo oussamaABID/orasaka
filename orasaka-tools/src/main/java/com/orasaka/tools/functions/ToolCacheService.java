@@ -30,7 +30,6 @@ public class ToolCacheService {
    *
    * @param value The actual string value cached (JSON or payload).
    * @param expiresAt The timestamp when this entry expires.
-   * @return The cache entry record.
    */
   public record CacheEntry(String value, Instant expiresAt) {
     /** Compact constructor enforcing non-null expiration. */

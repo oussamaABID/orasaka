@@ -18,7 +18,6 @@ public record IdentityInfrastructureProperties(
    *
    * @param enabled Whether email verification is enabled. If true, newly registered users are
    *     created disabled and must be activated via verification token.
-   * @return The EmailVerification config record.
    */
   public record EmailVerification(boolean enabled) {}
 
@@ -28,7 +27,6 @@ public record IdentityInfrastructureProperties(
    * @param enabled Whether user interceptions are enabled.
    * @param schemas Mapping of schema ID to its file path or URI (e.g.,
    *     classpath:onboarding-schema.json).
-   * @return The Interceptions config record.
    */
   public record Interceptions(boolean enabled, Map<String, String> schemas) {}
 }
