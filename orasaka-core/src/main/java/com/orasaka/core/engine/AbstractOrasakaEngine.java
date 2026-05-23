@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.ai.audio.tts.TextToSpeechModel;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.image.ImageModel;
 import org.springframework.context.ApplicationEventPublisher;
@@ -17,10 +18,10 @@ public abstract sealed class AbstractOrasakaEngine permits OrasakaEngine {
   private static final org.slf4j.Logger logger =
       org.slf4j.LoggerFactory.getLogger(AbstractOrasakaEngine.class);
 
-  protected final EngineModelRegistry registry;
-  protected final List<OrasakaContextInterceptor> interceptors;
-  protected final OrasakaOrchestrationPipeline pipeline;
-  protected final ApplicationEventPublisher eventPublisher;
+  final EngineModelRegistry registry;
+  final List<OrasakaContextInterceptor> interceptors;
+  final OrasakaOrchestrationPipeline pipeline;
+  final ApplicationEventPublisher eventPublisher;
 
   protected AbstractOrasakaEngine(
       Map<String, ChatModel> chat,
