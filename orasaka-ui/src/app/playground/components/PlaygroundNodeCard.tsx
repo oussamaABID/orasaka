@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import {
   Lock,
-  Upload,
   Play,
   FileText,
   Image as ImageIcon,
@@ -14,12 +13,21 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
+import { ResultDisplay } from "./ResultDisplay";
+import { MediaUploadField } from "./MediaUploadField";
 
 interface PlaygroundNodeCardProps {
   node: OperationNode;
+  onExecuted?: () => void;
 }
 
-export function PlaygroundNodeCard({ node }: PlaygroundNodeCardProps) {
+/**
+ * Component representing a single capability node card in the playground.
+ */
+export function PlaygroundNodeCard({
+  node,
+  onExecuted,
+}: PlaygroundNodeCardProps) {
   const [inputs, setInputs] = useState<Record<string, string>>({});
   const [result, setResult] = useState<{
     success: boolean;
@@ -95,6 +103,9 @@ export function PlaygroundNodeCard({ node }: PlaygroundNodeCardProps) {
         outputText = await response.text();
       }
       setResult({ success: true, data: outputText });
+      if (onExecuted) {
+        onExecuted();
+      }
     } catch (e: unknown) {
       setResult({
         success: false,
@@ -139,65 +150,15 @@ export function PlaygroundNodeCard({ node }: PlaygroundNodeCardProps) {
             field.toLowerCase().includes("base64") ||
             field.toLowerCase().includes("image");
           if (isBase64) {
-            const isAudio = field.toLowerCase().includes("audio");
-            const previewUrl = inputs[field]
-              ? `data:${isAudio ? "audio/mp3" : "image/png"};base64,${inputs[field]}`
-              : "";
             return (
-              <div key={field} className="flex flex-col gap-2">
-                <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-                  Media Payload ({field})
-                </span>
-                <div className="border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center bg-zinc-50/30 dark:bg-zinc-950/10 min-h-[140px]">
-                  {previewUrl ? (
-                    <div className="flex flex-col items-center gap-2 w-full">
-                      {isAudio ? (
-                        <audio
-                          src={previewUrl}
-                          controls
-                          className="w-full max-h-12"
-                        />
-                      ) : (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={previewUrl}
-                          alt="Preview"
-                          className="max-h-32 rounded-lg object-contain"
-                        />
-                      )}
-                      <button
-                        onClick={() => handleInputChange(field, "")}
-                        className="text-xs text-red-500 hover:underline"
-                        disabled={isLocked}
-                      >
-                        Remove Asset
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-2">
-                      <Upload className="h-8 w-8 text-zinc-400 animate-pulse" />
-                      <p className="text-xs text-zinc-500 text-center">
-                        Drag and drop asset, or{" "}
-                        <label
-                          className={`text-amber-500 ${isLocked ? "pointer-events-none opacity-50" : "cursor-pointer"} hover:underline`}
-                        >
-                          browse
-                          <input
-                            type="file"
-                            disabled={isLocked}
-                            onChange={(e) =>
-                              e.target.files?.[0] &&
-                              handleFileUpload(field, e.target.files[0])
-                            }
-                            accept={isAudio ? "audio/*" : "image/*"}
-                            className="hidden"
-                          />
-                        </label>
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <MediaUploadField
+                key={field}
+                field={field}
+                inputs={inputs}
+                isLocked={isLocked}
+                handleInputChange={handleInputChange}
+                handleFileUpload={handleFileUpload}
+              />
             );
           }
 
@@ -256,9 +217,13 @@ export function PlaygroundNodeCard({ node }: PlaygroundNodeCardProps) {
             )}
             {result.success ? "Output Result" : "Gateway Restriction"}
           </div>
-          <p className="whitespace-pre-line leading-relaxed font-mono text-xs text-zinc-700 dark:text-zinc-300">
-            {result.data}
-          </p>
+          {result.success ? (
+            <ResultDisplay payload={result.data} />
+          ) : (
+            <p className="whitespace-pre-line leading-relaxed font-mono text-xs text-zinc-700 dark:text-zinc-300">
+              {result.data}
+            </p>
+          )}
         </div>
       )}
     </Card>

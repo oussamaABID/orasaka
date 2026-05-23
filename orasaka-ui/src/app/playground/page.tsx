@@ -6,7 +6,7 @@ import { Header } from "@/components/layout/Header";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { Cpu, Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { OperationNode } from "./types";
 import { PlaygroundNodeCard } from "./components/PlaygroundNodeCard";
 import { RagSearchCard } from "./components/RagSearchCard";
@@ -50,6 +50,9 @@ const fetchOperationGraph = async (): Promise<OperationNode[]> => {
 export default function PlaygroundPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
+  const queryClient = useQueryClient();
+
+  const [nodes, setNodes] = React.useState<OperationNode[]>([]);
 
   React.useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -57,12 +60,23 @@ export default function PlaygroundPage() {
     }
   }, [isLoading, isAuthenticated, router]);
 
-  const { data: nodes = [], isLoading: isLoadingGraph } = useQuery({
+  const { data: queryData, isLoading: isLoadingGraph } = useQuery({
     queryKey: ["operationGraph"],
     queryFn: fetchOperationGraph,
     refetchOnWindowFocus: false,
     enabled: isAuthenticated,
   });
+
+  React.useEffect(() => {
+    if (queryData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setNodes(queryData);
+    }
+  }, [queryData]);
+
+  const handleNodeExecuted = () => {
+    queryClient.invalidateQueries({ queryKey: ["operationGraph"] });
+  };
 
   if (isLoading || !isAuthenticated) return null;
 
@@ -97,7 +111,8 @@ export default function PlaygroundPage() {
                     No Active Capabilities
                   </p>
                   <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                    The operation graph returned an empty or invalid dataset configuration.
+                    The operation graph returned an empty or invalid dataset
+                    configuration.
                   </p>
                 </div>
               </div>
@@ -106,7 +121,11 @@ export default function PlaygroundPage() {
                 {nodes
                   .filter((n) => n && n.state && n.state.type !== "INVISIBLE")
                   .map((node) => (
-                    <PlaygroundNodeCard key={node.id} node={node} />
+                    <PlaygroundNodeCard
+                      key={node.id}
+                      node={node}
+                      onExecuted={handleNodeExecuted}
+                    />
                   ))}
 
                 <RagSearchCard />

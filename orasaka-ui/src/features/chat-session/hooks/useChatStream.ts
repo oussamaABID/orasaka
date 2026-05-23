@@ -152,6 +152,22 @@ const postChatMessage = async (variables: {
   return result.data.chat;
 };
 
+const createUserMessage = (prompt: string): ChatMessage => ({
+  id: `user-${Date.now()}`,
+  role: "user",
+  content: prompt,
+  timestamp: Date.now(),
+  kind: "text",
+});
+
+const createAssistantMessage = (content: string): ChatMessage => ({
+  id: `assistant-mutation-${Date.now()}`,
+  role: "assistant",
+  content,
+  timestamp: Date.now(),
+  kind: "text",
+});
+
 /**
  * Custom React Hook providing message history state, listing threads, and starting SSE token streams.
  * Orchestrates local storage database fallbacks with Server-Sent Events (SSE).
@@ -201,13 +217,7 @@ export function useChatStream(conversationId: string) {
       const previousMessages =
         queryClient.getQueryData<ChatMessage[]>(queryKey) || [];
 
-      const userMsg: ChatMessage = {
-        id: `user-${Date.now()}`,
-        role: "user",
-        content: prompt,
-        timestamp: Date.now(),
-        kind: "text",
-      };
+      const userMsg = createUserMessage(prompt);
 
       const updated = [...previousMessages, userMsg];
 
@@ -225,8 +235,28 @@ export function useChatStream(conversationId: string) {
       }
     },
     onSuccess: (data, variables) => {
+      const convId = data?.conversationId || variables.conversationId;
+      const content =
+        data?.content || (data as unknown as { text?: string }).text || "";
+
+      if (content) {
+        const assistantMsg = createAssistantMessage(content);
+        queryClient.setQueryData<ChatMessage[]>(queryKey, (old = []) => {
+          const exists = old.some(
+            (m) => m.role === "assistant" && m.content === content,
+          );
+          if (exists) return old;
+          const updated = [...old, assistantMsg];
+          saveStoredMessages(convId, updated);
+          return updated;
+        });
+      }
+
+      // Invalidate operation graph reactively when conversation transaction starts
+      queryClient.invalidateQueries({ queryKey: ["operationGraph"] });
+
       // Trigger SSE/GraphQL streaming update dynamically via BFF
-      startStreaming(data.conversationId, variables.prompt);
+      startStreaming(convId, variables.prompt);
     },
   });
 
@@ -256,22 +286,26 @@ export function useChatStream(conversationId: string) {
       try {
         // Parse OrasakaChatResponse JSON from the gateway
         const parsed = JSON.parse(event.data);
-        chunk = parsed.content || "";
+        chunk = parsed.content || parsed.text || "";
       } catch {
         // Fallback to raw event data
         chunk = event.data;
       }
 
-      accumulatedContent += chunk;
+      if (chunk) {
+        accumulatedContent += chunk;
+      }
+
+      if (!accumulatedContent) {
+        return;
+      }
 
       queryClient.setQueryData<ChatMessage[]>(queryKey, (old = []) => {
         const lastMsg = old[old.length - 1];
         let updated: ChatMessage[];
-        if (
-          lastMsg &&
-          lastMsg.role === "assistant" &&
-          lastMsg.id === assistantMsgId
-        ) {
+
+        // If the last message is an assistant message, we reuse its slot and stream into it
+        if (lastMsg && lastMsg.role === "assistant") {
           updated = [
             ...old.slice(0, -1),
             {
@@ -318,6 +352,8 @@ export function useChatStream(conversationId: string) {
 
       // Invalidate threads to refresh updated timestamps
       queryClient.invalidateQueries({ queryKey: ["chatThreads"] });
+      // Invalidate operation graph reactively when stream finishes/settles
+      queryClient.invalidateQueries({ queryKey: ["operationGraph"] });
     };
   };
 

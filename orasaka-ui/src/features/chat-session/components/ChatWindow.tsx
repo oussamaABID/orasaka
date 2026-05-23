@@ -17,7 +17,7 @@ interface Props {
   initialConversationId: string;
 }
 
-const fetchOperationGraph = async (): Promise<{ nodes: OperationNode[] }> => {
+const fetchOperationGraph = async (): Promise<OperationNode[]> => {
   const query = `query GetOperationGraph { operationGraph { nodes { id label icon presentationContext state { type reason lockedAt } executionDetails { uriPath httpMethod payloadTemplate } } } }`;
   const response = await fetch("/api/graphql", {
     method: "POST",
@@ -27,7 +27,7 @@ const fetchOperationGraph = async (): Promise<{ nodes: OperationNode[] }> => {
   if (!response.ok) throw new Error("Failed to fetch Operation Graph");
   const result = await response.json();
   if (result.errors?.length > 0) throw new Error(result.errors[0].message);
-  return result.data.operationGraph;
+  return result.data?.operationGraph?.nodes || [];
 };
 
 export const ChatWindow: React.FC<Props> = ({ initialConversationId }) => {
@@ -54,7 +54,7 @@ export const ChatWindow: React.FC<Props> = ({ initialConversationId }) => {
     createThread,
   } = useChatStream(activeConversationId);
 
-  const { data: graph } = useQuery({
+  const { data: nodes } = useQuery({
     queryKey: ["operationGraph"],
     queryFn: fetchOperationGraph,
     refetchOnWindowFocus: false,
@@ -145,7 +145,7 @@ export const ChatWindow: React.FC<Props> = ({ initialConversationId }) => {
   };
 
   const plusNodes =
-    graph?.nodes?.filter(
+    nodes?.filter(
       (n: OperationNode) => n.presentationContext === "CONTEXT_MENU_PLUS",
     ) || [];
 
