@@ -87,7 +87,7 @@ orasaka:
       router:
         enabled: true
         provider: ${ORASAKA_ROUTER_PROVIDER:ollama}
-        model: ${ORASAKA_ROUTER_MODEL:llama3:8b}
+        model: ${ORASAKA_ROUTER_MODEL:llama3.1:8b}
         temperature: ${ORASAKA_ROUTER_TEMPERATURE:0.0}
     overrides:
       ollama:
@@ -95,7 +95,7 @@ orasaka:
         model: ${ORASAKA_OLLAMA_MODEL:llama3:8b}
         temperature: ${ORASAKA_OLLAMA_TEMPERATURE:0.7}
         extra:
-          embedding-model: ${ORASAKA_OLLAMA_EMBEDDING_MODEL:all-minilm}
+          embedding-model: ${ORASAKA_OLLAMA_EMBEDDING_MODEL:nomic-embed-text:latest}
       openai:
         base-url: ${ORASAKA_OPENAI_BASE_URL:https://api.openai.com/v1}
         model: ${ORASAKA_OPENAI_MODEL:gpt-4o}
