@@ -18,9 +18,8 @@ export function ThemeToggle() {
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
-    Promise.resolve().then(() => {
-      setMounted(true);
-    });
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
   }, []);
 
   const isDark = resolvedTheme === "dark";

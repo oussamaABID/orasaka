@@ -54,9 +54,8 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("orasaka_language") as Locale;
       if (stored === "en" || stored === "fr") {
-        Promise.resolve().then(() => {
-          setLocaleState(stored);
-        });
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setLocaleState(stored);
       }
     }
   }, []);
@@ -66,10 +65,9 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     if (settings?.language) {
       const settingsLang = settings.language as Locale;
       if (settingsLang === "en" || settingsLang === "fr") {
-        Promise.resolve().then(() => {
-          setLocaleState(settingsLang);
-          localStorage.setItem("orasaka_language", settingsLang);
-        });
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setLocaleState(settingsLang);
+        localStorage.setItem("orasaka_language", settingsLang);
       }
     }
   }, [settings]);

@@ -82,10 +82,9 @@ function VerifyPageContent() {
   // If token parameter exists in URL, trigger verification automatically
   React.useEffect(() => {
     if (tokenParam) {
-      Promise.resolve().then(() => {
-        setToken(tokenParam);
-        verifyMutation.mutate(tokenParam);
-      });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setToken(tokenParam);
+      verifyMutation.mutate(tokenParam);
     }
   }, [tokenParam, verifyMutation]);
 

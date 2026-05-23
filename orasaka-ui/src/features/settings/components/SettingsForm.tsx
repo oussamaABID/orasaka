@@ -43,15 +43,14 @@ export function SettingsForm() {
   // Sync state once loaded
   React.useEffect(() => {
     if (settings) {
-      Promise.resolve().then(() => {
-        setLanguage(settings.language as Locale);
-        setAiPersona(settings.aiPersona);
-        setThemeName(settings.themeName || "Orasaka");
-        setThemeTagline(settings.themeTagline || "Decoupled Intelligence");
-        setThemeAccent(settings.themeAccent || "zinc");
-        setThemeLayout(settings.themeLayout || "standard");
-        setTenantId(settings.tenantId || "orasaka-default");
-      });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLanguage(settings.language as Locale);
+      setAiPersona(settings.aiPersona);
+      setThemeName(settings.themeName || "Orasaka");
+      setThemeTagline(settings.themeTagline || "Decoupled Intelligence");
+      setThemeAccent(settings.themeAccent || "zinc");
+      setThemeLayout(settings.themeLayout || "standard");
+      setTenantId(settings.tenantId || "orasaka-default");
     }
   }, [settings]);
 

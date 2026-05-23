@@ -80,12 +80,11 @@ export default function HomePage() {
 
     const tokensEstimate = Math.round(totalCharacters / 4);
 
-    Promise.resolve().then(() => {
-      setMetrics({
-        activeSessions: threadsCount,
-        tokensUsed: tokensEstimate,
-        memoryNodes: totalMessagesCount,
-      });
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMetrics({
+      activeSessions: threadsCount,
+      tokensUsed: tokensEstimate,
+      memoryNodes: totalMessagesCount,
     });
   }, [isAuthenticated, threads]);
 
