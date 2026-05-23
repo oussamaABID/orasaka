@@ -188,8 +188,40 @@ npx ts-node src/index.ts login user@orasaka.com user
 npx ts-node src/index.ts chat "Explain quantum computing in one sentence."
 ```
 
+---
+
+## 🥷 AI Agent Governance & DevX Integration
+
+To facilitate seamless collaboration between human developers and AI coding assistants, Orasaka enforces an autonomous governance layer.
+
+### 🏛️ The Master Contract (`AGENTS.md`)
+The [AGENTS.md](file:///Users/oussamaabid/Documents/projects/orasaka/AGENTS.md) file serves as the system's ledger. It defines boundaries such as the statelessness of `orasaka-core`, thread safety, and Virtual Thread execution policies that AI models must respect.
+
+### 📁 Agent Context Matrix (`.agent/`)
+The `.agent/` directory contains reference guidelines:
+* **Rules (`.agent/rules/`)**: Code-level constraints, e.g., the [naming conventions and persistence policies](file:///Users/oussamaabid/Documents/projects/orasaka/.agent/rules/naming_conventions.md) which forbid database query duplication.
+* **Workflows (`.agent/workflows/`)**: Step-by-step verification flows. The [review_architect workflow](file:///Users/oussamaabid/Documents/projects/orasaka/.agent/workflows/review_architect.md) dictates how formatting, linting, and compilation cascade should be executed before any code validation loop is marked complete.
+
+### 💻 Integrating with your Development Cycle (DevX)
+1. **Instructing Agents**: When onboarding a new coding assistant or prompting an agent, begin with:
+   > "Read AGENTS.md and conform to all instructions in .agent/rules/ and .agent/workflows/."
+2. **Quality Verification Gate**: Run the compilation and verification workflow to ensure compatibility:
+   ```bash
+   # Run Java Code Quality and Spotless Apply
+   mvn spotless:apply -pl orasaka-gateway
+
+   # Run UI Code Formatting & Lint
+   cd orasaka-ui && npm run format && npm run lint
+
+   # Recompile entire integration mesh
+   mvn clean compile -pl orasaka-gateway -am
+   ```
+
+---
+
 For more details, see the [Architecture Reference](docs/ARCHITECTURE.md), [API Reference](docs/API_REFERENCE.md), and the [Architectural Decisions](docs/CONTEXT.md).
 
 ---
 
 *Orasaka — Precision in Implementation, Intelligence through Decoupling.*
+
