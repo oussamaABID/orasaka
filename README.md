@@ -31,7 +31,8 @@ Orasaka is a professional-grade Java solution based on Spring, architected for *
 | **`orasaka-ui`** | Next.js frontend application (BFF pattern). Routes client chat streams and queries. |
 | **`orasaka-cli`** | Node.js/TypeScript terminal client. Authenticates via JWT/UUID credentials and consumes SSE streams. |
 
-> **Dependency Flow**: 
+> **Dependency Flow**:
+>
 > - `orasaka-core` → `orasaka-identity`
 > - `orasaka-tools` → `orasaka-gateway`
 >
@@ -39,7 +40,7 @@ Orasaka is a professional-grade Java solution based on Spring, architected for *
 
 ## 📁 Repository Layout
 
-```
+```text
 orasaka/
 ├── ops/                     # DevOps, infrastructure, scripts, and testing assets
 │   ├── docker/              # Docker Compose and container orchestration configs
@@ -64,9 +65,10 @@ orasaka/
 
 ## 🏢 Building on Orasaka: The Business Layer
 
-Orasaka is built to be an **enabler framework**. When implementing a new business venture or a unique domain use-case (e.g., cross-platform media recommendation engines, automated market research tools, or financial analysts), you do not alter the stateless `orasaka-core`. 
+Orasaka is built to be an **enabler framework**. When implementing a new business venture or a unique domain use-case (e.g., cross-platform media recommendation engines, automated market research tools, or financial analysts), you do not alter the stateless `orasaka-core`.
 
 Instead, you implement a dedicated vertical domain. The business recipe always follows a 3-step pipeline:
+
 1. **Context & Profile Extraction**: Let `orasaka-identity` resolve who the customer is and what their explicit preferences are (e.g., favorite streaming services, language, content restrictions).
 2. **Agentic Knowledge Retrieval**: Use `orasaka-tools` to connect custom **MCP (Model Context Protocol) Servers** capable of fetching real-time real-world data (e.g., pulling active trending charts from Netflix, Apple TV, or Amazon Prime APIs).
 3. **Structured Orchestration**: The AI engine in `orasaka-core` processes the dynamic context, formats the outputs into strict, predictable schemas, and streams tailored, hyper-personalized value back to the `orasaka-ui` or `orasaka-cli`.
@@ -133,12 +135,12 @@ Run the bundled setup script which validates the JDK, checks for a native Ollama
 ```
 
 > The script will also launch the `pgvector` database and the MCP debug server defined in [docker-compose.yml](ops/docker/docker-compose.yml).
-
 > [!TIP]
 > To run Docker containers manually, specify the project name and the configuration file path:
-> ```bash
-> docker compose -p orasaka -f ops/docker/docker-compose.yml up -d
-> ```
+
+```bash
+docker compose -p orasaka -f ops/docker/docker-compose.yml up -d
+```
 
 ### Build & Run All Modules
 
@@ -195,17 +197,21 @@ npx ts-node src/index.ts chat "Explain quantum computing in one sentence."
 To facilitate seamless collaboration between human developers and AI coding assistants, Orasaka enforces an autonomous governance layer.
 
 ### 🏛️ The Master Contract (`AGENTS.md`)
-The [AGENTS.md](file:///Users/oussamaabid/Documents/projects/orasaka/AGENTS.md) file serves as the system's ledger. It defines boundaries such as the statelessness of `orasaka-core`, thread safety, and Virtual Thread execution policies that AI models must respect.
+
+The [AGENTS.md](AGENTS.md) file serves as the system's ledger. It defines boundaries such as the statelessness of `orasaka-core`, thread safety, and Virtual Thread execution policies that AI models must respect.
 
 ### 📁 Agent Context Matrix (`.agent/`)
+
 The `.agent/` directory contains reference guidelines:
-* **Rules (`.agent/rules/`)**: Code-level constraints, e.g., the [naming conventions and persistence policies](file:///Users/oussamaabid/Documents/projects/orasaka/.agent/rules/naming_conventions.md) which forbid database query duplication.
-* **Workflows (`.agent/workflows/`)**: Step-by-step verification flows. The [review_architect workflow](file:///Users/oussamaabid/Documents/projects/orasaka/.agent/workflows/review_architect.md) dictates how formatting, linting, and compilation cascade should be executed before any code validation loop is marked complete.
+**Rules (`.agent/rules/`)**: Code-level constraints, e.g., the [naming conventions and persistence policies](.agent/rules/naming_conventions.md) which forbid database query duplication.
+**Workflows (`.agent/workflows/`)**: Step-by-step verification flows. The [review_architect workflow](.agent/workflows/review_architect.md) dictates how formatting, linting, and compilation cascade should be executed before any code validation loop is marked complete.
 
 ### 💻 Integrating with your Development Cycle (DevX)
+
 1. **Instructing Agents**: When onboarding a new coding assistant or prompting an agent, begin with:
    > "Read AGENTS.md and conform to all instructions in .agent/rules/ and .agent/workflows/."
 2. **Quality Verification Gate**: Run the compilation and verification workflow to ensure compatibility:
+
    ```bash
    # Run Java Code Quality and Spotless Apply
    mvn spotless:apply -pl orasaka-gateway
@@ -224,4 +230,3 @@ For more details, see the [Architecture Reference](docs/ARCHITECTURE.md), [API R
 ---
 
 *Orasaka — Precision in Implementation, Intelligence through Decoupling.*
-

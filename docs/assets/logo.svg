@@ -1,85 +1,157 @@
 <svg width="1000" height="280" viewBox="0 0 1000 280" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Font styling and custom CRT/scanline variables -->
+    <!-- Importing Premium Fonts -->
     <style type="text/css">
-      @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&amp;family=Share+Tech+Mono&amp;family=Syne:wght@800&amp;display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&amp;family=Share+Tech+Mono&amp;family=Syne:wght@800;900&amp;display=swap');
       
       .font-wordmark {
-        font-family: 'Syne', 'Orbitron', 'Inter', -apple-system, sans-serif;
+        font-family: 'Syne', 'Orbitron', 'Inter', sans-serif;
+        font-weight: 900;
         text-transform: uppercase;
       }
       .font-hud {
         font-family: 'Share Tech Mono', 'Courier New', monospace;
       }
       .font-tagline {
-        font-family: 'Orbitron', 'Inter', -apple-system, sans-serif;
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 800;
       }
-      .scanlines-overlay {
-        pointer-events: none;
-        mix-blend-mode: overlay;
+      
+      /* Cross-Browser Spin & Pulse Animations */
+      @keyframes spin-cw {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes spin-ccw {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(-360deg); }
+      }
+      @keyframes core-pulse {
+        0%, 100% { transform: scale(0.95); opacity: 0.85; filter: drop-shadow(0 0 8px #FF6B00); }
+        50% { transform: scale(1.08); opacity: 1; filter: drop-shadow(0 0 22px #FF8C00) drop-shadow(0 0 8px #FFD700); }
+      }
+      @keyframes laser-sweep {
+        0% { stroke-dashoffset: 750; }
+        100% { stroke-dashoffset: -750; }
+      }
+      @keyframes text-glitch {
+        0%, 94%, 98%, 100% { transform: skewX(-12deg) translate(0, 0); filter: none; }
+        95% { transform: skewX(-12deg) translate(-2px, 1px); filter: drop-shadow(-1px 0 0 #00F2FE); }
+        96% { transform: skewX(-10deg) translate(1px, -1px); filter: drop-shadow(1px 0 0 #FF007F); }
+        97% { transform: skewX(-13deg) translate(-1px, 0); }
+      }
+      @keyframes radar-sweep {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes dot-flash {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 1; }
+      }
+      @keyframes bar-anim-1 {
+        0%, 100% { width: 45px; }
+        50% { width: 130px; }
+      }
+      @keyframes bar-anim-2 {
+        0%, 100% { width: 110px; }
+        30% { width: 60px; }
+        70% { width: 130px; }
+      }
+
+      /* Classes binding to translate groups */
+      .anim-spin-cw {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: spin-cw 35s linear infinite;
+      }
+      .anim-spin-ccw {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: spin-ccw 22s linear infinite;
+      }
+      .anim-spin-fast {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: spin-cw 10s linear infinite;
+      }
+      .anim-pulse-core {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: core-pulse 2.8s ease-in-out infinite;
+      }
+      .anim-glitch-text {
+        animation: text-glitch 8s infinite;
+      }
+      .anim-radar {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: radar-sweep 4s linear infinite;
+      }
+      .anim-flash {
+        animation: dot-flash 1.2s ease-in-out infinite;
+      }
+      .anim-bar-1 {
+        animation: bar-anim-1 5s ease-in-out infinite;
+      }
+      .anim-bar-2 {
+        animation: bar-anim-2 7s ease-in-out infinite;
       }
     </style>
 
-    <!-- Background gradient: deep obsidian console screen -->
-    <radialGradient id="bgGrad" cx="50%" cy="50%" r="70%">
-      <stop offset="0%" stop-color="#0E1321" />
-      <stop offset="100%" stop-color="#03050A" />
+    <!-- Obsidian & Cyberpunk Dark Background Gradient -->
+    <radialGradient id="bgGrad" cx="50%" cy="40%" r="75%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="60%" stop-color="#090D1A" />
+      <stop offset="100%" stop-color="#020408" />
     </radialGradient>
 
-    <!-- Metallic chrome gold for wordmark -->
-    <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FFF3C4" />
-      <stop offset="25%" stop-color="#F5C037" />
-      <stop offset="50%" stop-color="#A56E0D" />
-      <stop offset="75%" stop-color="#FFEFA8" />
-      <stop offset="100%" stop-color="#805707" />
+    <!-- Premium Metallic Cyber Gold for Wordmark -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFBEB" />
+      <stop offset="20%" stop-color="#FDE047" />
+      <stop offset="45%" stop-color="#CA8A04" />
+      <stop offset="70%" stop-color="#FEF08A" />
+      <stop offset="100%" stop-color="#854D0E" />
     </linearGradient>
 
-    <!-- Glowing cyan for reactor details -->
+    <!-- Holographic Cyan/Teal Gradient -->
     <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#22D3EE" />
+      <stop offset="50%" stop-color="#06B6D4" />
       <stop offset="100%" stop-color="#0891B2" />
     </linearGradient>
 
-    <!-- Glowing orange for reactor core -->
+    <!-- Cyberpunk Hot Orange Gradient -->
     <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FDBA74" />
-      <stop offset="50%" stop-color="#F97316" />
-      <stop offset="100%" stop-color="#C2410C" />
+      <stop offset="0%" stop-color="#FF9E00" />
+      <stop offset="50%" stop-color="#FF5D00" />
+      <stop offset="100%" stop-color="#9A1A00" />
     </linearGradient>
 
-    <!-- Animated shine sweep across text -->
-    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#E2B13C" stop-opacity="0" />
-      <stop offset="35%" stop-color="#E2B13C" stop-opacity="0" />
-      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.9" />
-      <stop offset="65%" stop-color="#E2B13C" stop-opacity="0" />
-      <stop offset="100%" stop-color="#E2B13C" stop-opacity="0" />
-      <animateTransform attributeName="gradientTransform" type="translate" from="-1.5 0" to="1.5 0" dur="4.5s" repeatCount="indefinite" />
-    </linearGradient>
-
-    <!-- Laser slash gradient -->
+    <!-- Laser Slash Gradient -->
     <linearGradient id="slashGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0" />
-      <stop offset="50%" stop-color="#E0F2FE" stop-opacity="1" />
-      <stop offset="100%" stop-color="#06B6D4" stop-opacity="0" />
+      <stop offset="0%" stop-color="#00F2FE" stop-opacity="0" />
+      <stop offset="15%" stop-color="#00F2FE" stop-opacity="0.3" />
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="1" />
+      <stop offset="85%" stop-color="#FF007F" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#FF007F" stop-opacity="0" />
     </linearGradient>
 
-    <!-- Gauges gradients -->
+    <!-- Gauge Color Bars -->
     <linearGradient id="barCyan" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#06B6D4" />
-      <stop offset="100%" stop-color="#22D3EE" />
+      <stop offset="0%" stop-color="#0891B2" />
+      <stop offset="100%" stop-color="#06B6D4" />
     </linearGradient>
     <linearGradient id="barOrange" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#EA580C" />
-      <stop offset="80%" stop-color="#F97316" />
-      <stop offset="100%" stop-color="#FCD34D" />
+      <stop offset="0%" stop-color="#C2410C" />
+      <stop offset="70%" stop-color="#F97316" />
+      <stop offset="100%" stop-color="#FDE047" />
     </linearGradient>
 
-    <!-- Glow filters -->
-    <filter id="cyanGlow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="3.5" result="blur" />
-      <feFlood flood-color="#06B6D4" flood-opacity="0.75" result="color" />
+    <!-- Neon Glow Filters -->
+    <filter id="cyanGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feFlood flood-color="#06B6D4" flood-opacity="0.6" result="color" />
       <feComposite in="color" in2="blur" operator="in" result="glow" />
       <feMerge>
         <feMergeNode in="glow" />
@@ -87,9 +159,9 @@
       </feMerge>
     </filter>
 
-    <filter id="orangeGlow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="4.5" result="blur" />
-      <feFlood flood-color="#F97316" flood-opacity="0.6" result="color" />
+    <filter id="orangeGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feFlood flood-color="#FF5D00" flood-opacity="0.65" result="color" />
       <feComposite in="color" in2="blur" operator="in" result="glow" />
       <feMerge>
         <feMergeNode in="glow" />
@@ -97,188 +169,189 @@
       </feMerge>
     </filter>
 
-    <!-- CRT Scanline Pattern -->
+    <!-- High-Definition CRT Scanline Pattern -->
     <pattern id="scanlines" width="1000" height="4" patternUnits="userSpaceOnUse">
-      <line x1="0" y1="0" x2="1000" y2="0" stroke="#000000" stroke-width="1.2" opacity="0.22" />
+      <line x1="0" y1="0" x2="1000" y2="0" stroke="#000" stroke-width="1.2" opacity="0.18" />
     </pattern>
-
-    <!-- Clip for shine overlay -->
-    <clipPath id="textClip">
-      <g transform="translate(250, 155) skewX(-12)">
-        <text x="0" y="0" font-family="'Syne', 'Orbitron', 'Inter', -apple-system, sans-serif" font-size="86" font-weight="900" letter-spacing="18">ORASAKA</text>
-      </g>
-    </clipPath>
   </defs>
 
-  <!-- Background -->
-  <rect width="1000" height="280" rx="12" fill="url(#bgGrad)" />
+  <!-- Background Base Canvas -->
+  <rect width="1000" height="280" rx="16" fill="url(#bgGrad)" stroke="#1E293B" stroke-width="2.5" />
 
-  <!-- Grid lines -->
-  <g stroke="#1E293B" stroke-width="0.5" opacity="0.22">
+  <!-- Technical Background Grid -->
+  <g stroke="#1E293B" stroke-width="0.75" opacity="0.35">
     <line x1="0" y1="40" x2="1000" y2="40" />
     <line x1="0" y1="240" x2="1000" y2="240" />
-    <line x1="80" y1="0" x2="80" y2="280" stroke-dasharray="2 10" />
-    <line x1="920" y1="0" x2="920" y2="280" stroke-dasharray="2 10" />
+    <!-- Vertical Dot Guides -->
+    <line x1="80" y1="0" x2="80" y2="280" stroke-dasharray="1 8" />
+    <line x1="220" y1="0" x2="220" y2="280" stroke-dasharray="1 8" />
+    <line x1="840" y1="0" x2="840" y2="280" stroke-dasharray="1 8" stroke-width="0.5" />
+    <line x1="920" y1="0" x2="920" y2="280" stroke-dasharray="1 8" />
   </g>
 
-  <!-- ═══ LEFT SIDE: Rotating orbital reactor core ═══ -->
+  <!-- Subtle Tech Concentric Backdrop Circles -->
+  <circle cx="500" cy="140" r="280" stroke="#1E293B" stroke-width="0.5" fill="none" opacity="0.15" />
+  <circle cx="500" cy="140" r="200" stroke="#1E293B" stroke-width="0.5" fill="none" opacity="0.1" />
+
+  <!-- ═══ LEFT MODULE: CYBERNETIC COGNITIVE REACTOR ═══ -->
   <g transform="translate(140, 140)">
-    <!-- Outer dashed tech circle -->
-    <circle r="60" stroke="#334155" stroke-width="0.8" fill="none" stroke-dasharray="4 12" opacity="0.7">
-      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="40s" repeatCount="indefinite" />
-    </circle>
-    
-    <!-- Outer solid rings with gap cuts -->
-    <circle r="53" stroke="url(#cyanGrad)" stroke-width="1.2" fill="none" stroke-dasharray="140 20 60 20" opacity="0.8" filter="url(#cyanGlow)">
-      <animateTransform attributeName="transform" type="rotate" from="0" to="-360" dur="25s" repeatCount="indefinite" />
-    </circle>
-    
-    <!-- Inner dashed indicator -->
-    <circle r="42" stroke="url(#orangeGrad)" stroke-width="0.6" fill="none" stroke-dasharray="2 6" opacity="0.6">
-      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="12s" repeatCount="indefinite" />
-    </circle>
-    
-    <!-- Outer tech crosshair notches -->
-    <line x1="-70" x2="-62" y1="0" y2="0" stroke="#334155" stroke-width="1" />
-    <line x1="62" x2="70" y1="0" y2="0" stroke="#334155" stroke-width="1" />
-    <line x1="0" x2="0" y1="-70" y2="-62" stroke="#334155" stroke-width="1" />
-    <line x1="0" x2="0" y1="62" y2="70" stroke="#334155" stroke-width="1" />
-    
-    <!-- Corner bracket markings around reactor -->
-    <path d="M-55 -55 L-47 -55 M-55 -55 V-47" stroke="#475569" stroke-width="0.8" opacity="0.5" />
-    <path d="M55 -55 L47 -55 M55 -55 V-47" stroke="#475569" stroke-width="0.8" opacity="0.5" />
-    <path d="M-55 55 L-47 55 M-55 55 V47" stroke="#475569" stroke-width="0.8" opacity="0.5" />
-    <path d="M55 55 L47 55 M55 55 V47" stroke="#475569" stroke-width="0.8" opacity="0.5" />
+    <!-- Tech Outer Crosshair Notches -->
+    <line x1="-72" x2="-64" y1="0" y2="0" stroke="#475569" stroke-width="1.2" />
+    <line x1="64" x2="72" y1="0" y2="0" stroke="#475569" stroke-width="1.2" />
+    <line x1="0" x2="0" y1="-72" y2="-64" stroke="#475569" stroke-width="1.2" />
+    <line x1="0" x2="0" y1="64" y2="72" stroke="#475569" stroke-width="1.2" />
 
-    <!-- Center Reactor Core Diamond/Hexagon shape -->
-    <g>
-      <animateTransform attributeName="transform" type="scale" values="0.96;1.06;0.96" dur="2.5s" repeatCount="indefinite" />
+    <!-- Reactor HUD Outer Bracket Lines -->
+    <path d="M-55 -55 L-45 -55 M-55 -55 V-45" stroke="#334155" stroke-width="1.2" opacity="0.7" />
+    <path d="M55 -55 L45 -55 M55 -55 V-45" stroke="#334155" stroke-width="1.2" opacity="0.7" />
+    <path d="M-55 55 L-45 55 M-55 55 V45" stroke="#334155" stroke-width="1.2" opacity="0.7" />
+    <path d="M55 55 L45 55 M55 55 V45" stroke="#334155" stroke-width="1.2" opacity="0.7" />
+
+    <!-- 1. Outer Tech Ring (Clockwise) -->
+    <circle r="60" stroke="#1E293B" stroke-width="1" fill="none" />
+    <circle r="60" stroke="url(#cyanGrad)" stroke-width="2" fill="none" stroke-dasharray="20 40 80 15 30 15" class="anim-spin-cw" filter="url(#cyanGlow)" />
+    
+    <!-- 2. Mid Detailed Measurement Ring (Counter-Clockwise) -->
+    <circle r="50" stroke="#334155" stroke-width="0.8" fill="none" stroke-dasharray="3 7" opacity="0.6" />
+    <circle r="46" stroke="url(#orangeGrad)" stroke-width="1.5" fill="none" stroke-dasharray="140 20 60 20" class="anim-spin-ccw" filter="url(#orangeGlow)" />
+
+    <!-- 3. Inner Diagnostic Dashed Circle (Clockwise) -->
+    <circle r="36" stroke="#0891B2" stroke-width="0.6" fill="none" stroke-dasharray="2 4" class="anim-spin-fast" />
+
+    <!-- 4. Pulsing Reactor Core Shard (Holographic Gold/Orange Seed) -->
+    <g class="anim-pulse-core">
       <!-- Glow backing -->
-      <path d="M0 -22 L14 -8 L14 8 L0 22 L-14 8 L-14 -8 Z" fill="url(#orangeGrad)" opacity="0.35" filter="url(#orangeGlow)" />
+      <path d="M0 -22 L14 -8 L14 8 L0 22 L-14 8 L-14 -8 Z" fill="url(#orangeGrad)" opacity="0.4" filter="url(#orangeGlow)" />
       <!-- Sharp central shard -->
-      <path d="M0 -18 L11 -6 L11 6 L0 18 L-11 6 L-11 -6 Z" fill="url(#metallicGold)" opacity="0.95" />
-      <path d="M0 -18 L0 18" stroke="#FFFFFF" stroke-width="0.5" opacity="0.5" />
-      <path d="-11 0 H11" stroke="#FFFFFF" stroke-width="0.5" opacity="0.5" />
+      <path d="M0 -18 L11 -6 L11 6 L0 18 L-11 6 L-11 -6 Z" fill="url(#goldGrad)" opacity="0.95" stroke="#FFFFFF" stroke-width="0.5" />
+      <!-- Center Core Spark lines -->
+      <line x1="0" y1="-18" x2="0" y2="18" stroke="#FFFFFF" stroke-width="0.5" opacity="0.6" />
+      <line x1="-11" y1="0" x2="11" y2="0" stroke="#FFFFFF" stroke-width="0.5" opacity="0.6" />
     </g>
 
-    <!-- Orbiting core particles -->
-    <!-- Particle 1 (cyan) -->
-    <g>
-      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="6s" repeatCount="indefinite" />
-      <circle cx="46" cy="0" r="3.5" fill="#22D3EE" filter="url(#cyanGlow)" />
+    <!-- Orbiting Charged Core Particles -->
+    <!-- Particle Alpha (Cyan) -->
+    <g class="anim-spin-fast">
+      <circle cx="53" cy="0" r="4.2" fill="#00F2FE" filter="url(#cyanGlow)" />
     </g>
-    <!-- Particle 2 (orange - offset) -->
-    <g>
-      <animateTransform attributeName="transform" type="rotate" from="180" to="540" dur="4s" repeatCount="indefinite" />
-      <circle cx="32" cy="0" r="2.5" fill="#FB923C" filter="url(#orangeGlow)" />
+    <!-- Particle Beta (Orange - Reverse Orbit) -->
+    <g class="anim-spin-ccw" style="animation-duration: 6s;">
+      <circle cx="38" cy="0" r="3.2" fill="#FF5D00" filter="url(#orangeGlow)" />
     </g>
   </g>
 
-  <!-- ═══ CENTER: WORDMARK & TAGLINE ═══ -->
-  <g transform="translate(250, 155) skewX(-12)">
-    <!-- Base gold text (Spelled correctly as ORASAKA) -->
-    <text x="0" y="0" font-family="'Syne', 'Orbitron', 'Inter', -apple-system, sans-serif" font-size="86" font-weight="900" letter-spacing="18" fill="url(#goldGrad)" class="font-wordmark">
-      ORASAKA
-      <animate attributeName="opacity" values="0.99;0.99;0.75;0.99;0.82;0.99;0.99;0.4;0.99;0.88;0.99" keyTimes="0;0.4;0.41;0.42;0.43;0.44;0.8;0.81;0.82;0.83;1" dur="7s" repeatCount="indefinite" />
-    </text>
+  <!-- ═══ CENTER BRANDING: WORDMARK & TAGLINE ═══ -->
+  <!-- Glitched & Skewed Text Wrapper -->
+  <g transform="translate(250, 155) skewX(-12)" class="anim-glitch-text">
+    <!-- Drop Shadow Glowing Backdrop -->
+    <text x="0" y="0" class="font-wordmark" font-size="88" fill="#06B6D4" opacity="0.25" letter-spacing="18" filter="url(#cyanGlow)">ORASAKA</text>
     
-    <!-- Neon strike cut (diagonal slash running directly through text) -->
-    <line x1="-30" x2="520" y1="-28" y2="-28" stroke="url(#slashGrad)" stroke-width="2.5" filter="url(#cyanGlow)" stroke-dasharray="120 430">
-      <animate attributeName="stroke-dashoffset" values="550;-550" dur="3.5s" repeatCount="indefinite" />
+    <!-- Sharp Front Metallic Gold Wordmark -->
+    <text x="0" y="0" class="font-wordmark" font-size="88" fill="url(#goldGrad)" letter-spacing="18" stroke="#78350F" stroke-width="0.75">ORASAKA</text>
+  </g>
+
+  <!-- Glowing Laser Knife Slice Strike (Sweeps through the Wordmark) -->
+  <g transform="translate(250, 155) skewX(-12)">
+    <line x1="-50" x2="550" y1="-28" y2="-28" stroke="url(#slashGrad)" stroke-width="3" filter="url(#cyanGlow)" stroke-dasharray="140 450">
+      <animate attributeName="stroke-dashoffset" values="590;-590" dur="4.2s" repeatCount="indefinite" />
     </line>
   </g>
 
-  <!-- Animated shine overlay (applied to text clip path) -->
-  <rect width="1000" height="280" fill="url(#shine)" clip-path="url(#textClip)" />
-
-  <!-- Tagline -->
-  <text x="254" y="195" font-family="'Orbitron', 'Inter', -apple-system, sans-serif" font-size="11" font-weight="700" fill="#38BDF8" letter-spacing="5.5" class="font-tagline">
-    NATIVE AI ENGINE
-    <animate attributeName="opacity" values="0.9;1;0.9" dur="3s" repeatCount="indefinite" />
-  </text>
-
-  <!-- ═══ BOTTOM HUD LAYER ═══ -->
-  <!-- Version badge -->
-  <g transform="translate(254, 215)">
-    <rect width="66" height="18" rx="3" fill="#1E293B" stroke="#334155" stroke-width="0.5" />
-    <text x="33" y="12" font-family="monospace" font-size="8.5" font-weight="700" fill="#F5C037" text-anchor="middle" class="font-hud">v1.0.0-DEV</text>
+  <!-- Tagline Frame & Text -->
+  <g transform="translate(254, 194)">
+    <line x1="0" y1="0" x2="400" y2="0" stroke="#1E293B" stroke-width="1" />
+    <!-- Glowing Accent Tick -->
+    <rect x="0" y="-1" width="16" height="2" fill="#00F2FE" filter="url(#cyanGlow)" />
+    <text x="24" y="11" class="font-tagline" font-size="11.5" fill="#38BDF8" letter-spacing="5.5">
+      NATIVE AI ORCHESTRATION ENGINE
+      <animate attributeName="fill" values="#38BDF8;#E0F2FE;#38BDF8" dur="4s" repeatCount="indefinite" />
+    </text>
   </g>
 
-  <!-- Status dot + text -->
-  <g transform="translate(332, 215)">
-    <circle cx="6" cy="9" r="3" fill="#22C55E">
-      <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
-    </circle>
-    <text x="16" y="12" font-family="monospace" font-size="8.5" font-weight="700" fill="#22C55E" class="font-hud">ONLINE // CONTEXT STABLE</text>
+  <!-- ═══ BOTTOM HUD INFORMATION LAYER ═══ -->
+  <!-- System Version Badge -->
+  <g transform="translate(254, 216)">
+    <rect width="78" height="18" rx="3.5" fill="#0F172A" stroke="#334155" stroke-width="0.8" />
+    <text x="39" y="12" class="font-hud" font-size="9" font-weight="700" fill="#FDE047" text-anchor="middle">v1.0.0-DEV</text>
   </g>
 
-  <!-- Left/Right HUD Gauges -->
-  <g transform="translate(254, 244)">
-    <!-- Label for bar 1 -->
-    <text x="0" y="7" font-family="monospace" font-size="8" font-weight="600" fill="#64748B" class="font-hud">SYS.PWR</text>
-    
-    <!-- Segmented Gauge 1 (power) -->
-    <g transform="translate(50, 0)">
-      <rect x="0" y="0" width="130" height="8" rx="2" fill="#1E293B" />
-      <rect x="0" y="0" width="130" height="8" rx="2" fill="url(#barCyan)">
-        <animate attributeName="width" values="0;130;130;0" keyTimes="0;0.35;0.9;1" dur="6s" repeatCount="indefinite" />
-      </rect>
+  <!-- Reactor Online State & Pulse Dot -->
+  <g transform="translate(344, 216)">
+    <circle cx="6" cy="9" r="3.5" fill="#22C55E" class="anim-flash" />
+    <!-- Halved Glow Backing -->
+    <circle cx="6" cy="9" r="6" fill="#22C55E" opacity="0.3" class="anim-flash" />
+    <text x="18" y="12" class="font-hud" font-size="9.5" fill="#22C55E" letter-spacing="0.5">SYS.ONLINE // CTX.ACTIVE</text>
+  </g>
+
+  <!-- Dynamic HUD Metrics Gauges -->
+  <g transform="translate(254, 245)">
+    <!-- Metric 1: System Power -->
+    <text x="0" y="7" class="font-hud" font-size="8.5" fill="#64748B">SYS.PWR</text>
+    <g transform="translate(52, 0)">
+      <rect width="130" height="8" rx="2" fill="#0F172A" stroke="#1E293B" stroke-width="0.5" />
+      <rect width="85" height="8" rx="2" fill="url(#barCyan)" class="anim-bar-1" />
+      <!-- Grid ticks over bar -->
+      <line x1="26" y1="0" x2="26" y2="8" stroke="#090D1A" stroke-width="0.75" />
+      <line x1="52" y1="0" x2="52" y2="8" stroke="#090D1A" stroke-width="0.75" />
+      <line x1="78" y1="0" x2="78" y2="8" stroke="#090D1A" stroke-width="0.75" />
+      <line x1="104" y1="0" x2="104" y2="8" stroke="#090D1A" stroke-width="0.75" />
     </g>
 
-    <!-- Label for bar 2 -->
-    <text x="200" y="7" font-family="monospace" font-size="8" font-weight="600" fill="#64748B" class="font-hud">CTX.MAX</text>
-
-    <!-- Segmented Gauge 2 (context) -->
-    <g transform="translate(250, 0)">
-      <rect x="0" y="0" width="130" height="8" rx="2" fill="#1E293B" />
-      <rect x="0" y="0" width="130" height="8" rx="2" fill="url(#barOrange)">
-        <animate attributeName="width" values="0;40;130;130;0" keyTimes="0;0.2;0.5;0.9;1" dur="6s" repeatCount="indefinite" />
-      </rect>
+    <!-- Metric 2: Context Max -->
+    <text x="200" y="7" class="font-hud" font-size="8.5" fill="#64748B">CTX.MAX</text>
+    <g transform="translate(252, 0)">
+      <rect width="130" height="8" rx="2" fill="#0F172A" stroke="#1E293B" stroke-width="0.5" />
+      <rect width="105" height="8" rx="2" fill="url(#barOrange)" class="anim-bar-2" />
+      <!-- Grid ticks over bar -->
+      <line x1="26" y1="0" x2="26" y2="8" stroke="#090D1A" stroke-width="0.75" />
+      <line x1="52" y1="0" x2="52" y2="8" stroke="#090D1A" stroke-width="0.75" />
+      <line x1="78" y1="0" x2="78" y2="8" stroke="#090D1A" stroke-width="0.75" />
+      <line x1="104" y1="0" x2="104" y2="8" stroke="#090D1A" stroke-width="0.75" />
     </g>
 
-    <!-- Flashing "MAX" badge -->
-    <g transform="translate(390, 8)" class="font-hud">
-      <rect x="0" y="-8" width="28" height="10" rx="1.5" fill="#EF4444">
-        <animate attributeName="fill" values="#EF4444;#F59E0B;#EF4444" dur="0.6s" repeatCount="indefinite" />
-      </rect>
-      <text x="14" y="0" font-family="monospace" font-size="7.5" font-weight="900" fill="#FFF" text-anchor="middle">MAX</text>
+    <!-- Context Warnings Indicator -->
+    <g transform="translate(392, 8)">
+      <rect x="0" y="-8" width="30" height="10" rx="2" fill="#EF4444" class="anim-flash" style="animation-duration: 0.8s;" />
+      <text x="15" y="0" class="font-hud" font-size="7.5" font-weight="900" fill="#FFFFFF" text-anchor="middle">MAX</text>
     </g>
   </g>
 
-  <!-- ═══ RIGHT SIDE: TECH MONITOR PANEL ═══ -->
+  <!-- ═══ RIGHT MODULE: REAL-TIME RADAR DIAGNOSTIC MONITOR ═══ -->
   <g transform="translate(860, 130)">
-    <!-- Circular diagnostic radar -->
-    <g transform="translate(0, 0)">
-      <circle r="34" stroke="#1E293B" stroke-width="1" fill="none" />
-      <circle r="26" stroke="#334155" stroke-width="0.8" fill="none" stroke-dasharray="4 6" opacity="0.7">
-        <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="40s" repeatCount="indefinite" />
-      </circle>
-      <circle r="18" stroke="url(#cyanGrad)" stroke-width="1.2" fill="none" stroke-dasharray="100 20" opacity="0.8" filter="url(#cyanGlow)">
-        <animateTransform attributeName="transform" type="rotate" from="0" to="-360" dur="25s" repeatCount="indefinite" />
-      </circle>
-      <circle r="4" fill="#F5C037" filter="url(#orangeGlow)" />
-      
-      <!-- Sweeper line -->
-      <line x1="0" y1="0" x2="0" y2="-34" stroke="#22D3EE" stroke-width="1.5" opacity="0.6">
-        <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="4s" repeatCount="indefinite" />
-      </line>
-    </g>
+    <!-- Radar Grid Circles -->
+    <circle r="36" stroke="#1E293B" stroke-width="0.75" fill="none" />
+    <circle r="26" stroke="#1E293B" stroke-width="0.5" stroke-dasharray="2 4" fill="none" />
+    <circle r="14" stroke="#1E293B" stroke-width="0.5" fill="none" />
+    
+    <!-- Crosshairs -->
+    <line x1="-39" x2="39" y1="0" y2="0" stroke="#1E293B" stroke-width="0.5" stroke-dasharray="2 2" />
+    <line x1="0" x2="0" y1="-39" y2="39" stroke="#1E293B" stroke-width="0.5" stroke-dasharray="2 2" />
 
-    <!-- Side Data values -->
-    <g transform="translate(54, -20)" class="font-hud">
-      <text x="0" y="0" font-family="monospace" font-size="8" font-weight="600" fill="#64748B">MODEL: L3-8B</text>
-      <text x="0" y="11" font-family="monospace" font-size="8" font-weight="700" fill="#E2B13C">LAT: 12.5ms</text>
-      <text x="0" y="22" font-family="monospace" font-size="8" font-weight="600" fill="#22C55E">MEM.POOL: OK</text>
-      <text x="0" y="33" font-family="monospace" font-size="8" font-weight="600" fill="#38BDF8">V-THREADS</text>
+    <!-- Glowing Active Detection Rings -->
+    <circle r="36" stroke="url(#cyanGrad)" stroke-width="1.2" fill="none" stroke-dasharray="60 140 20" opacity="0.75" class="anim-spin-cw" style="animation-duration: 12s;" filter="url(#cyanGlow)" />
+    <circle r="20" stroke="url(#orangeGrad)" stroke-width="1" fill="none" stroke-dasharray="30 80" opacity="0.7" class="anim-spin-ccw" style="animation-duration: 8s;" filter="url(#orangeGlow)" />
+
+    <!-- Centered Target Signal Dot -->
+    <circle cx="0" cy="0" r="3" fill="#E2B13C" filter="url(#orangeGlow)" />
+
+    <!-- Scanning Radar Sweeper Beam Line -->
+    <line x1="0" y1="0" x2="0" y2="-36" stroke="#22D3EE" stroke-width="1.8" class="anim-radar" opacity="0.65" />
+
+    <!-- Diagnostic Readout Statistics -->
+    <g transform="translate(56, -18)" class="font-hud" font-size="8" font-weight="700">
+      <text x="0" y="0" fill="#64748B">MODEL: <tspan fill="#38BDF8">L3-8B</tspan></text>
+      <text x="0" y="11" fill="#64748B">LATENCY: <tspan fill="#FDE047">4.8ms</tspan></text>
+      <text x="0" y="22" fill="#64748B">MEM.POOL: <tspan fill="#22C55E">OK</tspan></text>
+      <text x="0" y="33" fill="#64748B">V-THREADS: <tspan fill="#06B6D4">256</tspan></text>
     </g>
   </g>
 
-  <!-- Corner accent marks -->
-  <path d="M20 20 H40 M20 20 V40" stroke="#334155" stroke-width="0.8" opacity="0.4" />
-  <path d="M980 20 H960 M980 20 V40" stroke="#334155" stroke-width="0.8" opacity="0.4" />
-  <path d="M20 260 H40 M20 260 V240" stroke="#334155" stroke-width="0.8" opacity="0.4" />
-  <path d="M980 260 H960 M980 260 V240" stroke="#334155" stroke-width="0.8" opacity="0.4" />
+  <!-- Technical Corner Accent Bracket Markings -->
+  <path d="M22 22 H42 M22 22 V42" stroke="#475569" stroke-width="1" opacity="0.5" />
+  <path d="M978 22 H958 M978 22 V42" stroke="#475569" stroke-width="1" opacity="0.5" />
+  <path d="M22 258 H42 M22 258 V238" stroke="#475569" stroke-width="1" opacity="0.5" />
+  <path d="M978 258 H958 M978 258 V238" stroke="#475569" stroke-width="1" opacity="0.5" />
 
-  <!-- Scanline Screen Filter Overlay -->
-  <rect width="1000" height="280" fill="url(#scanlines)" class="scanlines-overlay" />
+  <!-- CRT Screen Filter Scanline Overlay -->
+  <rect width="1000" height="280" rx="16" fill="url(#scanlines)" pointer-events="none" mix-blend-mode="overlay" />
 </svg>
