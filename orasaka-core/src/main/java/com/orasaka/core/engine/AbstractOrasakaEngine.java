@@ -6,18 +6,21 @@ import com.orasaka.core.support.*;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.audio.tts.TextToSpeechModel;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.image.ImageModel;
+import org.springframework.ai.image.ImagePrompt;
+import org.springframework.ai.openai.OpenAiImageOptions;
 import org.springframework.context.ApplicationEventPublisher;
 import reactor.core.publisher.Flux;
 
 public abstract sealed class AbstractOrasakaEngine permits OrasakaEngine {
 
-  private static final org.slf4j.Logger logger =
-      org.slf4j.LoggerFactory.getLogger(AbstractOrasakaEngine.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractOrasakaEngine.class);
 
   final EngineModelRegistry registry;
   final List<OrasakaContextInterceptor> interceptors;
@@ -71,15 +74,9 @@ public abstract sealed class AbstractOrasakaEngine permits OrasakaEngine {
 
   public OrasakaImageResponse generateImage(OrasakaImageRequest request) {
     var model = registry.getActiveImageModel();
-    org.springframework.ai.openai.OpenAiImageOptions executionOptions =
-        org.springframework.ai.openai.OpenAiImageOptions.builder()
-            .model("stable-diffusion")
-            .N(1)
-            .height(512)
-            .width(512)
-            .build();
-    org.springframework.ai.image.ImagePrompt prompt =
-        new org.springframework.ai.image.ImagePrompt(request.prompt(), executionOptions);
+    OpenAiImageOptions executionOptions =
+        OpenAiImageOptions.builder().model("stable-diffusion").N(1).height(512).width(512).build();
+    ImagePrompt prompt = new ImagePrompt(request.prompt(), executionOptions);
     var response = model.call(prompt);
 
     var generation = response.getResult();
