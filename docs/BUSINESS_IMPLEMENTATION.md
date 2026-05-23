@@ -368,7 +368,7 @@ public record OrasakaChatRequest(
     return List.copyOf(container);
   }
 }
-
+```
 ---
 
 ## 🎙️ Functional Purity vs Legacy Procedural Code
