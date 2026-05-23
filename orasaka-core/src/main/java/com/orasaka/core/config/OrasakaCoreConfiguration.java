@@ -1,6 +1,9 @@
 package com.orasaka.core.config;
 
 import com.orasaka.core.engine.OrasakaEngine;
+import com.orasaka.core.graph.OrasakaAdminRegistry;
+import com.orasaka.core.graph.OrasakaFeaturesProperties;
+import com.orasaka.core.graph.OrasakaGraphEngine;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -296,5 +299,60 @@ public class OrasakaCoreConfiguration {
             orchEnabled, userContext, systemContext, refiner, router);
 
     return new CoreProperties(defaultProvider, overrides, rag, mcp, orchestration);
+  }
+
+  @Bean
+  public OrasakaFeaturesProperties featuresProperties(Environment env) {
+    Map<String, OrasakaFeaturesProperties.FeatureConfig> features = new HashMap<>();
+
+    List.of("orasaka.core.chat.image", "orasaka.core.chat.speech", "orasaka.core.chat.text")
+        .forEach(
+            id -> {
+              String prefix = "orasaka.features." + id + ".";
+              Boolean enabled = env.getProperty(prefix + "enabled", Boolean.class, true);
+              String label = env.getProperty(prefix + "label");
+              String icon = env.getProperty(prefix + "icon");
+              String uriPath = env.getProperty(prefix + "uriPath");
+              String httpMethod = env.getProperty(prefix + "httpMethod");
+              String payloadTemplate = env.getProperty(prefix + "payloadTemplate");
+
+              if (id.equals("orasaka.core.chat.image")) {
+                if (label == null) label = "Generate Image";
+                if (icon == null) icon = "image";
+                if (uriPath == null) uriPath = "/api/v1/chat/image";
+                if (httpMethod == null) httpMethod = "POST";
+                if (payloadTemplate == null) payloadTemplate = "{\"prompt\":\"${prompt}\"}";
+              } else if (id.equals("orasaka.core.chat.speech")) {
+                if (label == null) label = "Text to Speech";
+                if (icon == null) icon = "mic";
+                if (uriPath == null) uriPath = "/api/v1/chat/speech";
+                if (httpMethod == null) httpMethod = "POST";
+                if (payloadTemplate == null) payloadTemplate = "{\"text\":\"${text}\"}";
+              } else { // orasaka.core.chat.text
+                if (label == null) label = "Text Chat";
+                if (icon == null) icon = "chat";
+                if (uriPath == null) uriPath = "/api/v1/chat/stream";
+                if (httpMethod == null) httpMethod = "POST";
+                if (payloadTemplate == null) payloadTemplate = "{\"prompt\":\"${prompt}\"}";
+              }
+
+              features.put(
+                  id,
+                  new OrasakaFeaturesProperties.FeatureConfig(
+                      enabled, label, icon, uriPath, httpMethod, payloadTemplate));
+            });
+
+    return new OrasakaFeaturesProperties(features);
+  }
+
+  @Bean
+  public OrasakaAdminRegistry adminRegistry() {
+    return new OrasakaAdminRegistry();
+  }
+
+  @Bean
+  public OrasakaGraphEngine graphEngine(
+      OrasakaFeaturesProperties featuresProperties, OrasakaAdminRegistry adminRegistry) {
+    return new OrasakaGraphEngine(featuresProperties, adminRegistry);
   }
 }
