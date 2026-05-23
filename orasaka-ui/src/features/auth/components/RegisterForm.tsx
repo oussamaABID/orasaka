@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useMutation } from "@tanstack/react-query";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/Input";
@@ -43,15 +44,58 @@ interface RegisterFormProps {
 export function RegisterForm({ onSuccess, onError }: RegisterFormProps) {
   const router = useRouter();
 
-  // Form fields
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [username, setUsername] = React.useState("");
   const [language, setLanguage] = React.useState("en");
   const [confirmPassword, setConfirmPassword] = React.useState("");
-  const [isLoading, setIsLoading] = React.useState(false);
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const registerMutation = useMutation<
+    unknown,
+    { status: number; error?: string },
+    Record<string, string>
+  >({
+    mutationFn: async (payload: Record<string, string>) => {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw { status: res.status, error: data.error };
+      }
+      return data;
+    },
+    onSuccess: async (_, variables) => {
+      onSuccess("Account created! Signing you in…");
+      // Auto-login after successful registration
+      const signInRes = await signIn("credentials", {
+        email: variables.email,
+        password: variables.password,
+        redirect: false,
+      });
+      if (signInRes?.ok) {
+        router.push("/");
+      } else {
+        // Fallback — redirect to login so user can sign in manually
+        onSuccess("Account created! Redirecting to login…");
+        setTimeout(() => router.push("/login"), 1500);
+      }
+    },
+    onError: (err) => {
+      if (err.status === 409) {
+        onError(err.error || "An account with this email already exists.");
+      } else if (err.error) {
+        onError(err.error);
+      } else {
+        onError("Registration failed. Please try again.");
+      }
+    },
+  });
+
+  const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     onError("");
     onSuccess("");
@@ -70,46 +114,12 @@ export function RegisterForm({ onSuccess, onError }: RegisterFormProps) {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: username.trim(),
-          email,
-          password,
-          language,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.status === 201) {
-        onSuccess("Account created! Signing you in…");
-        // Auto-login after successful registration
-        const signInRes = await signIn("credentials", {
-          email,
-          password,
-          redirect: false,
-        });
-        if (signInRes?.ok) {
-          router.push("/");
-        } else {
-          // Fallback — redirect to login so user can sign in manually
-          onSuccess("Account created! Redirecting to login…");
-          setTimeout(() => router.push("/login"), 1500);
-        }
-      } else if (res.status === 409) {
-        onError(data.error || "An account with this email already exists.");
-      } else {
-        onError(data.error || "Registration failed. Please try again.");
-      }
-    } catch {
-      onError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    registerMutation.mutate({
+      username: username.trim(),
+      email,
+      password,
+      language,
+    });
   };
 
   return (
@@ -193,9 +203,9 @@ export function RegisterForm({ onSuccess, onError }: RegisterFormProps) {
         id="btn-register-submit"
         type="submit"
         className="w-full"
-        disabled={isLoading}
+        disabled={registerMutation.isPending}
       >
-        {isLoading ? "Creating account…" : "Create Account"}
+        {registerMutation.isPending ? "Creating account…" : "Create Account"}
       </Button>
       <p className="text-center text-xs text-zinc-500 dark:text-zinc-400">
         By registering, you accept the platform terms of use.
