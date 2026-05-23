@@ -80,14 +80,14 @@ orasaka:
       system-context:
         enabled: ${ORASAKA_SYSTEM_CONTEXT_ENABLED:true}
       refiner:
-        enabled: ${ORASAKA_REFINER_ENABLED:true}
+        enabled: ${ORASAKA_REFINER_ENABLED:false}
         provider: ${ORASAKA_REFINER_PROVIDER:openai}
         model: ${ORASAKA_REFINER_MODEL:gpt-4-turbo}
         temperature: ${ORASAKA_REFINER_TEMPERATURE:0.2}
       router:
         enabled: true
         provider: ${ORASAKA_ROUTER_PROVIDER:ollama}
-        model: ${ORASAKA_ROUTER_MODEL:llama3}
+        model: ${ORASAKA_ROUTER_MODEL:llama3:8b}
         temperature: ${ORASAKA_ROUTER_TEMPERATURE:0.0}
     overrides:
       ollama:

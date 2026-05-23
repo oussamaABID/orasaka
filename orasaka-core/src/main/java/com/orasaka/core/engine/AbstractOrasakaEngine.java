@@ -14,6 +14,9 @@ import reactor.core.publisher.Flux;
 
 public abstract sealed class AbstractOrasakaEngine permits OrasakaEngine {
 
+  private static final org.slf4j.Logger logger =
+      org.slf4j.LoggerFactory.getLogger(AbstractOrasakaEngine.class);
+
   protected final EngineModelRegistry registry;
   protected final List<OrasakaContextInterceptor> interceptors;
   protected final OrasakaOrchestrationPipeline pipeline;
@@ -36,7 +39,19 @@ public abstract sealed class AbstractOrasakaEngine permits OrasakaEngine {
 
   public OrasakaChatResponse chat(OrasakaChatRequest request) {
     var context = EnginePipelineBridge.compileContext(request, pipeline, registry, interceptors);
-    var response = registry.getChatModel(context.provider()).call(context.toPrompt());
+    ChatResponse response;
+    try {
+      response = registry.getChatModel(context.provider()).call(context.toPrompt());
+    } catch (IllegalStateException e) {
+      logger.warn(
+          "Model '{}' failed tool execution activation, falling back to non-tool text inference.",
+          context.provider(),
+          e);
+      response =
+          registry
+              .getChatModel(context.provider())
+              .call(EnginePipelineBridge.removeTools(context.toPrompt()));
+    }
     var text = response.getResult().getOutput().getText();
 
     interceptors.forEach(i -> i.postProcess(request, context.promptText(), text));

@@ -64,4 +64,28 @@ final class EnginePipelineBridge {
       default -> new UserMessage(msg.content());
     };
   }
+
+  static Prompt removeTools(Prompt prompt) {
+    ChatOptions options = prompt.getOptions();
+    if (options == null) {
+      return prompt;
+    }
+    ChatOptions cleanOptions =
+        switch (options) {
+          case org.springframework.ai.ollama.api.OllamaChatOptions ollama ->
+              org.springframework.ai.ollama.api.OllamaChatOptions.builder()
+                  .model(ollama.getModel())
+                  .temperature(ollama.getTemperature())
+                  .numPredict(ollama.getNumPredict())
+                  .build();
+          case org.springframework.ai.openai.OpenAiChatOptions openai ->
+              org.springframework.ai.openai.OpenAiChatOptions.builder()
+                  .model(openai.getModel())
+                  .temperature(openai.getTemperature())
+                  .maxTokens(openai.getMaxTokens())
+                  .build();
+          default -> options;
+        };
+    return new Prompt(prompt.getInstructions(), cleanOptions);
+  }
 }

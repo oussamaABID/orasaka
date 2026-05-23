@@ -28,7 +28,29 @@ final class EngineStreamBridge {
           var model = registry.getChatModel(context.provider());
           var responseBuilder = new StringBuilder();
 
-          return model.stream(context.toPrompt())
+          Flux<org.springframework.ai.chat.model.ChatResponse> streamFlux;
+          try {
+            streamFlux = model.stream(context.toPrompt());
+          } catch (IllegalStateException e) {
+            org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EngineStreamBridge.class);
+            logger.warn(
+                "Model '{}' stream failed tool execution activation, falling back to non-tool text inference stream.",
+                context.provider(),
+                e);
+            streamFlux = model.stream(EnginePipelineBridge.removeTools(context.toPrompt()));
+          }
+
+          return streamFlux
+              .onErrorResume(
+                  IllegalStateException.class,
+                  ex -> {
+                    org.slf4j.Logger logger =
+                        org.slf4j.LoggerFactory.getLogger(EngineStreamBridge.class);
+                    logger.warn(
+                        "Asynchronous tool execution activation failure, falling back to non-tool text inference stream.",
+                        ex);
+                    return model.stream(EnginePipelineBridge.removeTools(context.toPrompt()));
+                  })
               .map(
                   chatResponse -> {
                     String chunk = chatResponse.getResult().getOutput().getText();

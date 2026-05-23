@@ -41,7 +41,10 @@ const fetchOperationGraph = async (): Promise<OperationNode[]> => {
   });
   if (!response.ok) throw new Error("Failed to fetch Operation Graph");
   const result = await response.json();
-  return result.data.operationGraph.nodes;
+  if (result.errors && result.errors.length > 0) {
+    throw new Error(result.errors[0].message || "GraphQL Query Error");
+  }
+  return result.data?.operationGraph?.nodes || [];
 };
 
 export default function PlaygroundPage() {
@@ -86,10 +89,22 @@ export default function PlaygroundPage() {
               <div className="flex items-center justify-center p-12">
                 <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
               </div>
+            ) : !Array.isArray(nodes) || nodes.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-12 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-900/50 space-y-4">
+                <Cpu className="h-12 w-12 text-zinc-400 dark:text-zinc-600 animate-pulse" />
+                <div className="text-center space-y-1">
+                  <p className="font-semibold text-zinc-800 dark:text-zinc-200">
+                    No Active Capabilities
+                  </p>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                    The operation graph returned an empty or invalid dataset configuration.
+                  </p>
+                </div>
+              </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {nodes
-                  .filter((n) => n.state.type !== "INVISIBLE")
+                  .filter((n) => n && n.state && n.state.type !== "INVISIBLE")
                   .map((node) => (
                     <PlaygroundNodeCard key={node.id} node={node} />
                   ))}
