@@ -1,4 +1,4 @@
-package com.orasaka.core.rag;
+package com.orasaka.core.interceptors.rag;
 
 import java.util.List;
 import java.util.Map;

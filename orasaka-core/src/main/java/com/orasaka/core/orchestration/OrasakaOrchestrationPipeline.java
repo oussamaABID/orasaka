@@ -60,20 +60,21 @@ public class OrasakaOrchestrationPipeline {
       if (context.preferences() != null) {
         userMetadata.putAll(context.preferences());
       }
-      if (context.authorities() != null) {
-        userMetadata.put("authorities", context.authorities());
+      if (context.roles() != null) {
+        userMetadata.put("roles", context.roles());
       }
     }
 
     PromptContext promptContext = new PromptContext(rawUserQuery, userMetadata);
-    for (PromptInterceptor interceptor : interceptors) {
-      try {
-        interceptor.intercept(promptContext);
-      } catch (Exception e) {
-        logger.error(
-            "Error executing prompt interceptor '{}'", interceptor.getClass().getName(), e);
-      }
-    }
+    interceptors.forEach(
+        interceptor -> {
+          try {
+            interceptor.intercept(promptContext);
+          } catch (Exception e) {
+            logger.error(
+                "Error executing prompt interceptor '{}'", interceptor.getClass().getName(), e);
+          }
+        });
     return promptContext;
   }
 }

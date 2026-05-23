@@ -1,13 +1,13 @@
 package com.orasaka.core.client;
 
 import com.orasaka.core.engine.AbstractOrasakaEngine;
+import com.orasaka.core.interceptors.rag.OrasakaKnowledgeService;
+import com.orasaka.core.interceptors.tool.OrasakaToolRegistry;
 import com.orasaka.core.model.OrasakaChatRequest;
 import com.orasaka.core.model.OrasakaChatResponse;
 import com.orasaka.core.model.OrasakaImageRequest;
 import com.orasaka.core.model.OrasakaImageResponse;
 import com.orasaka.core.model.OrasakaSpeechRequest;
-import com.orasaka.core.rag.OrasakaKnowledgeService;
-import com.orasaka.core.tool.OrasakaToolRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

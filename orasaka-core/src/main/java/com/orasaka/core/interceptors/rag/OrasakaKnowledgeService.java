@@ -1,4 +1,4 @@
-package com.orasaka.core.rag;
+package com.orasaka.core.interceptors.rag;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,7 +34,9 @@ public class OrasakaKnowledgeService {
    * @return Formatted context string.
    */
   public String retrieveContext(String query, int topK) {
-    if (vectorStore == null) return "";
+    if (vectorStore == null) {
+      return "";
+    }
 
     List<Document> documents =
         vectorStore.similaritySearch(SearchRequest.builder().query(query).topK(topK).build());

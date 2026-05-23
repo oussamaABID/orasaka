@@ -1,4 +1,4 @@
-package com.orasaka.core.rag;
+package com.orasaka.core.interceptors.rag;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;

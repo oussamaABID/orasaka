@@ -31,16 +31,18 @@ public class SystemContextInjector implements PromptInterceptor {
   @Override
   public void intercept(PromptContext context) {
     logger.debug("Injecting system context signals. Provider count: {}", providers.size());
-    for (SystemContextProvider provider : providers) {
-      try {
-        Map<String, Object> data = provider.getSystemContext();
-        if (data != null) {
-          context.systemMetadata().putAll(data);
-        }
-      } catch (Exception e) {
-        logger.error("Error invoking SystemContextProvider: {}", provider.getClass().getName(), e);
-      }
-    }
+    providers.forEach(
+        provider -> {
+          try {
+            Map<String, Object> data = provider.getSystemContext();
+            if (data != null) {
+              context.systemMetadata().putAll(data);
+            }
+          } catch (Exception e) {
+            logger.error(
+                "Error invoking SystemContextProvider: {}", provider.getClass().getName(), e);
+          }
+        });
   }
 
   @Override

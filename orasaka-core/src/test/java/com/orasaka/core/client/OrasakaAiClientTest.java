@@ -5,10 +5,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.orasaka.core.engine.OrasakaEngine;
+import com.orasaka.core.interceptors.rag.OrasakaKnowledgeService;
+import com.orasaka.core.interceptors.tool.OrasakaToolRegistry;
 import com.orasaka.core.model.OrasakaChatRequest;
 import com.orasaka.core.model.OrasakaChatResponse;
-import com.orasaka.core.rag.OrasakaKnowledgeService;
-import com.orasaka.core.tool.OrasakaToolRegistry;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

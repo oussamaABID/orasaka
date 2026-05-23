@@ -1,4 +1,4 @@
-package com.orasaka.core.mcp;
+package com.orasaka.core.interceptors.mcp;
 
 import java.util.List;
 

@@ -10,4 +10,12 @@ import java.util.Map;
  * @param metadata Metadata associated with the response (e.g., provider name, token counts).
  */
 public record OrasakaChatResponse(
-    String content, String conversationId, Map<String, Object> metadata) {}
+    String content, String conversationId, Map<String, Object> metadata) {
+  /** Compact constructor enforcing defensive copies. */
+  public OrasakaChatResponse {
+    if (content == null) {
+      content = "";
+    }
+    metadata = (metadata == null) ? java.util.Map.of() : java.util.Map.copyOf(metadata);
+  }
+}

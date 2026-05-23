@@ -1,6 +1,5 @@
 package com.orasaka.core.context;
 
-import com.orasaka.core.identity.OrasakaAuthority;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -14,40 +13,35 @@ import java.util.Set;
  * @param userId The unique identifier of the user making the request.
  * @param conversationId The session identifier for conversation thread state mapping.
  * @param preferences A map of user-specific execution overrides (e.g. TTS voice models).
- * @param authorities The resolved security roles tied to the user session.
- * @see com.orasaka.core.identity.OrasakaAuthority
+ * @param roles The resolved security roles tied to the user session.
  */
 public record OrasakaContext(
-    String userId,
-    String conversationId,
-    Map<String, Object> preferences,
-    Set<OrasakaAuthority> authorities) {
+    String userId, String conversationId, Map<String, Object> preferences, Set<String> roles) {
   public OrasakaContext {
     // Defensive copy of preferences
     preferences =
         (preferences != null)
             ? Collections.unmodifiableMap(Map.copyOf(preferences))
             : Collections.emptyMap();
-    authorities =
-        (authorities != null)
-            ? Collections.unmodifiableSet(Set.copyOf(authorities))
-            : Collections.emptySet();
+    roles =
+        (roles != null) ? Collections.unmodifiableSet(Set.copyOf(roles)) : Collections.emptySet();
   }
 
   /**
-   * Checks if the user session has the specified authority name.
+   * Checks if the user session has the specified role name.
    *
    * <p>This checking operation is thread-safe and non-blocking under Virtual Thread execution
-   * contexts, as it queries the immutable local set of user authorities. The input parameter is
+   * contexts, as it queries the immutable local set of user roles. The input parameter is
    * normalized internally to uppercase and stripped of whitespace.
    *
-   * @param authName The name of the authority role to look up.
-   * @return {@code true} if the authority is present in the session context, otherwise {@code
-   *     false}.
-   * @see com.orasaka.core.identity.OrasakaAuthority
+   * @param roleName The name of the role to look up.
+   * @return {@code true} if the role is present in the session context, otherwise {@code false}.
    */
-  public boolean hasAuthority(String authName) {
-    return authorities.stream()
-        .anyMatch(auth -> auth.name().equals(authName.toUpperCase().strip()));
+  public boolean hasRole(String roleName) {
+    if (roleName == null) {
+      return false;
+    }
+    return roles.stream()
+        .anyMatch(role -> role.toUpperCase().strip().equals(roleName.toUpperCase().strip()));
   }
 }

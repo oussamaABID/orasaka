@@ -1,10 +1,6 @@
 package com.orasaka.core.config;
 
 import com.orasaka.core.engine.OrasakaEngine;
-import com.orasaka.core.engine.OrasakaMemoryResolver;
-import com.orasaka.core.mcp.McpOrchestrator;
-import com.orasaka.core.rag.OrasakaKnowledgeService;
-import com.orasaka.core.tool.OrasakaToolRegistry;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,11 +50,7 @@ public class OrasakaCoreConfiguration {
    * (Bridge Pattern 2.0 — AGENTS.md §1.B).
    *
    * @param properties Externalized configuration for provider selection and overrides.
-   * @param toolRegistry Registry of native Java tools available for AI function calling.
-   * @param knowledgeService RAG knowledge retrieval service backed by a {@link
-   *     org.springframework.ai.vectorstore.VectorStore}.
-   * @param mcpOrchestrator Bridge for external MCP server context and tool resolution.
-   * @param memoryResolver Session-scoped conversation memory resolver.
+   * @param interceptors Cognitive context interceptors chain.
    * @param chatModels Map of provider-key → {@link ChatModel} implementations.
    * @param imageModels Map of provider-key → {@link ImageModel} implementations.
    * @param embeddingModels Map of provider-key → {@link EmbeddingModel} implementations.
@@ -66,30 +58,6 @@ public class OrasakaCoreConfiguration {
    * @return A fully initialized {@link OrasakaEngine} ready for Virtual Thread execution.
    * @see com.orasaka.core.client.OrasakaAiClient
    */
-  @Bean
-  public OrasakaEngine orasakaEngine(
-      CoreProperties properties,
-      OrasakaToolRegistry toolRegistry,
-      OrasakaKnowledgeService knowledgeService,
-      McpOrchestrator mcpOrchestrator,
-      OrasakaMemoryResolver memoryResolver,
-      com.orasaka.core.orchestration.OrasakaOrchestrationPipeline orchestrationPipeline,
-      Map<String, ChatModel> chatModels,
-      Map<String, ImageModel> imageModels,
-      Map<String, EmbeddingModel> embeddingModels,
-      Map<String, TextToSpeechModel> speechModels) {
-    return new OrasakaEngine(
-        chatModels,
-        imageModels,
-        embeddingModels,
-        speechModels,
-        properties,
-        toolRegistry,
-        knowledgeService,
-        mcpOrchestrator,
-        memoryResolver,
-        orchestrationPipeline);
-  }
 
   /**
    * Builds the provider-keyed map of {@link ChatModel} instances from configuration.
@@ -261,24 +229,27 @@ public class OrasakaCoreConfiguration {
 
     // Provider Overrides
     Map<String, CoreProperties.ProviderConfig> overrides = new HashMap<>();
-    for (String provider : List.of("ollama", "openai")) {
-      String prefix = "orasaka.core.overrides." + provider + ".";
-      String model = env.getProperty(prefix + "model");
-      String baseUrl = env.getProperty(prefix + "base-url");
-      Double temp = env.getProperty(prefix + "temperature", Double.class);
-      Integer maxTokens = env.getProperty(prefix + "max-tokens", Integer.class);
+    List.of("ollama", "openai")
+        .forEach(
+            provider -> {
+              String prefix = "orasaka.core.overrides." + provider + ".";
+              String model = env.getProperty(prefix + "model");
+              String baseUrl = env.getProperty(prefix + "base-url");
+              Double temp = env.getProperty(prefix + "temperature", Double.class);
+              Integer maxTokens = env.getProperty(prefix + "max-tokens", Integer.class);
 
-      Map<String, Object> extra = new HashMap<>();
-      String embed = env.getProperty(prefix + "extra.embedding-model");
-      if (embed != null) {
-        extra.put("embedding-model", embed);
-      }
+              Map<String, Object> extra = new HashMap<>();
+              String embed = env.getProperty(prefix + "extra.embedding-model");
+              if (embed != null) {
+                extra.put("embedding-model", embed);
+              }
 
-      if (model != null || baseUrl != null) {
-        overrides.put(
-            provider, new CoreProperties.ProviderConfig(model, baseUrl, temp, maxTokens, extra));
-      }
-    }
+              if (model != null || baseUrl != null) {
+                overrides.put(
+                    provider,
+                    new CoreProperties.ProviderConfig(model, baseUrl, temp, maxTokens, extra));
+              }
+            });
 
     // Orchestration Config
     Boolean orchEnabled =

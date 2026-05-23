@@ -1,4 +1,4 @@
-package com.orasaka.core.tool;
+package com.orasaka.core.interceptors.tool;
 
 import java.util.List;
 import java.util.function.Function;

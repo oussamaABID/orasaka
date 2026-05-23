@@ -1,4 +1,4 @@
-package com.orasaka.core.engine;
+package com.orasaka.core.interceptors.memory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +19,6 @@ import org.springframework.stereotype.Component;
  * <p>Internal storage uses a {@link ConcurrentHashMap} making this component fully safe for
  * concurrent access by Java 21 Virtual Threads.
  *
- * @see com.orasaka.core.engine.AbstractOrasakaEngine
  * @see org.springframework.ai.chat.memory.ChatMemory
  */
 @Component

@@ -41,11 +41,9 @@ public final class SecurityContextUtil {
             Method prefMethod = principal.getClass().getMethod("preferences");
             Object prefs = prefMethod.invoke(principal);
             if (prefs instanceof Map<?, ?> map) {
-              for (Map.Entry<?, ?> entry : map.entrySet()) {
-                if (entry.getKey() != null) {
-                  metadata.put("preference." + entry.getKey(), entry.getValue());
-                }
-              }
+              map.entrySet().stream()
+                  .filter(entry -> entry.getKey() != null)
+                  .forEach(entry -> metadata.put("preference." + entry.getKey(), entry.getValue()));
             }
           } catch (Exception ignored) {
           }

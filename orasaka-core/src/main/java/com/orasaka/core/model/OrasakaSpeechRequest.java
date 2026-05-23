@@ -9,4 +9,11 @@ import com.orasaka.core.context.OrasakaContext;
  * @param options Provider-specific speech options.
  * @param context The execution context carrying user preferences (e.g., voice models, speed).
  */
-public record OrasakaSpeechRequest(String text, OrasakaOptions options, OrasakaContext context) {}
+public record OrasakaSpeechRequest(String text, OrasakaOptions options, OrasakaContext context) {
+  /** Compact constructor enforcing non-empty text. */
+  public OrasakaSpeechRequest {
+    if (text == null || text.isBlank()) {
+      throw new IllegalArgumentException("Text cannot be empty");
+    }
+  }
+}

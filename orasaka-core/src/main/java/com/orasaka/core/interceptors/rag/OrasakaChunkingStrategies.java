@@ -1,12 +1,12 @@
-package com.orasaka.core.rag;
+package com.orasaka.core.interceptors.rag;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.springframework.ai.document.Document;
 
 /** Pre-built, reusable chunking strategies library. */
@@ -17,16 +17,11 @@ public enum OrasakaChunkingStrategies implements OrasakaChunker {
       if (content == null || content.isBlank()) {
         return Collections.emptyList();
       }
-      List<Document> docs = new ArrayList<>();
-      // Split by paragraph
-      String[] paragraphs = content.split("\\n\\n+");
-      for (String paragraph : paragraphs) {
-        String trimmed = paragraph.trim();
-        if (!trimmed.isEmpty()) {
-          docs.add(new Document(trimmed, new HashMap<>(metadata)));
-        }
-      }
-      return docs;
+      return java.util.Arrays.stream(content.split("\\n\\n+"))
+          .map(String::trim)
+          .filter(trimmed -> !trimmed.isEmpty())
+          .map(trimmed -> new Document(trimmed, new HashMap<>(metadata)))
+          .toList();
     }
   },
 
@@ -36,16 +31,11 @@ public enum OrasakaChunkingStrategies implements OrasakaChunker {
       if (content == null || content.isBlank()) {
         return Collections.emptyList();
       }
-      List<Document> docs = new ArrayList<>();
-      // Split by markdown headers
-      String[] sections = content.split("(?m)^(?=#{1,6}\\s+)");
-      for (String section : sections) {
-        String trimmed = section.trim();
-        if (!trimmed.isEmpty()) {
-          docs.add(new Document(trimmed, new HashMap<>(metadata)));
-        }
-      }
-      return docs;
+      return java.util.Arrays.stream(content.split("(?m)^(?=#{1,6}\\s+)"))
+          .map(String::trim)
+          .filter(trimmed -> !trimmed.isEmpty())
+          .map(trimmed -> new Document(trimmed, new HashMap<>(metadata)))
+          .toList();
     }
   },
 
@@ -59,28 +49,28 @@ public enum OrasakaChunkingStrategies implements OrasakaChunker {
       }
       try {
         List<Object> list = jsonMapper.readValue(content, new TypeReference<List<Object>>() {});
-        List<Document> docs = new ArrayList<>();
-        for (Object item : list) {
-          if (item == null) continue;
-          String docText;
-          Map<String, Object> itemMeta = new HashMap<>(metadata);
-          if (item instanceof Map) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> mapItem = (Map<String, Object>) item;
-            docText = jsonMapper.writeValueAsString(mapItem);
-            // Merge map values into metadata as well for richer search options
-            mapItem.forEach(
-                (k, v) -> {
-                  if (v != null) {
-                    itemMeta.put(k, v);
+        return list.stream()
+            .filter(java.util.Objects::nonNull)
+            .map(
+                item -> {
+                  Map<String, Object> itemMeta = new HashMap<>(metadata);
+                  String docText;
+                  if (item instanceof Map) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> mapItem = (Map<String, Object>) item;
+                    try {
+                      docText = jsonMapper.writeValueAsString(mapItem);
+                    } catch (Exception e) {
+                      throw new RuntimeException(e);
+                    }
+                    mapItem.forEach(
+                        (k, v) -> Optional.ofNullable(v).ifPresent(val -> itemMeta.put(k, val)));
+                  } else {
+                    docText = item.toString();
                   }
-                });
-          } else {
-            docText = item.toString();
-          }
-          docs.add(new Document(docText, itemMeta));
-        }
-        return docs;
+                  return new Document(docText, itemMeta);
+                })
+            .toList();
       } catch (Exception e) {
         // Fallback to plain text paragraph chunking if JSON parsing fails
         return PLAIN_TEXT.chunk(content, metadata);

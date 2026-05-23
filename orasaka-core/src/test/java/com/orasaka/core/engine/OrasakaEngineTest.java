@@ -6,13 +6,18 @@ import static org.mockito.Mockito.*;
 
 import com.orasaka.core.config.CoreProperties;
 import com.orasaka.core.exception.OrasakaException;
-import com.orasaka.core.mcp.McpOrchestrator;
+import com.orasaka.core.interceptors.mcp.McpOrchestrator;
+import com.orasaka.core.interceptors.mcp.OrasakaMcpInterceptor;
+import com.orasaka.core.interceptors.memory.OrasakaMemoryInterceptor;
+import com.orasaka.core.interceptors.memory.OrasakaMemoryResolver;
+import com.orasaka.core.interceptors.rag.OrasakaKnowledgeService;
+import com.orasaka.core.interceptors.rag.OrasakaRagInterceptor;
+import com.orasaka.core.interceptors.tool.OrasakaToolInterceptor;
+import com.orasaka.core.interceptors.tool.OrasakaToolRegistry;
 import com.orasaka.core.model.OrasakaChatRequest;
 import com.orasaka.core.model.OrasakaChatResponse;
 import com.orasaka.core.model.OrasakaImageRequest;
 import com.orasaka.core.model.OrasakaImageResponse;
-import com.orasaka.core.rag.OrasakaKnowledgeService;
-import com.orasaka.core.tool.OrasakaToolRegistry;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Assertions;
@@ -33,6 +38,7 @@ import org.springframework.ai.image.ImageGeneration;
 import org.springframework.ai.image.ImageModel;
 import org.springframework.ai.image.ImagePrompt;
 import org.springframework.ai.image.ImageResponse;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class OrasakaEngineTest {
@@ -45,6 +51,7 @@ class OrasakaEngineTest {
   @Mock private OrasakaKnowledgeService knowledgeService;
   @Mock private McpOrchestrator mcpOrchestrator;
   @Mock private OrasakaMemoryResolver memoryResolver;
+  @Mock private ApplicationEventPublisher eventPublisher;
 
   private OrasakaEngine engine;
   private CoreProperties properties;
@@ -58,6 +65,11 @@ class OrasakaEngineTest {
             new CoreProperties.RagConfig(false, null, 3),
             new CoreProperties.McpConfig(List.of()));
 
+    OrasakaMemoryInterceptor memoryInterceptor = new OrasakaMemoryInterceptor(memoryResolver);
+    OrasakaMcpInterceptor mcpInterceptor = new OrasakaMcpInterceptor(mcpOrchestrator);
+    OrasakaRagInterceptor ragInterceptor = new OrasakaRagInterceptor(properties, knowledgeService);
+    OrasakaToolInterceptor toolInterceptor = new OrasakaToolInterceptor(toolRegistry);
+
     engine =
         new OrasakaEngine(
             Map.of("ollama", chatModel),
@@ -65,10 +77,8 @@ class OrasakaEngineTest {
             Map.of("ollama", embeddingModel),
             Map.of("ollama", speechModel),
             properties,
-            toolRegistry,
-            knowledgeService,
-            mcpOrchestrator,
-            memoryResolver);
+            List.of(ragInterceptor, mcpInterceptor, memoryInterceptor, toolInterceptor),
+            eventPublisher);
   }
 
   @Test
@@ -88,6 +98,7 @@ class OrasakaEngineTest {
     assertThat(response.content()).isEqualTo("Hi there!");
     assertThat(response.metadata()).containsEntry("provider", "ollama");
     verify(chatModel).call(any(Prompt.class));
+    verify(eventPublisher).publishEvent(any(Object.class));
   }
 
   @Test
@@ -99,6 +110,12 @@ class OrasakaEngineTest {
             Map.of(),
             new CoreProperties.RagConfig(true, "pgvector", 3),
             new CoreProperties.McpConfig(List.of()));
+
+    OrasakaMemoryInterceptor memoryInterceptor = new OrasakaMemoryInterceptor(memoryResolver);
+    OrasakaMcpInterceptor mcpInterceptor = new OrasakaMcpInterceptor(mcpOrchestrator);
+    OrasakaRagInterceptor ragInterceptor = new OrasakaRagInterceptor(properties, knowledgeService);
+    OrasakaToolInterceptor toolInterceptor = new OrasakaToolInterceptor(toolRegistry);
+
     engine =
         new OrasakaEngine(
             Map.of("ollama", chatModel),
@@ -106,10 +123,8 @@ class OrasakaEngineTest {
             Map.of(),
             Map.of(),
             properties,
-            toolRegistry,
-            knowledgeService,
-            mcpOrchestrator,
-            memoryResolver);
+            List.of(ragInterceptor, mcpInterceptor, memoryInterceptor, toolInterceptor),
+            eventPublisher);
 
     OrasakaChatRequest request = OrasakaChatRequest.simple("Hello");
     when(knowledgeService.retrieveContext(anyString(), anyInt())).thenReturn("Relevant context");
@@ -160,7 +175,7 @@ class OrasakaEngineTest {
     CoreProperties emptyProps = new CoreProperties(null, Map.of(), null, null);
     OrasakaEngine badEngine =
         new OrasakaEngine(
-            Map.of(), Map.of(), Map.of(), Map.of(), emptyProps, null, null, null, null);
+            Map.of(), Map.of(), Map.of(), Map.of(), emptyProps, List.of(), eventPublisher);
 
     // When / Then
     Assertions.assertThrows(
@@ -257,6 +272,12 @@ class OrasakaEngineTest {
         new com.orasaka.core.orchestration.OrasakaOrchestrationPipeline(
             List.of(userResolver, sysInjector, refiner, router), enabledProps);
 
+    OrasakaMemoryInterceptor memoryInterceptor = new OrasakaMemoryInterceptor(memoryResolver);
+    OrasakaMcpInterceptor mcpInterceptor = new OrasakaMcpInterceptor(mcpOrchestrator);
+    OrasakaRagInterceptor ragInterceptor =
+        new OrasakaRagInterceptor(enabledProps, knowledgeService);
+    OrasakaToolInterceptor toolInterceptor = new OrasakaToolInterceptor(toolRegistry);
+
     OrasakaEngine customEngine =
         new OrasakaEngine(
             Map.of("ollama", chatModel, "openai", openaiChatModel),
@@ -264,11 +285,9 @@ class OrasakaEngineTest {
             Map.of(),
             Map.of(),
             enabledProps,
-            toolRegistry,
-            knowledgeService,
-            mcpOrchestrator,
-            memoryResolver,
-            pipeline);
+            List.of(ragInterceptor, mcpInterceptor, memoryInterceptor, toolInterceptor),
+            pipeline,
+            eventPublisher);
 
     OrasakaChatRequest request = OrasakaChatRequest.simple("Fuzzy prompt");
 

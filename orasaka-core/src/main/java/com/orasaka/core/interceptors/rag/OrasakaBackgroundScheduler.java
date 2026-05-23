@@ -1,6 +1,6 @@
-package com.orasaka.core.rag;
+package com.orasaka.core.interceptors.rag;
 
-import com.orasaka.core.tool.OrasakaToolRegistry;
+import com.orasaka.core.interceptors.tool.OrasakaToolRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;

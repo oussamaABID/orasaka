@@ -12,4 +12,11 @@ import com.orasaka.core.context.OrasakaContext;
  * @param context The execution context carrying user preferences (e.g., aspect ratios).
  */
 public record OrasakaImageRequest(
-    String prompt, Integer width, Integer height, OrasakaOptions options, OrasakaContext context) {}
+    String prompt, Integer width, Integer height, OrasakaOptions options, OrasakaContext context) {
+  /** Compact constructor enforcing non-empty prompt. */
+  public OrasakaImageRequest {
+    if (prompt == null || prompt.isBlank()) {
+      throw new IllegalArgumentException("Prompt cannot be empty");
+    }
+  }
+}
