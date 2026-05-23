@@ -1,0 +1,149 @@
+package com.orasaka.tools.functions;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.orasaka.tools.entity.OrasakaToolCacheEntity;
+import com.orasaka.tools.entity.OrasakaToolCacheId;
+import com.orasaka.tools.repository.OrasakaToolCacheRepository;
+import java.time.Instant;
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+/**
+ * Service managing multi-tier caching with Caffeine and PostgreSQL storage.
+ *
+ * <p>All caching operations are performed using Spring Data JPA to eliminate raw SQL strings and
+ * promote repository-driven patterns (AGENTS.md §2.A).
+ */
+@Service
+public class ToolCacheService {
+
+  private static final Logger log = LoggerFactory.getLogger(ToolCacheService.class);
+
+  private final OrasakaToolCacheRepository cacheRepository;
+  private final Cache<String, CacheEntry> localCache;
+
+  /**
+   * Represents a cached response entry.
+   *
+   * @param value The actual string value cached (JSON or payload).
+   * @param expiresAt The timestamp when this entry expires.
+   * @return The cache entry record.
+   */
+  public record CacheEntry(String value, Instant expiresAt) {
+    /**
+     * Checks whether the current instant is past the expiration timestamp.
+     *
+     * @return True if the entry has expired, false otherwise.
+     */
+    public boolean isExpired() {
+      return Instant.now().isAfter(expiresAt);
+    }
+  }
+
+  /**
+   * Initializes the ToolCacheService.
+   *
+   * @param cacheRepository The JPA cache repository for database communication.
+   */
+  public ToolCacheService(OrasakaToolCacheRepository cacheRepository) {
+    this.cacheRepository = cacheRepository;
+    this.localCache = Caffeine.newBuilder().maximumSize(5000).build();
+  }
+
+  /**
+   * Gets a cached value for a tool and key.
+   *
+   * @param toolId The ID of the tool.
+   * @param cacheKey The cache key string.
+   * @return The cached value, or null if expired or not found.
+   */
+  public String get(String toolId, String cacheKey) {
+    String fullKey = toolId + ":" + cacheKey;
+
+    // 1. Check local in-memory cache
+    CacheEntry localEntry = localCache.getIfPresent(fullKey);
+    if (localEntry != null) {
+      if (!localEntry.isExpired()) {
+        log.debug("Local cache hit for tool={}, key={}", toolId, cacheKey);
+        return localEntry.value();
+      } else {
+        log.debug("Local cache expired for tool={}, key={}", toolId, cacheKey);
+        localCache.invalidate(fullKey);
+        evictFromDb(toolId, cacheKey);
+        return null;
+      }
+    }
+
+    // 2. Check PostgreSQL cache
+    log.debug("Local cache miss. Checking DB for tool={}, key={}", toolId, cacheKey);
+    try {
+      Optional<OrasakaToolCacheEntity> dbOpt =
+          cacheRepository.findById(new OrasakaToolCacheId(toolId, cacheKey));
+      if (dbOpt.isPresent()) {
+        OrasakaToolCacheEntity entity = dbOpt.get();
+        CacheEntry dbEntry = new CacheEntry(entity.getCacheValue(), entity.getExpiresAt());
+        if (!dbEntry.isExpired()) {
+          log.debug("DB cache hit for tool={}, key={}", toolId, cacheKey);
+          localCache.put(fullKey, dbEntry);
+          return dbEntry.value();
+        } else {
+          log.debug("DB cache expired for tool={}, key={}", toolId, cacheKey);
+          evictFromDb(toolId, cacheKey);
+        }
+      }
+    } catch (Exception e) {
+      log.error(
+          "Failed to query tool cache from database for tool={}, key={}", toolId, cacheKey, e);
+    }
+
+    return null;
+  }
+
+  /**
+   * Puts a value into the local and database cache.
+   *
+   * @param toolId The ID of the tool.
+   * @param cacheKey The cache key.
+   * @param value The value to cache.
+   * @param ttlSeconds The TTL duration in seconds.
+   */
+  public void put(String toolId, String cacheKey, String value, long ttlSeconds) {
+    String fullKey = toolId + ":" + cacheKey;
+    Instant expiresAt = Instant.now().plusSeconds(ttlSeconds);
+    CacheEntry entry = new CacheEntry(value, expiresAt);
+
+    // 1. Put in Caffeine
+    localCache.put(fullKey, entry);
+
+    // 2. Put in PostgreSQL
+    try {
+      OrasakaToolCacheId id = new OrasakaToolCacheId(toolId, cacheKey);
+      OrasakaToolCacheEntity entity = new OrasakaToolCacheEntity();
+      entity.setId(id);
+      entity.setCacheValue(value);
+      entity.setExpiresAt(expiresAt);
+      entity.setCreatedAt(Instant.now());
+      cacheRepository.save(entity);
+    } catch (Exception e) {
+      log.error("Failed to write tool cache to database for tool={}, key={}", toolId, cacheKey, e);
+    }
+  }
+
+  /**
+   * Evicts an entry from the database cache.
+   *
+   * @param toolId The ID of the tool.
+   * @param cacheKey The cache key.
+   */
+  private void evictFromDb(String toolId, String cacheKey) {
+    try {
+      cacheRepository.deleteById(new OrasakaToolCacheId(toolId, cacheKey));
+    } catch (Exception e) {
+      log.error(
+          "Failed to delete expired cache entry from DB for tool={}, key={}", toolId, cacheKey, e);
+    }
+  }
+}

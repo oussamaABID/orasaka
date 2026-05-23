@@ -1,0 +1,40 @@
+package com.orasaka.tools.config;
+
+import java.util.Map;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+/**
+ * Configuration registry for Orasaka Tools, including caching and RAG ingestion properties.
+ *
+ * @param configs Map of configuration settings per tool.
+ */
+@ConfigurationProperties(prefix = "orasaka.tools")
+public record OrasakaToolsProperties(Map<String, ToolConfig> configs) {
+  /**
+   * Configuration settings for a specific tool.
+   *
+   * @param cache The caching configuration block.
+   * @param rag The RAG chunking and database ingestion configuration block.
+   * @return The tool configuration record.
+   */
+  public record ToolConfig(CacheConfig cache, RagConfig rag) {}
+
+  /**
+   * Configuration settings for caching tool execution results.
+   *
+   * @param enabled Whether caching is active.
+   * @param ttlSeconds Time-To-Live in seconds for cached values.
+   * @return The cache configuration record.
+   */
+  public record CacheConfig(boolean enabled, long ttlSeconds) {}
+
+  /**
+   * Configuration settings for RAG database ingestion for a specific tool.
+   *
+   * @param enabled Whether RAG ingestion is active for the tool.
+   * @param chunkerType The type/strategy of the text chunker to use.
+   * @param sourceTable The name of the database source table.
+   * @return The RAG configuration record.
+   */
+  public record RagConfig(boolean enabled, String chunkerType, String sourceTable) {}
+}

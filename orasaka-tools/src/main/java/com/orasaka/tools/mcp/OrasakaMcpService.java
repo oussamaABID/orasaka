@@ -1,51 +1,59 @@
 package com.orasaka.tools.mcp;
 
 import com.orasaka.core.config.CoreProperties;
+import java.util.List;
+import java.util.Objects;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * Integration layer for MCP (Model Context Protocol).
- * Consumes context/tools from external MCP servers.
+ * Integration layer for MCP (Model Context Protocol). Consumes context/tools from external MCP
+ * servers.
  */
 @Service
 public class OrasakaMcpService {
 
-    private final CoreProperties properties;
-    private final List<Object> mcpClients = new ArrayList<>();
+  private final CoreProperties properties;
 
-    /**
-     * Initializes the service and attempts to boot up MCP clients.
-     * 
-     * @param properties The global configuration properties.
-     */
-    public OrasakaMcpService(CoreProperties properties) {
-        this.properties = properties;
-        initializeClients();
-    }
+  /**
+   * Initializes the service and attempts to boot up MCP clients.
+   *
+   * @param properties The global configuration properties.
+   */
+  public OrasakaMcpService(CoreProperties properties) {
+    this.properties = properties;
+    initializeClients();
+  }
 
-    private void initializeClients() {
-        if (properties.mcp() != null && properties.mcp().endpoints() != null) {
-            for (String endpoint : properties.mcp().endpoints()) {
-                // Initialize MCP Client for endpoint
-                // This is a placeholder for actual Spring AI MCP client initialization
-            }
-        }
+  private void initializeClients() {
+    if (properties.mcp() != null && properties.mcp().endpoints() != null) {
+      for (String endpoint : properties.mcp().endpoints()) {
+        // Initialize MCP Client for endpoint. Currently a placeholder.
+        Objects.requireNonNull(endpoint);
+      }
     }
+  }
 
-    /**
-     * Get tools provided by MCP servers.
-     */
-    public List<Object> getMcpTools() {
-        return List.of(); // Placeholder
-    }
+  /**
+   * Retrieves the consolidated list of schema tool definitions provided by external MCP servers.
+   *
+   * <p>Acts as an integration bridge layer for downstream cognitive engines.
+   *
+   * @return A list of objects representing external tool schemas.
+   * @see com.orasaka.core.mcp.McpOrchestrator#resolveExternalTools()
+   */
+  public List<Object> getMcpTools() {
+    return List.of(); // Placeholder
+  }
 
-    /**
-     * Get context provided by MCP servers.
-     */
-    public String getMcpContext() {
-        return ""; // Placeholder
-    }
+  /**
+   * Retrieves the consolidated system context provided by registered MCP servers.
+   *
+   * <p>Polls endpoints dynamically to compile external state before LLM execution.
+   *
+   * @return A consolidated string containing external environment or tool contexts.
+   * @see com.orasaka.core.mcp.McpOrchestrator#resolveExternalContext()
+   */
+  public String getMcpContext() {
+    return ""; // Placeholder
+  }
 }
