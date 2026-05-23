@@ -1,8 +1,7 @@
 package com.orasaka.core.engine;
 
-import com.orasaka.core.config.CoreProperties;
-import com.orasaka.core.interceptors.OrasakaContextInterceptor;
-import com.orasaka.core.orchestration.OrasakaOrchestrationPipeline;
+import com.orasaka.core.pipeline.OrasakaContextInterceptor;
+import com.orasaka.core.pipeline.OrasakaOrchestrationPipeline;
 import java.util.List;
 import java.util.Map;
 import org.springframework.ai.audio.tts.TextToSpeechModel;

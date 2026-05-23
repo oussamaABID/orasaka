@@ -1,8 +1,8 @@
 package com.orasaka.core.engine;
 
-import com.orasaka.core.model.DefaultOrasakaOptions;
-import com.orasaka.core.model.OrasakaImageRequest;
-import com.orasaka.core.model.OrasakaOptions;
+import com.orasaka.core.support.DefaultOrasakaOptions;
+import com.orasaka.core.support.OrasakaImageRequest;
+import com.orasaka.core.support.OrasakaOptions;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.DefaultChatOptions;
 import org.springframework.ai.image.ImageOptions;
@@ -13,9 +13,7 @@ import org.springframework.ai.openai.OpenAiImageOptions;
 /** Utility class responsible for mapping Orasaka options to Spring AI options. */
 public final class OrasakaOptionsMapper {
 
-  private OrasakaOptionsMapper() {
-    // Utility
-  }
+  private OrasakaOptionsMapper() {}
 
   /** Maps OrasakaOptions to Spring AI ChatOptions. */
   public static ChatOptions mapOptions(OrasakaOptions options, String provider) {
