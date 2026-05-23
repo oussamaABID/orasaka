@@ -1,10 +1,19 @@
 package com.orasaka.identity.entity;
 
+import com.orasaka.identity.entity.converter.JsonMapConverter;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * JPA Entity mapping the {@code orasaka_users} database table.
@@ -32,7 +41,16 @@ public class OrasakaUserEntity {
   private Boolean enabled = true;
 
   @Column(name = "preferences")
-  private String preferences;
+  @Convert(converter = JsonMapConverter.class)
+  private Map<String, Object> preferences;
+
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
+  private Set<OrasakaAuthorityEntity> authorities = new HashSet<>();
+
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
+  private Set<OrasakaUserInterceptionEntity> interceptions = new HashSet<>();
 
   @Column(name = "rate_limit_tier", length = 50)
   private String rateLimitTier;
@@ -134,21 +152,57 @@ public class OrasakaUserEntity {
   }
 
   /**
-   * Gets the JSON string containing user preferences.
+   * Gets the user preferences map.
    *
-   * @return The preferences JSON string.
+   * @return The preferences map.
    */
-  public String getPreferences() {
+  public Map<String, Object> getPreferences() {
     return preferences;
   }
 
   /**
-   * Sets the JSON string containing user preferences.
+   * Sets the user preferences map.
    *
-   * @param preferences The preferences JSON string.
+   * @param preferences The preferences map.
    */
-  public void setPreferences(String preferences) {
+  public void setPreferences(Map<String, Object> preferences) {
     this.preferences = preferences;
+  }
+
+  /**
+   * Gets the security authorities entities assigned to the user.
+   *
+   * @return Set of authority entities.
+   */
+  public Set<OrasakaAuthorityEntity> getAuthorities() {
+    return authorities;
+  }
+
+  /**
+   * Sets the security authorities entities assigned to the user.
+   *
+   * @param authorities Set of authority entities.
+   */
+  public void setAuthorities(Set<OrasakaAuthorityEntity> authorities) {
+    this.authorities = authorities;
+  }
+
+  /**
+   * Gets the user flow interceptions.
+   *
+   * @return Set of interception entities.
+   */
+  public Set<OrasakaUserInterceptionEntity> getInterceptions() {
+    return interceptions;
+  }
+
+  /**
+   * Sets the user flow interceptions.
+   *
+   * @param interceptions Set of interception entities.
+   */
+  public void setInterceptions(Set<OrasakaUserInterceptionEntity> interceptions) {
+    this.interceptions = interceptions;
   }
 
   /**
