@@ -52,6 +52,13 @@ class EngineModelRegistry {
         .orElseThrow(() -> new OrasakaException("No ChatModel found for provider: " + provider));
   }
 
+  EmbeddingModel getActiveEmbeddingModel() {
+    String provider = getActiveProvider();
+    return Optional.ofNullable(embeddingModels.get(provider))
+        .orElseThrow(
+            () -> new OrasakaException("No EmbeddingModel found for provider: " + provider));
+  }
+
   ImageModel getActiveImageModel() {
     String provider = getActiveProvider();
     return Optional.ofNullable(imageModels.get(provider))
