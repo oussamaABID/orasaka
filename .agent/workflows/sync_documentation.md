@@ -1,23 +1,17 @@
 ---
-description: Orasaka Documentation Synchronization Workflow
+description: CONTINUOUS DOCUMENTATION SYNCHRONIZATION
 ---
 
-# Orasaka Documentation Synchronization Workflow
+# ORASAKA WORKFLOW: CONTINUOUS DOCUMENTATION SYNCHRONIZATION
 
-## Synchronization Policy
-- **Trigger**: Any modification to Public Interfaces, Records (Properties), or Engine abstractions.
-- **Action**: Update associated documentation artifacts to maintain "Single Source of Truth".
-
-## Target Artifacts
-1. **[README.md](file:///Users/oussamaabid/Documents/projects/orasaka/README.md)**: High-level overview and Quick Start. Always include the orasaka logo (file:///Users/oussamaabid/Documents/projects/orasaka/docs/assets/logo.svg) on the top of [README.md](file:///Users/oussamaabid/Documents/projects/orasaka/README.md).
-2. **[API_REFERENCE.md](file:///Users/oussamaabid/Documents/projects/orasaka/docs/API_REFERENCE.md)**: Detailed technical specification of public types.
-3. **[GLOSSARY.md](file:///Users/oussamaabid/Documents/projects/orasaka/docs/GLOSSARY.md)**: Definition of ecosystem terms.
-4. **[CONTEXT.md](file:///Users/oussamaabid/Documents/projects/orasaka/docs/CONTEXT.md)**: Architectural Decision Records (ADR).
-
-## Update Procedure
-1. Scan changed files for documentation-impactful changes (signature changes, new configuration keys).
-2. Propagate changes to `API_REFERENCE.md`.
-3. If `orasaka-gateway` schemas change, update the "Gateway API" section in `API_REFERENCE.md`.
-4. If new terminology is introduced, update `GLOSSARY.md`.
-5. Reflect major architectural shifts in `CONTEXT.md`.
-6. Ensure `![Orasaka Logo](docs/assets/logo.svg)` remains at the very top of `README.md`.
+## 🔄 Synchronization Policy & Drift Enforcement
+* **Trigger**: Any signature modification, entity layout shift, interface change, or configuration key addition under the `orasaka.core` namespace must immediately trigger a documentation compliance review.
+* **Target Matrix Mapping**: Ensure absolute synchronization between code reality and the high-level documentation matrix. The target matrix consists of the following 6 files:
+  1. `README.md` (Root level overview)
+  2. `docs/ARCHITECTURE.md` (Core design decisions and package mappings)
+  3. `docs/API_REFERENCE.md` (Public endpoint specifications)
+  4. `docs/GLOSSARY.md` (Terminology, naming constraints, and concepts)
+  5. `docs/CONTEXT.md` (Runtime environment variables and tool mappings)
+  6. `docs/BUSINESS_IMPLEMENTATION.md` (CinePulse AI business enabler guide)
+* **Environment Variable Registry**: Any addition or modification of environment variables in `.env` or `orasaka-ui/.env.local` must immediately trigger an update of the "Environment Variables" section in `docs/GLOSSARY.md`. Each variable must be documented with its key, purpose, default value, and security classification.
+* **Docstring Gate**: Missing Javadoc or TSDoc blocks on public components will automatically block compiling cycles.

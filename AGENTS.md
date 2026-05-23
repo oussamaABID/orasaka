@@ -1,103 +1,59 @@
-# 🥷 ORASAKA: SYSTEM & AGENT STANDARDS
+# 🥷 ORASAKA: SYSTEM & AGENT GOVERNANCE
 
-## 🏛️ 1. Core Architectural Directives
+> [!IMPORTANT]
+> **AGENT EXECUTION CONTRACT & CONTEXT LOADING ORDER**
 
-### A. Structural Agnosticism & Decoupling
+> 1. **Pre-requisite**: You MUST dynamically load, parse, and strictly adhere to all active definitions found within `.agent/rules/*` and `.agent/workflows/*` prior to any file modification or code generation task.
+> 2. **Rule Aggregation**: Treat the specialized local rules inside the `.agent/` directory as strict, non-negotiable extensions of this global master specification ledger.
+> 3. **Validation Gate**: Every task, architectural review, code compilation, and documentation synchronization loop must simultaneously satisfy both the local manifests and this ledger.
 
-* **The Stateless Core**: `orasaka-core` is a **standalone library** and must remain completely stateless regarding user storage or preferences.
-* **No Starter Leaks**: `orasaka-core` must **NEVER** import `spring-boot-starter` or any framework auto-configuration dependencies. Only `spring-ai-core` 1.1.6 and direct provider implementations (Ollama, OpenAI) are permitted.
-* **Structural Rebuttal**: Reject any code proposal that leaks `org.springframework.ai` types into the `orasaka-gateway`, `orasaka-identity`, or `orasaka-cli` modules.
-* **Gateway Responsibility**: `orasaka-gateway` is strictly responsible for fetching user profiles from `orasaka-identity`, merging them into an immutable `OrasakaContext`, and injecting them into the Core Client on every single request.
+---
+
+## 🏛️ 1. Core Decoupling Boundaries & Architecture
+
+### A. Structural Agnosticism
+
+* **The Stateless Core**: `orasaka-core` is an isolated, standalone orchestration library. It must remain 100% agnostic of active user storage, HTTP protocols, or active sessions. It depends strictly on `spring-ai-core` 1.1.6. No web starters or web security dependencies are allowed inside its perimeter.
+* **No Class Leakage**: Type signatures native to `org.springframework.ai` must remain encapsulated inside `orasaka-core`. They are strictly prohibited from leaking outward into the gateway controllers, CLI modules, or identity layers.
+* **Gateway Context Mandate**: `orasaka-gateway` acts as the single source of orchestration context. It is strictly responsible for fetching data profiles from `orasaka-identity`, assembling them into an immutable `PromptContext` snapshot, and injecting that context into the Core Client on every request.
 
 ### B. The Bridge Pattern 2.0
 
-Direct exposure of external AI frameworks is strictly forbidden.
+Direct exposure of external AI frameworks to the rest of the application is strictly forbidden:
+* **Encapsulation**: All third-party AI framework models, prompts, and options must be safely wrapped inside Orasaka-native abstractions (e.g., `OrasakaChatRequest`, `OrasakaOptions`).
+* **Facade Access**: External modules and clients must interact with the core engine exclusively through the unified `OrasakaAiClient` facade.
 
-* **Encapsulation**: All `org.springframework.ai` types must be wrapped in Orasaka-native abstractions (`OrasakaChatRequest`, `OrasakaOptions`, etc.).
-* **Facade Access**: External modules and clients must only interact with the core through the `OrasakaAiClient` facade.
+### C. Context-Matrix Orchestration Pipeline
 
----
+When processing fuzzy queries, execution must flow sequentially through an isolated, ordered chain of independent `PromptInterceptor` beans to achieve user and system multi-tenant prompt enrichment. If disabled (`orasaka.core.orchestration.pipeline.enabled=false`), the engine switches to a zero-allocation bypass.
 
-## ⚡ 2. Technical & Coding Standards
-
-### A. Java 21 Mandatory
-
-All backend source code must utilize modern Java 21 features natively:
-
-* **Records**: Mandatory for all configuration, data transfer objects (DTOs), context objects, and domain models.
-* **Sealed Interfaces**: Mandatory for domain-driven hierarchies (e.g., RBAC, Provider types).
-* **Pattern Matching**: Compulsory for switch expressions and instance checks across all orchestration logic.
-
-### B. Concurrency & Streaming Architecture
-
-* **Virtual Threads**: Every I/O or AI-intensive task MUST utilize `Executors.newVirtualThreadPerTaskExecutor()` to ensure high-concurrency scalability.
-* **Async Orchestration**: All multi-threaded Gateway orchestration (resolving user preferences + executing AI token streaming) MUST run asynchronously using Virtual Threads.
-* **Real-time Streaming**: Gateway stream endpoints must support GraphQL Subscriptions or HTTP SSE (Server-Sent Events) to seamlessly feed both `orasaka-ui` and the terminal `orasaka-cli`.
-
-### C. Multi-Modal Contextual Profiles
-
-* For non-conversational AI components (Text-To-Speech, Image Generation), request records must accept an `OrasakaContext` record carrying the `userId`, `conversationId`, and a defensively copied `Map<String, Object> preferences`.
-* This context dynamically overrides global application configurations to enforce user-specific preferences (voice models, speed, stylistic aspect ratios) at the request level.
+1. **UserContextResolver (Order 1)**: Dynamically extracts user profile attributes, RBAC security configurations, and rate-limiting tier states from session context tokens.
+2. **SystemContextInjector (Order 2)**: Loops over active `SystemContextProvider` implementations to feed real-time environment signals, system variables, active tool arrays, and marketplace trends via Inversion of Control (IoC) without circular dependencies.
+3. **RefinerInterceptor (Order 3)**: Resolves fuzzy user questions against active conversation history and compiled context matrices to reformulate them into clear, explicit instructions.
+4. **RouterInterceptor (Order 4)**: Evaluates input intent at `temperature: 0.0` to dynamically route the refined request to the optimal model provider under the canonical `orasaka.core` configuration namespace.
 
 ---
 
-## 🛡️ 3. Guardian Protocol & Security Guardrails
+## 🚀 2. Concurrency Rules & Multi-Module Rebuild Workflow
 
-### A. Data Leak Prevention (Strict Multi-Tenancy)
+### A. Non-Blocking Concurrency & Persistence Patterns
 
-* You are the **Guardian of Orasaka**. Accuracy and isolation are non-negotiable.
-* **CRITICAL**: Flag any generated data access object, repository mapping, or memory resolver that breaks isolation between different `userId` or `conversationId` boundaries. Multi-session and multi-user data MUST be strictly partitioned and isolated.
-* Allow users to instantiate unlimited independent conversation threads. `orasaka-core` must resolve the specific `ChatMemory` state dynamically using a unique `conversationId` per thread.
+* **Java 21 Virtual Threads**: Every blocking action, network invocation, remote model inference, or Vector database retrieval must execute inside un-pinned Virtual Threads utilizing `Executors.newVirtualThreadPerTaskExecutor()`. Never use heavy `synchronized` blocks over I/O loops.
+* **Reactive Streams**: Continuous token streaming to clients must utilize native reactive non-blocking structures (`Flux<OrasakaChatResponse>`).
+* **Persistence Pattern & I/O Isolation (Formal Mandate)**: 
+  * **Rule**: Database-query duplication is formally and strictly banned. Service methods must never query the database for records that have been freshly created, updated, or already loaded in memory within the current execution/transaction block.
+  * **Model Separation**: Database entities (`*Entity`) must remain strictly isolated and decoupled from clean, immutable domain records (e.g., `User`).
+  * **Remediation**: Force the implementation of static or private in-memory domain mappers to assemble the output data layer instantly, cutting database roundtrips by 50%.
 
-### B. Dependency & Workspace Harmony
 
-* Use the `orasaka-parent` BOM in the root `pom.xml` for all version consistency.
-* **Spring AI Version**: Strictly locked and adhered to version **1.1.6**.
+### B. Fast-Iteration Build Rebuild Workflow
 
----
+When internal contracts, schema definitions, or module dependencies evolve, the compilation cascade must be strictly respected to prevent dependency staleness inside the target build execution context:
 
-## 💻 4. Agent Execution Modes
+1. **Install and Update Contract Contexts**: 
+   Command: `mvn clean install -pl orasaka-identity`
+   *Use case: Forces the synchronization of core security, cryptography, and data entity schemas into the local repository.*
 
-* **Reasoning Chain**: All code generation must be preceded by a transparent technical reasoning chain explaining architectural choices.
-* **Turbo Mode**: Verified terminal actions (compilation, folder scaffolding, tests) are unlocked and automated using the `// turbo` suffix.
-* **Flash Optimization**: Every prompt generated for tools, models, or configurations must be concise, direct, and high-token-efficiency (Gemini 3 Flash optimized).
-
----
-
-## 🎨 5. Frontend Architecture (orasaka-ui)
-
-Laisse tomber l'Atomic Design théorique. Va au plus efficace et au plus scalable :
-
-* **`components/ui/`**: Pour la plomberie visuelle brute (Boutons, Inputs, Cards).
-* **`features/`**: Pour l'intelligence métier (Chat, Sessions, Rendu Dynamique).
-* **`app/`**: Uniquement pour distribuer les routes et assembler les features.
-* **`core/`**: Configuration globale et clients. **Règle absolue :** Toutes les requêtes asynchrones et la gestion d'état serveur doivent obligatoirement utiliser **TanStack Query** (React Query).
-
-### Structure de référence (`src/`)
-
-```
-src/
-├── app/                      # Next.js App Router (Pages, Routing, Layouts)
-│   ├── chat/page.tsx
-│   └── dashboard/page.tsx
-├── components/               # Les Primitives (Agnostiques au métier)
-│   └── ui/                   # Tes "Atomes" (Générés via Shadcn/UI)
-│       ├── button.tsx
-│       ├── card.tsx
-│       └── dialog.tsx
-├── features/                 # Le Cœur de l'application (Par Domaines)
-│   ├── chat-session/         # Tout ce qui concerne le Chat & la Mémoire
-│   │   ├── components/       # ChatWindow, MessageBubble, ThreadList
-│   │   ├── hooks/            # useChatStream.ts
-│   │   └── types/            # chat.types.ts
-│   ├── dynamic-renderer/     # LA FEATURE CLÉ : Ton moteur de rendu d'UI à la volée
-│   │   ├── components/       # RemoteUiResolver.tsx, ComponentMapper.tsx
-│   │   └── utils/            # layoutEngine.ts
-│   └── document-analyzer/    # Exemple d'une feature business future
-└── core/                     # Configuration globale et clients
-    ├── graphql/              # Client Apollo/Urql, requêtes & abonnements (SSE)
-    └── context/              # Providers globaux (OrasakaContext, Theme)
-```
-
----
-*Orasaka: Precision in Implementation, Intelligence through Decoupling.*
+2. **Recompile the Entire Integration Mesh (Automated Upstream Cascade)**: 
+   Command: `mvn clean compile -pl orasaka-gateway -am`
+   *Use case: The `-am` (also-make) flag forces Maven to analyze and automatically rebuild all modified dependencies (including `orasaka-core` and `orasaka-tools`) that the gateway relies on, eradicating stale code anomalies in a single command.*

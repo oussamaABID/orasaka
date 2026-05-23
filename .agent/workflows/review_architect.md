@@ -1,33 +1,49 @@
 ---
-description: Architectural Review Protocol
+description: ARCHITECTURAL STATIC GATE & REJECTION CRITERIA
 ---
 
-# Orasaka Architectural Review Protocol
+# ORASAKA WORKFLOW: ARCHITECTURAL STATIC GATE & REJECTION CRITERIA
 
-## Documentation Mandate (Java 21)
-- **Docstring Requirement**: Every Class, Interface, Record, and Public/Protected Method MUST have a comprehensive Javadoc.
-- **Style Guide**: Follow Google Java Style Guide.
-- **Mandatory Tags**:
-    - `@param`: Detailed description of inputs.
-    - `@return`: Expected output and its significance.
-    - `@throws`: Documentation of custom `OrasakaException` or standard exceptions.
-    - `@see`: Links to related Orasaka abstractions or Spring AI core components.
-- **Virtual Thread Safety**: Explicitly document the non-blocking nature of methods leveraging Virtual Threads.
+## ⛔ Rejection Gates
+Immediately halt execution and reject any generation cycle if the following patterns are detected:
+1. **Inline Serialization Pollution**: Multi-line try-catch blocks handling Jackson mapping (`ObjectMapper`) inside standard service paths. *Remediation*: Extract into private mapping utilities or custom helper classes.
+2. **Simulated Token Streaming**: Simulating streaming tokens via raw string splitting (`.split(" ")`) or arbitrary `Thread.sleep` calls. *Remediation*: Enforce native reactive non-blocking `Flux<OrasakaChatResponse>`.
+3. **FQCN Inline Exposure**: Utilizing Fully Qualified Class Names inside method blocks (e.g., `java.util.Set<String>`). *Remediation*: Declare explicit imports at the top of the file.
+4. **Mutation Query Duplication**: Resolving a database write or mutation followed by a separate query/read lookup of the same record within the controller/facade layer. *Remediation*: Ensure the write/mutation method returns the updated domain record directly.
 
-## Review Gates
-1. **Domain Purity**: Ensure zero `spring-boot-starter` dependencies in `cors`.
-2. **Dependency Audit**: Verify use of Spring AI BOM (1.1.6).
-3. **Java 21 Features**: Ensure usage of Records, Pattern Matching, and Virtual Threads where applicable.
-4. **Documentation Accuracy**: If code is "naked" (missing Javadocs), the review FAILs.
 
-## Self-Correction Protocol
-If Javadocs are missing:
-1. Halt execution.
-2. Trigger "Documentation Enrichment" task.
-3. Re-generate code with full documentation before proceeding.
+## ✍️ Documentation Gate
+* **Java 21 Javadoc Rule**: Missing Javadoc annotations on public interfaces, methods, or record structures will automatically fail compilation cycles.
+* **Front-End TSDoc Rule**: All shared TypeScript components, hooks, and helpers under `orasaka-ui` must be fully documented using valid TSDoc annotations.
 
-## Post-Generation Reporting
-After each task, provide a "Code Summary":
-- **Component Type**: (e.g., Abstract Class, Functional Interface).
-- **Responsibility**: A one-sentence summary of the component's role.
-- **Virtual Thread Safety**: Confirmation of non-blocking behavior.
+## 🧹 Code Quality & Formatting Gates
+Enforce strict formatting using official ecosystem tools before task completion.
+
+### 1. Java Backend Quality Gates (Spotless + Google Java Style)
+* **Formatting Execution**: Prior to backend task completion, format the code within the specific modified module using Spotless:
+  ```bash
+  mvn spotless:apply -pl <module-name>
+  ```
+* **Validation Check**: Verify that no formatting rules are broken:
+  ```bash
+  mvn spotless:check -pl <module-name>
+  ```
+  If this check fails, formatting must be re-applied and re-verified.
+
+### 2. Frontend Quality Gates (Prettier + ESLint)
+* **Prettier Code Formatting**: format React, TypeScript, and JSON files inside `orasaka-ui` before committing:
+  ```bash
+  cd orasaka-ui && npm run format
+  ```
+* **ESLint Static Analysis**: Ensure ESLint checks pass cleanly:
+  ```bash
+  cd orasaka-ui && npm run lint
+  ```
+  All errors/warnings must be resolved until a clean exit status is achieved.
+
+## 🚀 Workflow Pipeline Order
+The final verification execution sequence must follow:
+1. Generate / Refactor target files.
+2. Run ecosystem formatters (`mvn spotless:apply` or `npm run format`).
+3. Run static analysis quality gates (`mvn spotless:check` or `npm run lint`).
+4. Execute project compiling (`mvn clean compile -pl orasaka-gateway -am`).
