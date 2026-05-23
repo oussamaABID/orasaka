@@ -1,0 +1,123 @@
+# ==============================================================================
+# ORASAKA SYSTEM HTTP CLIENT WORKSPACE
+# Supports: IntelliJ HTTP Client, VS Code REST Client, and CLI tools
+# ==============================================================================
+
+@gatewayUrl = http://localhost:8080
+@bffUrl = http://localhost:3000
+@adminToken = 550e8400-e29b-41d4-a716-446655440001
+@userToken = 550e8400-e29b-41d4-a716-446655440002
+@guestToken = 550e8400-e29b-41d4-a716-446655440003
+
+# ------------------------------------------------------------------------------
+# PART 1: DIRECT GATEWAY API (Port 8080)
+# Standard endpoints consumed by orasaka-cli and backend microservices
+# ------------------------------------------------------------------------------
+
+### 1.1 REST Auth: Login to resolve User UUID Session Token
+# Plaintext credentials: User / User (admin/admin, guest/guest)
+# Returns {"token": "<UUID>", "username": "<username>"} cached in ~/.orasaka-cli.json
+POST {{gatewayUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "user",
+  "password": "user"
+}
+
+### 1.2 GraphQL: Get Current User Profile (Admin)
+POST {{gatewayUrl}}/graphql
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "query": "query { me { id username preferences } }"
+}
+
+### 1.3 GraphQL: Get Current User Profile (Standard User)
+POST {{gatewayUrl}}/graphql
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "query": "query { me { id username preferences } }"
+}
+
+### 1.4 GraphQL: Update User Preferences
+POST {{gatewayUrl}}/graphql
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "query": "mutation($prefs: Map!) { updatePreferences(preferences: $prefs) { id username preferences } }",
+  "variables": {
+    "prefs": {
+      "language": "ja",
+      "tts-voice": "nova",
+      "image-aspect-ratio": "16:9",
+      "chat-temperature": 0.7
+    }
+  }
+}
+
+### 1.5 GraphQL: Execute Chat Mutation (Single-turn)
+POST {{gatewayUrl}}/graphql
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "query": "mutation { chat(prompt: \"Hello Orasaka! Explain what a virtual thread is in one short sentence.\", conversationId: \"conv-http-123\") { content conversationId metadata } }"
+}
+
+### 1.6 REST SSE: Real-Time Chat Streaming (Server-Sent Events)
+# Emits OrasakaChatResponse JSON objects chunk-by-chunk with 40ms inter-chunk delay
+GET {{gatewayUrl}}/api/v1/chat/stream/conv-http-123?prompt=Explain%20Virtual%20Threads%20in%203%20words.
+Authorization: Bearer {{userToken}}
+Accept: text/event-stream
+
+
+# ------------------------------------------------------------------------------
+# PART 2: NEXT.JS BFF CLIENT PROXY API (Port 3000)
+# Encapsulated routes conforming to the BFF Topology Directive (AGENTS.md §1.D).
+# Browser clients communicate strictly through these routes.
+# ------------------------------------------------------------------------------
+
+### 2.1 BFF GraphQL: Get Current User Profile via Next.js Proxy
+# Proxies to Gateway /graphql. In developer mode, falls back to Admin UUID
+# if NextAuth session cookies are absent.
+POST {{bffUrl}}/api/graphql
+Content-Type: application/json
+
+{
+  "query": "query { me { id username preferences } }"
+}
+
+### 2.2 BFF GraphQL: Update User Preferences via Next.js Proxy
+POST {{bffUrl}}/api/graphql
+Content-Type: application/json
+
+{
+  "query": "mutation($prefs: Map!) { updatePreferences(preferences: $prefs) { id username preferences } }",
+  "variables": {
+    "prefs": {
+      "language": "en",
+      "tts-voice": "alloy",
+      "image-aspect-ratio": "1:1",
+      "chat-temperature": 0.5
+    }
+  }
+}
+
+### 2.3 BFF GraphQL: Execute Chat Mutation via Next.js Proxy
+POST {{bffUrl}}/api/graphql
+Content-Type: application/json
+
+{
+  "query": "mutation { chat(prompt: \"State the primary directive of Orasaka in five words.\", conversationId: \"conv-bff-123\") { content conversationId metadata } }"
+}
+
+### 2.4 BFF REST SSE: Real-Time Chat Streaming via Next.js Proxy
+# Proxies to Gateway /api/v1/chat/stream/[conversationId] using a ReadableStream
+# to avoid buffer buildup. Flows event chunks dynamically.
+GET {{bffUrl}}/api/chat/stream/conv-bff-123?prompt=What%20is%20your%20primary%20directive?
+Accept: text/event-stream

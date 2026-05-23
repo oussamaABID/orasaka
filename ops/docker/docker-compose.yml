@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: ankane/pgvector:latest
+    container_name: orasaka-postgres
+    environment:
+      POSTGRES_DB: orasaka_db
+      POSTGRES_USER: orasaka_admin
+      POSTGRES_PASSWORD: orasaka_secure_pass
+    command: postgres -c shared_buffers=256MB -c max_connections=100
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+      - ./../postgres/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orasaka_admin -d orasaka_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mcp-debug-server:
+    image: node:20-slim
+    container_name: orasaka-mcp-debug
+    working_dir: /app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: >
+      sh -c "npm init -y && 
+             npm install @modelcontextprotocol/sdk && 
+             node -e '
+               const { Server } = require(\"@modelcontextprotocol/sdk/server/index.js\");
+               const { StdioServerTransport } = require(\"@modelcontextprotocol/sdk/server/stdio.js\");
+               const { ListToolsRequestSchema } = require(\"@modelcontextprotocol/sdk/types.js\");
+               const server = new Server({ name: \"debug-server\", version: \"1.0.0\" }, { capabilities: { tools: {} } });
+               server.setRequestHandler(ListToolsRequestSchema, () => ({ tools: [{ name: \"echo\", description: \"Echo input\" }] }));
+               const transport = new StdioServerTransport();
+               server.connect(transport).then(() => console.log(\"MCP Debug Server connected via Stdio\"));
+             '"
+    ports:
+      - "8082:8080"
+
+  redis:
+    image: redis:7-alpine
+    container_name: orasaka-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgvector_data:

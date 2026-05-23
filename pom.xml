@@ -99,6 +99,45 @@
                     </compilerArgs>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <!-- Java 21: recognises records, sealed types, virtual threads -->
+                    <source>21</source>
+                    <!-- Suppress pedantic Javadoc formatting errors -->
+                    <doclint>none</doclint>
+                    <!--
+                        The plugin appends /apidocs to this value automatically.
+                        Result: ${project.basedir}/docs/apidocs/index.html
+                    -->
+                    <reportOutputDirectory>${project.basedir}/docs</reportOutputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>aggregate-javadoc</id>
+                        <!-- Keeps docs in sync with every package lifecycle run -->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>aggregate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.43.0</version>
+                <configuration>
+                    <java>
+                        <googleJavaFormat>
+                            <version>1.22.0</version>
+                            <style>GOOGLE</style>
+                        </googleJavaFormat>
+                    </java>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
