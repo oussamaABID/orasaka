@@ -66,3 +66,5 @@
 | **GATEWAY_URL** | Target BFF address connecting Next.js API routes with spring-gateway. | `http://localhost:8080` | Low |
 | **GITHUB_ID** / **GITHUB_SECRET** | Third-party GitHub OAuth credentials. | *(Empty)* | High (Secret) |
 | **GOOGLE_CLIENT_ID** / **GOOGLE_CLIENT_SECRET** | Third-party Google OAuth credentials. | *(Empty)* | High (Secret) |
+| **ORASAKA_SECURITY_DEV_BYPASS_ID** | Mock user ID used to bypass authentication during local development. | `user-mock` | Medium |
+| **ORASAKA_SECURITY_DEV_BYPASS_ENABLED** | Toggle to enable mock user authentication bypass in development. | `true` | Medium |

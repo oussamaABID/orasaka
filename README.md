@@ -142,6 +142,36 @@ Run the bundled setup script which validates the JDK, checks for a native Ollama
 docker compose -p orasaka -f ops/docker/docker-compose.yml up -d
 ```
 
+### Local Sovereign AI Image Generation Setup (`stable-diffusion.cpp`)
+
+Orasaka supports 100% sovereign, local image generation via a bare-metal `stable-diffusion.cpp` engine.
+
+1. **Build the `sd-server` binary**:
+   Compile `stable-diffusion.cpp` on your target hardware. For Apple Silicon with Metal GPU acceleration:
+   ```bash
+   git clone --recursive https://github.com/leejet/stable-diffusion.cpp
+   cd stable-diffusion.cpp
+   mkdir build && cd build
+   cmake .. -DSD_METAL=ON
+   cmake --build . --config Release --target sd-server
+   ```
+
+2. **Download a Model**:
+   Download a compatible Stable Diffusion model (e.g., `v1-5-pruned-emaonly.safetensors` in safetensors format) and place it on your machine.
+
+3. **Start the local server**:
+   Run the compiled server on port `8085`:
+   ```bash
+   ./bin/sd-server --listen-port 8085 -m ~/models/stable-diffusion/v1-5-pruned-emaonly.safetensors
+   ```
+
+4. **Verify Gateway Integration**:
+   The Orasaka gateway is pre-configured to bind the `localai` overrides context pointing directly to `http://localhost:8085`. Ensure connectivity responds:
+   ```bash
+   curl http://localhost:8085/
+   # Returns "Stable Diffusion Server is running"
+   ```
+
 ### Build & Run All Modules
 
 ```bash

@@ -119,3 +119,10 @@
 - **Decision**: Group tightly coupled records, sealed hierarchies, and inner implementation steps inside the same file boundary using nested types or package-private inline structures. Split packages by transport protocols are strictly prohibited; entry points must reside in a unified `.endpoint` package boundary, and interconnected data transport objects (DTOs) must maintain ultimate density to prevent file-tree explosion by grouping them inline within singular container contract files.
 - **Rationale**: Maximizes Java 21 file density, leading to shorter, cleaner file structures, faster navigation, and immediate context visibility.
 - **Status**: Approved. (2026-05-22).
+
+## ADR 021: Local Sovereign Offline Image Generation via stable-diffusion.cpp and RFC 2397 Data URLs
+
+- **Decision**: Integrate a bare-metal `stable-diffusion.cpp` engine running locally on port 8085 for image generation, mapping it using a proxy fallback to Ollama chat execution context and returning RFC 2397 Data URLs containing raw Base64 data strings.
+- **Rationale**: Removes external cloud service dependencies (OpenAI API key requirement) for image generation, ensures 100% data sovereignty, and prevents NullPointerExceptions in local offline sandbox architecture environments by cleanly formatting base64 streams directly to the Next.js UI component display canvas.
+- **Status**: Approved (2026-05-23).
+
