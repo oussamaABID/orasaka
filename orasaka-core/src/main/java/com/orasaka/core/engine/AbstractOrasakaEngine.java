@@ -3,6 +3,7 @@ package com.orasaka.core.engine;
 import com.orasaka.core.pipeline.OrasakaContextInterceptor;
 import com.orasaka.core.pipeline.OrasakaOrchestrationPipeline;
 import com.orasaka.core.support.*;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import org.springframework.ai.audio.tts.TextToSpeechModel;
@@ -70,9 +71,51 @@ public abstract sealed class AbstractOrasakaEngine permits OrasakaEngine {
 
   public OrasakaImageResponse generateImage(OrasakaImageRequest request) {
     var model = registry.getActiveImageModel();
-    var response =
-        model.call(MediaPayloadHandler.toImagePrompt(request, registry.getActiveProvider()));
-    return new OrasakaImageResponse(null, response.getResult().getOutput().getUrl(), "png");
+    org.springframework.ai.openai.OpenAiImageOptions executionOptions =
+        org.springframework.ai.openai.OpenAiImageOptions.builder()
+            .model("stable-diffusion")
+            .N(1)
+            .height(512)
+            .width(512)
+            .build();
+    org.springframework.ai.image.ImagePrompt prompt =
+        new org.springframework.ai.image.ImagePrompt(request.prompt(), executionOptions);
+    var response = model.call(prompt);
+
+    var generation = response.getResult();
+    byte[] imageData = null;
+    String url = null;
+
+    if (generation != null && generation.getOutput() != null) {
+      var output = generation.getOutput();
+      url = output.getUrl();
+      String b64 = output.getB64Json();
+      if (b64 != null && !b64.isBlank()) {
+        try {
+          imageData = Base64.getDecoder().decode(b64.trim());
+        } catch (IllegalArgumentException e) {
+          logger.warn("Failed to decode base64 image data", e);
+        }
+      }
+
+      if (imageData == null) {
+        try {
+          var method = output.getClass().getMethod("getImage");
+          Object imgObj = method.invoke(output);
+          if (imgObj instanceof byte[] bytes) {
+            imageData = bytes;
+          }
+        } catch (Exception e) {
+          // Method getImage() does not exist or failed, ignore
+        }
+      }
+    }
+
+    if (imageData != null && url == null) {
+      url = "data:image/png;base64," + Base64.getEncoder().encodeToString(imageData);
+    }
+
+    return new OrasakaImageResponse(imageData, url, "png");
   }
 
   public byte[] generateSpeech(OrasakaSpeechRequest request) {

@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,13 +19,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class OrasakaSecurityFilter extends OncePerRequestFilter {
 
   private static final Logger logger = LoggerFactory.getLogger(OrasakaSecurityFilter.class);
-
-  public static final String DEV_ADMIN_USER_ID = "550e8400-e29b-41d4-a716-446655440001";
-
   private final IdentityService identityService;
+  private final GatewayProperties.SecurityProperties securityProperties;
 
-  public OrasakaSecurityFilter(IdentityService identityService) {
+  public OrasakaSecurityFilter(
+      IdentityService identityService, GatewayProperties.SecurityProperties securityProperties) {
     this.identityService = identityService;
+    this.securityProperties = securityProperties;
   }
 
   @Override
@@ -60,7 +61,29 @@ public class OrasakaSecurityFilter extends OncePerRequestFilter {
             () ->
                 Optional.ofNullable(request.getParameter("token"))
                     .map(String::trim)
-                    .filter(token -> !token.isEmpty()));
+                    .filter(token -> !token.isEmpty()))
+        .filter(token -> isValidTokenLayout(token) || isDevBypass(token));
+  }
+
+  private boolean isValidTokenLayout(String token) {
+    if (token == null) {
+      return false;
+    }
+    try {
+      UUID.fromString(token);
+      return true;
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
+  }
+
+  private boolean isDevBypass(String token) {
+    if (securityProperties.devBypassEnabled()
+        && securityProperties.devBypassId() != null
+        && !securityProperties.devBypassId().isBlank()) {
+      return securityProperties.devBypassId().equals(token);
+    }
+    return false;
   }
 
   private Optional<User> safeGetUser(String userId) {

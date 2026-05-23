@@ -20,6 +20,7 @@ import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.ollama.api.OllamaChatOptions;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.stereotype.Component;
 
 public final class PipelineInterceptors {
@@ -361,20 +362,70 @@ class OrasakaToolInterceptor implements OrasakaContextInterceptor {
   @Override
   public ChatOptions preProcess(
       OrasakaChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
-    int toolCount = 0;
-    if (toolRegistry != null && !toolRegistry.getRegisteredTools().isEmpty()) {
-      options = attachTools(options);
-      toolCount = toolRegistry.getRegisteredTools().size();
+    if (toolRegistry == null || toolRegistry.getRegisteredTools().isEmpty()) {
+      return options;
     }
-    logger.debug("Attached {} tools to ChatOptions", toolCount);
+
+    List<ToolCallback> demandedTools = new java.util.ArrayList<>();
+    for (ToolCallback tool : toolRegistry.getRegisteredTools()) {
+      String name = tool.getToolDefinition().name();
+      boolean demand = true;
+      if ("analyzePoster".equals(name)) {
+        demand = demandsPosterTool(request, promptText);
+      } else if ("analyzeAudioExtract".equals(name)) {
+        demand = demandsAudioTool(request, promptText);
+      }
+      if (demand) {
+        demandedTools.add(tool);
+      }
+    }
+
+    if (demandedTools.isEmpty()) {
+      return options;
+    }
+
+    options = attachTools(options, demandedTools);
+    logger.debug("Attached {} tools to ChatOptions", demandedTools.size());
     return options;
   }
 
-  private ChatOptions attachTools(ChatOptions options) {
+  private boolean demandsPosterTool(OrasakaChatRequest request, String promptText) {
+    String text = (promptText != null ? promptText : "") + " " + request.prompt();
+    if (request.messages() != null) {
+      for (var msg : request.messages()) {
+        if (msg.content() != null) {
+          text += " " + msg.content();
+        }
+      }
+    }
+    String lower = text.toLowerCase();
+    return lower.contains("poster")
+        || lower.contains("image")
+        || lower.contains("visual")
+        || lower.contains("picture");
+  }
+
+  private boolean demandsAudioTool(OrasakaChatRequest request, String promptText) {
+    String text = (promptText != null ? promptText : "") + " " + request.prompt();
+    if (request.messages() != null) {
+      for (var msg : request.messages()) {
+        if (msg.content() != null) {
+          text += " " + msg.content();
+        }
+      }
+    }
+    String lower = text.toLowerCase();
+    return lower.contains("audio")
+        || lower.contains("clip")
+        || lower.contains("compliance")
+        || lower.contains("sound")
+        || lower.contains("voice")
+        || lower.contains("music");
+  }
+
+  private ChatOptions attachTools(ChatOptions options, List<ToolCallback> demandedTools) {
     Set<String> toolNames =
-        toolRegistry.getRegisteredTools().stream()
-            .map(t -> t.getToolDefinition().name())
-            .collect(Collectors.toSet());
+        demandedTools.stream().map(t -> t.getToolDefinition().name()).collect(Collectors.toSet());
 
     return switch (options) {
       case OllamaChatOptions ollama ->
@@ -383,6 +434,7 @@ class OrasakaToolInterceptor implements OrasakaContextInterceptor {
               .temperature(ollama.getTemperature())
               .numPredict(ollama.getNumPredict())
               .toolNames(toolNames)
+              .toolCallbacks(demandedTools)
               .build();
       case OpenAiChatOptions openai ->
           OpenAiChatOptions.builder()
@@ -390,6 +442,7 @@ class OrasakaToolInterceptor implements OrasakaContextInterceptor {
               .temperature(openai.getTemperature())
               .maxTokens(openai.getMaxTokens())
               .toolNames(toolNames)
+              .toolCallbacks(demandedTools)
               .build();
       default -> options;
     };

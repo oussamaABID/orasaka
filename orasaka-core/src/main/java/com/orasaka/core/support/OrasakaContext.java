@@ -1,6 +1,5 @@
 package com.orasaka.core.support;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,11 +18,23 @@ public record OrasakaContext(
     String userId, String conversationId, Map<String, Object> preferences, Set<String> roles) {
   public OrasakaContext {
     preferences =
-        (preferences != null)
-            ? Collections.unmodifiableMap(Map.copyOf(preferences))
-            : Collections.emptyMap();
+        java.util.Optional.ofNullable(preferences)
+            .map(
+                m -> {
+                  var clean = new java.util.HashMap<String, Object>();
+                  m.forEach(
+                      (k, v) -> {
+                        if (k != null && v != null) {
+                          clean.put(k, v);
+                        }
+                      });
+                  return Map.copyOf(clean);
+                })
+            .orElseGet(Map::of);
     roles =
-        (roles != null) ? Collections.unmodifiableSet(Set.copyOf(roles)) : Collections.emptySet();
+        (roles != null)
+            ? java.util.Collections.unmodifiableSet(Set.copyOf(roles))
+            : java.util.Collections.emptySet();
   }
 
   /**

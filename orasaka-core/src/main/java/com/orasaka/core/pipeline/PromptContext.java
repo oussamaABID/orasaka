@@ -22,8 +22,34 @@ public record PromptContext(
 
   /** Compact constructor enforcing immutability and defensive copying. */
   public PromptContext {
-    userMetadata = (userMetadata == null) ? Map.of() : Map.copyOf(userMetadata);
-    systemMetadata = (systemMetadata == null) ? Map.of() : Map.copyOf(systemMetadata);
+    userMetadata =
+        java.util.Optional.ofNullable(userMetadata)
+            .map(
+                m -> {
+                  var clean = new java.util.HashMap<String, Object>();
+                  m.forEach(
+                      (k, v) -> {
+                        if (k != null && v != null) {
+                          clean.put(k, v);
+                        }
+                      });
+                  return Map.copyOf(clean);
+                })
+            .orElseGet(Map::of);
+    systemMetadata =
+        java.util.Optional.ofNullable(systemMetadata)
+            .map(
+                m -> {
+                  var clean = new java.util.HashMap<String, Object>();
+                  m.forEach(
+                      (k, v) -> {
+                        if (k != null && v != null) {
+                          clean.put(k, v);
+                        }
+                      });
+                  return Map.copyOf(clean);
+                })
+            .orElseGet(Map::of);
   }
 
   /**

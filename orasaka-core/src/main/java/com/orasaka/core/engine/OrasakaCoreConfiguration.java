@@ -6,6 +6,9 @@ import org.springframework.ai.audio.tts.TextToSpeechModel;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.image.ImageModel;
+import org.springframework.ai.openai.OpenAiImageModel;
+import org.springframework.ai.openai.OpenAiImageOptions;
+import org.springframework.ai.openai.api.OpenAiImageApi;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +29,28 @@ public class OrasakaCoreConfiguration {
 
   @Bean
   public Map<String, ImageModel> imageModels(CoreProperties properties) {
-    return ModelFactory.createImageModels(properties);
+    Map<String, ImageModel> models = new HashMap<>(ModelFactory.createImageModels(properties));
+    if (properties.overrides() != null) {
+      CoreProperties.ProviderConfig localai = properties.overrides().get("localai");
+      if (localai != null && localai.baseUrl() != null) {
+        String apiKey = "dummy-key";
+        OpenAiImageApi api =
+            OpenAiImageApi.builder().apiKey(apiKey).baseUrl(localai.baseUrl()).build();
+        OpenAiImageOptions defaultOptions =
+            OpenAiImageOptions.builder()
+                .model(localai.model() != null ? localai.model() : "stable-diffusion")
+                .N(1)
+                .height(512)
+                .width(512)
+                .build();
+        OpenAiImageModel model =
+            new OpenAiImageModel(
+                api, defaultOptions, new org.springframework.retry.support.RetryTemplate());
+        models.put("localai", model);
+        models.put("ollama", model);
+      }
+    }
+    return models;
   }
 
   @Bean

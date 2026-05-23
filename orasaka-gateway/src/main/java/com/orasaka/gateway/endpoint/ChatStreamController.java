@@ -9,6 +9,7 @@ import com.orasaka.gateway.service.ChatStreamService;
 import com.orasaka.gateway.support.MediaContracts;
 import com.orasaka.identity.domain.User;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,7 +85,27 @@ public class ChatStreamController {
         new OrasakaContext(user.id().toString(), null, user.preferences(), user.authorities());
     var request = new OrasakaImageRequest(prompt, null, null, null, context);
     var response = aiClient.generateImage(request);
-    return ResponseEntity.ok(Map.of("content", response.url()));
+
+    // 💎 Elite Defensive Payload Packing
+    String base64Data = "";
+    if (response.imageData() != null) {
+      base64Data = Base64.getEncoder().encodeToString(response.imageData());
+    }
+
+    Map<String, Object> safeResponse = new HashMap<>();
+    safeResponse.put("format", response.format() != null ? response.format() : "png");
+
+    String urlVal = "";
+    if (base64Data != null && !base64Data.isBlank()) {
+      urlVal = "data:image/png;base64," + base64Data.trim();
+    } else if (response.url() != null) {
+      urlVal = response.url();
+    }
+
+    safeResponse.put("url", urlVal);
+    safeResponse.put("content", urlVal);
+
+    return ResponseEntity.ok(safeResponse);
   }
 
   /**

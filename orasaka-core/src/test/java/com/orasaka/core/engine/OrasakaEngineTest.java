@@ -107,6 +107,75 @@ class OrasakaEngineTest {
   }
 
   @Test
+  void shouldAttachPosterToolWhenDemanded() {
+    // Given
+    org.springframework.ai.tool.ToolCallback mockTool =
+        mock(org.springframework.ai.tool.ToolCallback.class);
+    org.springframework.ai.tool.definition.ToolDefinition mockDef =
+        mock(org.springframework.ai.tool.definition.ToolDefinition.class);
+    when(mockDef.name()).thenReturn("analyzePoster");
+    when(mockTool.getToolDefinition()).thenReturn(mockDef);
+    when(toolRegistry.getRegisteredTools()).thenReturn(List.of(mockTool));
+
+    OrasakaChatRequest request =
+        OrasakaChatRequest.simple("Please analyze this poster for visual themes");
+    AssistantMessage assistantMessage = new AssistantMessage("Response");
+    ChatResponse chatResponse = new ChatResponse(List.of(new Generation(assistantMessage)));
+    when(chatModel.call(any(Prompt.class))).thenReturn(chatResponse);
+
+    // When
+    engine.chat(request);
+
+    // Then
+    verify(chatModel)
+        .call(
+            argThat(
+                (Prompt prompt) -> {
+                  var opts = prompt.getOptions();
+                  if (opts instanceof org.springframework.ai.ollama.api.OllamaChatOptions ollama) {
+                    return ollama.getToolNames() != null
+                        && ollama.getToolNames().contains("analyzePoster")
+                        && ollama.getToolCallbacks() != null
+                        && ollama.getToolCallbacks().contains(mockTool);
+                  }
+                  return false;
+                }));
+  }
+
+  @Test
+  void shouldNotAttachPosterToolWhenNotDemanded() {
+    // Given
+    org.springframework.ai.tool.ToolCallback mockTool =
+        mock(org.springframework.ai.tool.ToolCallback.class);
+    org.springframework.ai.tool.definition.ToolDefinition mockDef =
+        mock(org.springframework.ai.tool.definition.ToolDefinition.class);
+    when(mockDef.name()).thenReturn("analyzePoster");
+    when(mockTool.getToolDefinition()).thenReturn(mockDef);
+    when(toolRegistry.getRegisteredTools()).thenReturn(List.of(mockTool));
+
+    OrasakaChatRequest request = OrasakaChatRequest.simple("Hello there, how are you?");
+    AssistantMessage assistantMessage = new AssistantMessage("Response");
+    ChatResponse chatResponse = new ChatResponse(List.of(new Generation(assistantMessage)));
+    when(chatModel.call(any(Prompt.class))).thenReturn(chatResponse);
+
+    // When
+    engine.chat(request);
+
+    // Then
+    verify(chatModel)
+        .call(
+            argThat(
+                (Prompt prompt) -> {
+                  var opts = prompt.getOptions();
+                  if (opts instanceof org.springframework.ai.ollama.api.OllamaChatOptions ollama) {
+                    return ollama.getToolNames() == null
+                        || !ollama.getToolNames().contains("analyzePoster");
+                  }
+                  return true;
+                }));
+  }
+
+  @Test
   void shouldInjectRagContextWhenEnabled() throws Exception {
     // Given
     properties =

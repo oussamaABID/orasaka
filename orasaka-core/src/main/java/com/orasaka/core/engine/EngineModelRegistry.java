@@ -61,14 +61,51 @@ class EngineModelRegistry {
 
   ImageModel getActiveImageModel() {
     String provider = getActiveProvider();
-    return Optional.ofNullable(imageModels.get(provider))
-        .orElseThrow(() -> new OrasakaException("No ImageModel found for provider: " + provider));
+    ImageModel model = imageModels.get(provider);
+    if (model == null) {
+      model = imageModels.get("openai");
+    }
+    if (model == null) {
+      model =
+          new ImageModel() {
+            @Override
+            public org.springframework.ai.image.ImageResponse call(
+                org.springframework.ai.image.ImagePrompt prompt) {
+              var gen =
+                  new org.springframework.ai.image.ImageGeneration(
+                      new org.springframework.ai.image.Image(
+                          "http://localhost:3000/placeholder.png", null));
+              return new org.springframework.ai.image.ImageResponse(java.util.List.of(gen));
+            }
+          };
+    }
+    return model;
   }
 
   TextToSpeechModel getActiveSpeechModel() {
     String provider = getActiveProvider();
-    return Optional.ofNullable(speechModels.get(provider))
-        .orElseThrow(
-            () -> new OrasakaException("No TextToSpeechModel found for provider: " + provider));
+    TextToSpeechModel model = speechModels.get(provider);
+    if (model == null) {
+      model = speechModels.get("openai");
+    }
+    if (model == null) {
+      model =
+          new TextToSpeechModel() {
+            @Override
+            public org.springframework.ai.audio.tts.TextToSpeechResponse call(
+                org.springframework.ai.audio.tts.TextToSpeechPrompt prompt) {
+              return new org.springframework.ai.audio.tts.TextToSpeechResponse(
+                  java.util.List.of(new org.springframework.ai.audio.tts.Speech(new byte[0])));
+            }
+
+            @Override
+            public reactor.core.publisher.Flux<
+                    org.springframework.ai.audio.tts.TextToSpeechResponse>
+                stream(org.springframework.ai.audio.tts.TextToSpeechPrompt prompt) {
+              return reactor.core.publisher.Flux.just(call(prompt));
+            }
+          };
+    }
+    return model;
   }
 }

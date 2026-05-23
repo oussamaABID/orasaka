@@ -21,6 +21,23 @@ public record DefaultOrasakaOptions(
     Double temperature, Integer maxTokens, Map<String, Object> extraOptions)
     implements OrasakaOptions {
 
+  public DefaultOrasakaOptions {
+    extraOptions =
+        java.util.Optional.ofNullable(extraOptions)
+            .map(
+                m -> {
+                  var clean = new java.util.HashMap<String, Object>();
+                  m.forEach(
+                      (k, v) -> {
+                        if (k != null && v != null) {
+                          clean.put(k, v);
+                        }
+                      });
+                  return Map.copyOf(clean);
+                })
+            .orElseGet(Map::of);
+  }
+
   /**
    * Default constructor creating an empty configuration with null constraints and an empty extra
    * options map.

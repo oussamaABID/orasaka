@@ -113,7 +113,7 @@ public class SecurityConfig {
                         .anyRequest()
                         .authenticated())
             .addFilterBefore(
-                new OrasakaSecurityFilter(identityService),
+                new OrasakaSecurityFilter(identityService, gatewayProperties.security()),
                 UsernamePasswordAuthenticationFilter.class);
 
     chain.addFilterAfter(new OrasakaOperationGraphFilter(graphEngine), OrasakaSecurityFilter.class);
