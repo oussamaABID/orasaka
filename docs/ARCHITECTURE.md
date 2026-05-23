@@ -23,9 +23,20 @@ graph TD
     
     Identity --> Postgres[(PostgreSQL)]
     Tools --> Postgres
+
+    classDef client fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#0369a1;
+    classDef bff fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px,color:#6d28d9;
+    classDef core fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#047857;
+    classDef infra fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#b45309;
+    
+    class UI,CLI client;
+    class Gateway,CoreClient,Identity bff;
+    class Core,Tools core;
+    class Postgres infra;
 ```
 
 ### Module Breakdown
+
 - **[orasaka-core](./orasaka-core)**: The stateless, agnostic core library. It holds pure abstractions (RAG interfaces, Model Context Protocol declarations, engine interfaces) and strictly locks down Spring AI to version `1.1.6`. It is completely decoupled from Spring Boot auto-configuration.
 - **[orasaka-tools](./orasaka-tools)**: The concrete tool execution and multi-tier cache module. Contains memory/persistent caffeine-to-postgres decorators and concrete MCP integrations.
 - **[orasaka-identity](./orasaka-identity)**: Manages authentication credentials, user profiles, BCrypt hashing, and the data-driven Interception & Feedback engine.
@@ -37,7 +48,7 @@ graph TD
 
 ## 🌐 BFF (Backend-for-Frontend) Topology
 
-To prevent security context leakage, browser-side CORS failures, and open-port exposures on the client, the UI follows a strict BFF topology pattern. 
+To prevent security context leakage, browser-side CORS failures, and open-port exposures on the client, the UI follows a strict BFF topology pattern.
 
 **Key Rule**: The browser client NEVER connects directly to `orasaka-gateway` (port `8080`) or local AI execution environments (e.g., Ollama port `11434`). All asynchronous interactions must go through server-side API Routes in Next.js (`/api/graphql` or `/api/chat/stream/[conversationId]`).
 
@@ -80,13 +91,15 @@ graph TD
     Gateway -- "Virtual Threads Auth / Profile fetch" --> Identity
     Identity -- "SQL persist/verify" --> Postgres
 
-    %% Styling & annotations
-    classDef client fill:#f9f,stroke:#333,stroke-width:2px;
-    classDef bff fill:#bbf,stroke:#333,stroke-width:2px;
-    classDef backend fill:#dfd,stroke:#333,stroke-width:2px;
+    classDef client fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#0369a1;
+    classDef bff fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px,color:#6d28d9;
+    classDef core fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#047857;
+    classDef infra fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#b45309;
+    
     class UI client;
     class ChatStream,GraphQL,NextAuth bff;
-    class Gateway,Identity,Postgres backend;
+    class Gateway,Identity bff;
+    class Postgres infra;
 ```
 
 ---
@@ -132,6 +145,16 @@ graph TD
         McpOrchestrator --> McpServer[External MCP Servers]
         ToolRegistry --> JavaMethods[Local Java Methods]
     end
+
+    classDef client fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#0369a1;
+    classDef bff fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px,color:#6d28d9;
+    classDef core fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#047857;
+    classDef infra fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#b45309;
+    
+    class User client;
+    class Client bff;
+    class Engine,Interceptors,ToolInterceptor,RagInterceptor,McpInterceptor,MemoryInterceptor,ToolRegistry,KnowledgeService,McpOrchestrator,ChatModel,ImageModel,EmbeddingModel core;
+    class Ollama,OpenAI,VectorStore,McpServer,JavaMethods infra;
 ```
 
 ---
@@ -141,6 +164,7 @@ graph TD
 The `orasaka-identity` module implements an "Intercept & Resume" Session Engine. Downstream business verticals can dynamically prompt users to perform feedback loops or complete surveys using abstract JSON configurations.
 
 ### Key Characteristics
+
 1. **Zero-Polling Profile Injection**: Checked during initial Gateway token verification and cached in JWT payloads, preventing unnecessary runtime API queries.
 2. **Generic Database Tracking**: Registered in `orasaka_user_interceptions` (mapping a `user_id` to an active `interception_type` and `schema_id`).
 3. **Opt-in Passive Activation**: Controlled dynamically by feature flags inside backend configurations.
@@ -150,9 +174,11 @@ The `orasaka-identity` module implements an "Intercept & Resume" Session Engine.
 ## 🌊 5. High-Density Pipeline Orchestration & Interceptor Lego Pattern
 
 ### 5.1 The Architecture Principle
+
 Orasaka pipelines are stateless, sequential orchestration layers executing safely over Java 21 Virtual Threads. Instead of mutating or fragmenting core logic into different hardcoded service layers, the framework treats the pipeline as an anemic processing sequence driven by a chain of package-private interceptors (`List<OrasakaContextInterceptor>`).
 
 ### ⚙️ 5.2 Pattern A: Dynamic Declarative Routing via Configuration
+
 New, isolated execution pipelines can be instantiated purely through metadata declaration within application configuration boundaries (`application.yml`). This prevents code duplication and keeps internal interceptor strategies strictly sealed.
 
 ```yaml
@@ -171,6 +197,7 @@ orasaka:
 ```
 
 ### 🛠️ 5.3 Pattern B: Programmable Fluent Construction (The Pipeline Builder)
+
 For contextual testing or runtime isolation, the framework exposes a strict, type-safe Builder pattern to assemble internal implementation blocks:
 
 ```java
@@ -183,6 +210,6 @@ OrasakaOrchestrationPipeline customCodingPipeline = OrasakaPipelineBuilder.creat
 ```
 
 ### 🔒 5.4 Encapsulation & Concurrency Invariance
+
 - **Absolute Package Privacy**: All individual concrete interceptor definitions must remain package-private within `com.orasaka.core.pipeline`. Only the Orchestrator and the Builder are allowed to be public.
 - **Virtual Thread Purity**: Because interceptors rely entirely on linear functional reduction (`Stream.reduce`), adding or removing nodes into a pipeline layout introduces zero race conditions or thread-local storage leaks.
-

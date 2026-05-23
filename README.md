@@ -195,6 +195,7 @@ npx ts-node src/index.ts chat "Explain quantum computing in one sentence."
 Orasaka is architected to provide an elite, modern development experience (DevX), leveraging cutting-edge Java 21 features and a decoupled component-driven extension model.
 
 ### A. Dynamic Context Interceptor Pipeline
+
 Third-party developers can extend the orchestration engine without modifying the core cognitive code. By implementing the `OrasakaContextInterceptor` interface, custom components are automatically discovered via Spring dependency injection and woven into the functional execution pipeline:
 
 ```mermaid
@@ -205,20 +206,33 @@ graph LR
     Interceptors --> Interceptor3[RefinerInterceptor]
     Interceptors --> Interceptor4[RouterInterceptor]
     Interceptor4 --> Engine[AbstractOrasakaEngine]
+
+    classDef client fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#0369a1;
+    classDef bff fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px,color:#6d28d9;
+    classDef core fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#047857;
+    classDef infra fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#b45309;
+    
+    class Request,Interceptors,Interceptor1,Interceptor2,Interceptor3,Interceptor4,Engine core;
 ```
 
 ### B. Decoupled Event-Driven Extensibility
+
 Execution lifecycle events are emitted asynchronously and reactively, enabling non-blocking analytics, auditing, and observability integrations:
-* **`OrasakaChatCompletedEvent`**: An immutable record published using Spring's `ApplicationEventPublisher` upon successful completion of synchronous chat executions or reactive token streams.
+
+- **`OrasakaChatCompletedEvent`**: An immutable record published using Spring's `ApplicationEventPublisher` upon successful completion of synchronous chat executions or reactive token streams.
 
 ### C. Self-Validating Records & Compile-Time Defensiveness
+
 We enforce compile-time verification and runtime safety by migrating defensive copies, default parameters, and structural validation from anemic services directly into the **Compact Constructors** of Java 21 records:
-* **Zero-Allocation Payloads**: Rich domain methods like `compileMessages()` eliminate procedural loop structures from the service layer, keeping service classes clean and orchestration-focused.
+
+- **Zero-Allocation Payloads**: Rich domain methods like `compileMessages()` eliminate procedural loop structures from the service layer, keeping service classes clean and orchestration-focused.
 
 ### D. Server-Driven UX via the Orasaka Operation Graph
+
 Orasaka implements a Server-Driven UI capability architecture via the polymorphic `OrasakaOperationGraph`. Rather than hardcoding feature toggles in the frontend, the UI constructs its contextual "+" actions menu dynamically by querying the `/api/v1/operations/graph` endpoint:
-* **Polymorphic Capability States**: Capabilities can evaluate to `Active`, `Locked` (providing a contextual locking explanation and audit timestamp), or `Invisible` (which is skipped entirely in frontend rendering).
-* **Frontier Ingress Security**: The gateway boundary enforces matching access control via the `OrasakaOperationGraphFilter`. Calls to locked or invisible capabilities are aborted immediately at the frontier, returning an HTTP `403 Forbidden` response.
+
+- **Polymorphic Capability States**: Capabilities can evaluate to `Active`, `Locked` (providing a contextual locking explanation and audit timestamp), or `Invisible` (which is skipped entirely in frontend rendering).
+- **Frontier Ingress Security**: The gateway boundary enforces matching access control via the `OrasakaOperationGraphFilter`. Calls to locked or invisible capabilities are aborted immediately at the frontier, returning an HTTP `403 Forbidden` response.
 
 ---
 
