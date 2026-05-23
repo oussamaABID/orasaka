@@ -4,7 +4,7 @@ import com.orasaka.core.context.OrasakaContext;
 
 /**
  * Unified image request record for multi-modal generation.
- * 
+ *
  * @param prompt Descriptive text for the image to generate.
  * @param width Desired width in pixels (optional).
  * @param height Desired height in pixels (optional).
@@ -12,9 +12,4 @@ import com.orasaka.core.context.OrasakaContext;
  * @param context The execution context carrying user preferences (e.g., aspect ratios).
  */
 public record OrasakaImageRequest(
-    String prompt,
-    Integer width,
-    Integer height,
-    OrasakaOptions options,
-    OrasakaContext context
-) {}
+    String prompt, Integer width, Integer height, OrasakaOptions options, OrasakaContext context) {}

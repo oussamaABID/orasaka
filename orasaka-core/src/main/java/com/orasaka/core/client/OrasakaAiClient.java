@@ -8,18 +8,20 @@ import com.orasaka.core.model.OrasakaImageResponse;
 import com.orasaka.core.model.OrasakaSpeechRequest;
 import com.orasaka.core.rag.OrasakaKnowledgeService;
 import com.orasaka.core.tool.OrasakaToolRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 /**
  * High-level Facade for developers to interact with the Orasaka AI Ecosystem.
- * 
- * <p>This client serves as the primary entry point for all AI interactions, including
- * multi-modal chat, image generation, and knowledge retrieval. It automatically 
- * orchestrates provider resolution, RAG context injection, and local tool execution 
- * through the underlying engine.
- * 
- * <p>Execution is handled via Virtual Threads in the engine layer to ensure 
- * optimal performance in high-concurrency environments.
+ *
+ * <p>This client serves as the primary entry point for all AI interactions, including multi-modal
+ * chat, image generation, and knowledge retrieval. It automatically orchestrates provider
+ * resolution, RAG context injection, and local tool execution through the underlying engine.
+ *
+ * <p>Execution is handled via Virtual Threads in the engine layer to ensure optimal performance in
+ * high-concurrency environments.
  *
  * @see com.orasaka.core.engine.AbstractOrasakaEngine
  * @see com.orasaka.core.rag.OrasakaKnowledgeService
@@ -28,76 +30,105 @@ import org.springframework.stereotype.Component;
 @Component
 public class OrasakaAiClient {
 
-    private final AbstractOrasakaEngine engine;
-    private final OrasakaToolRegistry toolRegistry;
-    private final OrasakaKnowledgeService knowledgeService;
+  private static final Logger logger = LoggerFactory.getLogger(OrasakaAiClient.class);
 
-    /**
-     * Initializes the facade with required orchestration services.
-     *
-     * @param engine The core AI orchestration engine.
-     * @param toolRegistry The registry for local Java tools.
-     * @param knowledgeService The RAG knowledge management service.
-     */
-    public OrasakaAiClient(
-            AbstractOrasakaEngine engine,
-            OrasakaToolRegistry toolRegistry,
-            OrasakaKnowledgeService knowledgeService) {
-        this.engine = engine;
-        this.toolRegistry = toolRegistry;
-        this.knowledgeService = knowledgeService;
-    }
+  private final AbstractOrasakaEngine engine;
+  private final OrasakaToolRegistry toolRegistry;
+  private final OrasakaKnowledgeService knowledgeService;
 
-    /**
-     * Executes a unified chat interaction with automatic RAG and Tooling support.
-     * 
-     * <p>This method leverages Virtual Threads via the engine to remain non-blocking.
-     *
-     * @param request The domain-specific chat request.
-     * @return An {@link OrasakaChatResponse} containing the generated content and provider metadata.
-     * @see OrasakaChatRequest
-     */
-    public OrasakaChatResponse chat(OrasakaChatRequest request) {
-        return engine.chat(request);
-    }
+  /**
+   * Initializes the facade with required orchestration services.
+   *
+   * @param engine The core AI orchestration engine.
+   * @param toolRegistry The registry for local Java tools.
+   * @param knowledgeService The RAG knowledge management service.
+   */
+  public OrasakaAiClient(
+      AbstractOrasakaEngine engine,
+      OrasakaToolRegistry toolRegistry,
+      OrasakaKnowledgeService knowledgeService) {
+    this.engine = engine;
+    this.toolRegistry = toolRegistry;
+    this.knowledgeService = knowledgeService;
+  }
 
-    /**
-     * Triggers multi-modal image generation flows.
-     * 
-     * <p>This method leverages Virtual Threads via the engine to remain non-blocking.
-     *
-     * @param request The image generation specification.
-     * @return An {@link OrasakaImageResponse} containing image metadata or URLs.
-     */
-    public OrasakaImageResponse generateImage(OrasakaImageRequest request) {
-        return engine.generateImage(request);
-    }
+  /**
+   * Executes a unified chat interaction with automatic RAG and Tooling support.
+   *
+   * <p>This method leverages Virtual Threads via the engine to remain non-blocking.
+   *
+   * @param request The domain-specific chat request.
+   * @return An {@link OrasakaChatResponse} containing the generated content and provider metadata.
+   * @see OrasakaChatRequest
+   */
+  public OrasakaChatResponse chat(OrasakaChatRequest request) {
+    logger.debug("Core Client received chat request: {}", request);
+    OrasakaChatResponse response = engine.chat(request);
+    logger.debug("Core Client chat completed with response: {}", response);
+    return response;
+  }
 
-    /**
-     * Triggers multi-modal speech generation (TTS) flows.
-     * 
-     * @param request The speech generation specification.
-     * @return The audio metadata or stream info (provider dependent).
-     */
-    public byte[] generateSpeech(OrasakaSpeechRequest request) {
-        return engine.generateSpeech(request);
-    }
+  /**
+   * Executes a unified chat interaction with automatic RAG and Tooling support, returning the
+   * response as a reactive streaming {@link Flux}.
+   *
+   * <p>This method leverages the reactive stream model and is non-blocking.
+   *
+   * @param request The domain-specific chat request.
+   * @return A {@link Flux} of {@link OrasakaChatResponse} chunks.
+   * @see OrasakaChatRequest
+   * @see reactor.core.publisher.Flux
+   */
+  public Flux<OrasakaChatResponse> stream(OrasakaChatRequest request) {
+    logger.debug("Core Client received streaming chat request: {}", request);
+    return engine.stream(request);
+  }
 
-    /**
-     * Provides access to the local tool registry for manual tool management.
-     *
-     * @return The active {@link OrasakaToolRegistry}.
-     */
-    public OrasakaToolRegistry getToolRegistry() {
-        return toolRegistry;
-    }
+  /**
+   * Triggers multi-modal image generation flows.
+   *
+   * <p>This method leverages Virtual Threads via the engine to remain non-blocking.
+   *
+   * @param request The image generation specification.
+   * @return An {@link OrasakaImageResponse} containing image metadata or URLs.
+   */
+  public OrasakaImageResponse generateImage(OrasakaImageRequest request) {
+    logger.debug("Core Client received image generation request: {}", request);
+    OrasakaImageResponse response = engine.generateImage(request);
+    logger.debug("Core Client image generation completed with response: {}", response);
+    return response;
+  }
 
-    /**
-     * Provides access to the knowledge service for RAG configuration.
-     *
-     * @return The active {@link OrasakaKnowledgeService}.
-     */
-    public OrasakaKnowledgeService getKnowledgeService() {
-        return knowledgeService;
-    }
+  /**
+   * Triggers multi-modal speech generation (TTS) flows.
+   *
+   * @param request The speech generation specification.
+   * @return The audio metadata or stream info (provider dependent).
+   */
+  public byte[] generateSpeech(OrasakaSpeechRequest request) {
+    logger.debug("Core Client received speech generation request: {}", request);
+    byte[] response = engine.generateSpeech(request);
+    logger.debug(
+        "Core Client speech generation completed with {} bytes",
+        response != null ? response.length : 0);
+    return response;
+  }
+
+  /**
+   * Provides access to the local tool registry for manual tool management.
+   *
+   * @return The active {@link OrasakaToolRegistry}.
+   */
+  public OrasakaToolRegistry getToolRegistry() {
+    return toolRegistry;
+  }
+
+  /**
+   * Provides access to the knowledge service for RAG configuration.
+   *
+   * @return The active {@link OrasakaKnowledgeService}.
+   */
+  public OrasakaKnowledgeService getKnowledgeService() {
+    return knowledgeService;
+  }
 }
