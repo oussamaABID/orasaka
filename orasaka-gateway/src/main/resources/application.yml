@@ -1,0 +1,87 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: orasaka-gateway
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/orasaka_db}
+    username: ${SPRING_DATASOURCE_USERNAME:orasaka_admin}
+    password: ${SPRING_DATASOURCE_PASSWORD:orasaka_secure_pass}
+    driver-class-name: org.postgresql.Driver
+  sql:
+    init:
+      mode: ${SPRING_SQL_INIT_MODE:never}
+  graphql:
+    graphiql:
+      enabled: ${SPRING_GRAPHQL_GRAPHIQL_ENABLED:true}
+    cors:
+      allowed-origins: ${ORASAKA_GATEWAY_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+      allowed-headers: "Authorization,Content-Type,X-Requested-With,X-Orasaka-Context"
+      allow-credentials: true
+
+orasaka:
+  gateway:
+    cors:
+      # Comma-separated list of allowed origins. Override via ORASAKA_GATEWAY_CORS_ALLOWED_ORIGINS env var.
+      allowed-origins: ${ORASAKA_GATEWAY_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  core:
+    default-provider: ${ORASAKA_DEFAULT_PROVIDER:ollama}
+    orchestration:
+      pipeline:
+        enabled: ${ORASAKA_ORCHESTRATION_ENABLED:true}
+        user-context:
+          enabled: ${ORASAKA_USER_CONTEXT_ENABLED:true}
+        system-context:
+          enabled: ${ORASAKA_SYSTEM_CONTEXT_ENABLED:true}
+        refiner:
+          enabled: ${ORASAKA_REFINER_ENABLED:true}
+          provider: ${ORASAKA_REFINER_PROVIDER:openai}
+          model: ${ORASAKA_REFINER_MODEL:gpt-4-turbo}
+          temperature: ${ORASAKA_REFINER_TEMPERATURE:0.2}
+        router:
+          enabled: true
+          provider: ${ORASAKA_ROUTER_PROVIDER:ollama}
+          model: ${ORASAKA_ROUTER_MODEL:llama3}
+          temperature: ${ORASAKA_ROUTER_TEMPERATURE:0.0}
+    overrides:
+      ollama:
+        base-url: ${ORASAKA_OLLAMA_BASE_URL:http://localhost:11434}
+        model: ${ORASAKA_OLLAMA_MODEL:llama3:8b}
+        temperature: ${ORASAKA_OLLAMA_TEMPERATURE:0.7}
+        extra:
+          embedding-model: ${ORASAKA_OLLAMA_EMBEDDING_MODEL:all-minilm}
+      openai:
+        base-url: ${ORASAKA_OPENAI_BASE_URL:https://api.openai.com/v1}
+        model: ${ORASAKA_OPENAI_MODEL:gpt-4o}
+        temperature: ${ORASAKA_OPENAI_TEMPERATURE:0.7}
+  tools:
+    configs:
+      searchWeb:
+        cache:
+          enabled: true
+          ttl-seconds: 3600
+        rag:
+          enabled: true
+          chunker-type: MARKDOWN_CHUNKERS
+          source-table: orasaka_tools_rag_source
+  infrastructure:
+    identity:
+      email-verification:
+        enabled: ${ORASAKA_EMAIL_VERIFICATION_ENABLED:true}
+      interceptions:
+        enabled: ${ORASAKA_INTERCEPTIONS_ENABLED:true}
+        schemas:
+          onboarding: "classpath:config/onboarding-schema.json"
+          feedback: "classpath:config/feedback-schema.json"
+    rate-limit:
+      enabled: ${ORASAKA_RATE_LIMIT_ENABLED:false}
+      redis-url: ${ORASAKA_REDIS_URL:redis://localhost:6379}
+      default-tier: ${ORASAKA_RATE_LIMIT_DEFAULT_TIER:free}
+
+logging:
+  level:
+    root: ${LOGGING_LEVEL_ROOT:INFO}
+    com.orasaka: ${LOGGING_LEVEL_ORASAKA:DEBUG}
+    org.springframework.security: ${LOGGING_LEVEL_SECURITY:DEBUG}

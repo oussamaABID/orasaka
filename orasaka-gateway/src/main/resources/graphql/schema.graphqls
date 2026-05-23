@@ -1,9 +1,13 @@
 type Query {
     me: User
+    interceptionSchema(schemaId: String!): String
 }
 
 type Mutation {
     chat(prompt: String!, conversationId: String): ChatResponse
+    updatePreferences(preferences: Map!): User
+    register(username: String!, email: String!, password: String!, language: String): RegisterResult!
+    resolveInterception(interceptionType: String!, schemaId: String!, responses: Map!): Boolean!
 }
 
 type Subscription {
@@ -13,6 +17,8 @@ type Subscription {
 type User {
     id: ID!
     username: String!
+    email: String!
+    authorities: [String!]!
     preferences: Map
 }
 
@@ -20,6 +26,15 @@ type ChatResponse {
     content: String!
     conversationId: String
     metadata: Map
+}
+
+"""
+Result of the self-service registration mutation.
+Exactly one of `user` or `error` will be non-null.
+"""
+type RegisterResult {
+    user: User
+    error: String
 }
 
 scalar Map
