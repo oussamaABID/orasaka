@@ -1,22 +1,41 @@
 import { GraphQLClient, gql } from 'graphql-request';
 
-/**
- * Orasaka CLI Client
- * Foundation for terminal-based AI orchestration.
- */
 export class OrasakaCliClient {
     private client: GraphQLClient;
 
-    constructor(private endpoint: string = 'http://localhost:' + '8080' + '/graphql') {
-        this.client = new GraphQLClient(this.endpoint);
+    constructor(private endpoint: string = 'http://localhost:8080/graphql', token?: string) {
+        this.client = new GraphQLClient(this.endpoint, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
     }
 
-    /**
-     * Executes a chat mutation.
-     * 
-     * @param prompt The user input.
-     * @param conversationId Optional session ID.
-     */
+    async getOperationGraph() {
+        const query = gql`
+            query GetOperationGraph {
+                operationGraph {
+                    nodes {
+                        id
+                        label
+                        icon
+                        presentationContext
+                        state {
+                            type
+                            reason
+                            lockedAt
+                        }
+                        executionDetails {
+                            uriPath
+                            httpMethod
+                            payloadTemplate
+                        }
+                    }
+                }
+            }
+        `;
+        const data: any = await this.client.request(query);
+        return data.operationGraph.nodes;
+    }
+
     async chat(prompt: string, conversationId?: string) {
         const mutation = gql`
             mutation Chat($prompt: String!, $conversationId: String) {
@@ -36,16 +55,13 @@ export class OrasakaCliClient {
         }
     }
 
-    /**
-     * Executes a chat stream subscription.
-     * 
-     * @param prompt The user input.
-     * @param conversationId Optional session ID.
-     * @param onNext Callback for each streamed token.
-     * @param onError Callback for errors.
-     * @param onComplete Callback when the stream completes.
-     */
-    async chatStream(prompt: string, conversationId?: string, onNext?: (data: any) => void, onError?: (error: any) => void, onComplete?: () => void) {
+    async chatStream(
+        prompt: string,
+        conversationId?: string,
+        onNext?: (data: any) => void,
+        onError?: (error: any) => void,
+        onComplete?: () => void
+    ) {
         const { createClient } = await import('graphql-ws');
         const WebSocket = await import('ws');
 
