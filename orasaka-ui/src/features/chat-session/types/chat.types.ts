@@ -16,15 +16,28 @@ export interface ChatResponse {
   metadata?: Record<string, unknown>;
 }
 
-/**
- * Represents a single message in a chat conversation.
- */
-export interface ChatMessage {
+export interface BaseChatMessage {
   id: string;
   role: "user" | "assistant" | "system";
-  content: string;
   timestamp: number;
 }
+
+export interface TextChatMessage extends BaseChatMessage {
+  kind: "text";
+  content: string;
+}
+
+export interface ImageChatMessage extends BaseChatMessage {
+  kind: "image";
+  content: string;
+}
+
+export interface AudioChatMessage extends BaseChatMessage {
+  kind: "audio";
+  content: string;
+}
+
+export type ChatMessage = TextChatMessage | ImageChatMessage | AudioChatMessage;
 
 /**
  * Thread item metadata representing a single conversation history session.

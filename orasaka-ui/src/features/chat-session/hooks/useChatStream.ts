@@ -62,44 +62,39 @@ const saveStoredThreadsInternal = (threads: ChatThread[]) => {
   localStorage.setItem("orasaka_threads", JSON.stringify(threads));
 };
 
-/**
- * Retrieves the message history for a specific conversation thread from local storage.
- * Returns a fallback welcome message from the assistant if no history exists.
- *
- * @param {string} conversationId - The unique identifier of the conversation thread.
- * @returns {ChatMessage[]} The list of chat messages for the thread.
- */
 const getStoredMessages = (conversationId: string): ChatMessage[] => {
   if (!conversationId || typeof window === "undefined") return [];
   const stored = localStorage.getItem(`orasaka_messages_${conversationId}`);
+  let parsed: Partial<ChatMessage>[] = [];
   if (stored) {
     try {
-      return JSON.parse(stored);
+      parsed = JSON.parse(stored);
     } catch (e) {
       console.error(`Failed to parse messages for ${conversationId}:`, e);
     }
+  } else {
+    parsed = [
+      {
+        id: `init-${conversationId}`,
+        role: "assistant",
+        content: `System online. Orasaka Gateway ready for thread ${conversationId}. How may I assist your engineering goals today?`,
+        timestamp: Date.now() - 60000,
+      },
+    ];
+    localStorage.setItem(
+      `orasaka_messages_${conversationId}`,
+      JSON.stringify(parsed),
+    );
   }
-  const defaultMsg: ChatMessage[] = [
-    {
-      id: `init-${conversationId}`,
-      role: "assistant",
-      content: `System online. Orasaka Gateway ready for thread ${conversationId}. How may I assist your engineering goals today?`,
-      timestamp: Date.now() - 60000,
-    },
-  ];
-  localStorage.setItem(
-    `orasaka_messages_${conversationId}`,
-    JSON.stringify(defaultMsg),
-  );
-  return defaultMsg;
+  return parsed.map((msg) => ({
+    id: msg.id || `msg-${Date.now()}`,
+    role: msg.role || "assistant",
+    content: msg.content || "",
+    timestamp: msg.timestamp || Date.now(),
+    kind: msg.kind || "text",
+  }));
 };
 
-/**
- * Serializes and saves the message history for a given conversation thread to local storage.
- *
- * @param {string} conversationId - The unique identifier of the conversation thread.
- * @param {ChatMessage[]} messages - The messages array to serialize and store.
- */
 const saveStoredMessages = (
   conversationId: string,
   messages: ChatMessage[],
@@ -211,6 +206,7 @@ export function useChatStream(conversationId: string) {
         role: "user",
         content: prompt,
         timestamp: Date.now(),
+        kind: "text",
       };
 
       const updated = [...previousMessages, userMsg];
@@ -278,7 +274,11 @@ export function useChatStream(conversationId: string) {
         ) {
           updated = [
             ...old.slice(0, -1),
-            { ...lastMsg, content: accumulatedContent },
+            {
+              ...lastMsg,
+              content: accumulatedContent,
+              kind: "text",
+            },
           ];
         } else {
           updated = [
@@ -288,6 +288,7 @@ export function useChatStream(conversationId: string) {
               role: "assistant",
               content: accumulatedContent,
               timestamp: Date.now(),
+              kind: "text",
             },
           ];
         }
@@ -349,6 +350,7 @@ export function useChatStream(conversationId: string) {
         role: "assistant",
         content: `System online. Orasaka Gateway ready for thread ${newId}. How may I assist your engineering goals today?`,
         timestamp: Date.now(),
+        kind: "text",
       },
     ];
     saveStoredMessages(newId, defaultMsg);
