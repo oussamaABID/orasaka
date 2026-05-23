@@ -1,7 +1,7 @@
 package com.orasaka.tools.mcp;
 
 import com.orasaka.core.config.CoreProperties;
-import com.orasaka.core.mcp.McpOrchestrator;
+import com.orasaka.core.interceptors.mcp.McpOrchestrator;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;

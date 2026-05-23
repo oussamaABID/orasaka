@@ -3,7 +3,7 @@ package com.orasaka.tools.functions;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.orasaka.core.tool.OrasakaToolRegistry;
+import com.orasaka.core.interceptors.tool.OrasakaToolRegistry;
 import java.util.List;
 import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;

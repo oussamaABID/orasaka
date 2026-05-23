@@ -1,17 +1,17 @@
 package com.orasaka.tools.entity;
 
+import com.orasaka.tools.entity.converter.JsonMapConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import jakarta.persistence.Convert;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import com.orasaka.tools.entity.converter.JsonMapConverter;
 
 /**
  * JPA Entity mapping the {@code orasaka_tools_rag_source} database table.

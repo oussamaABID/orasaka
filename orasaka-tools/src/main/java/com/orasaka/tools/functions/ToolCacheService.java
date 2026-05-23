@@ -33,6 +33,14 @@ public class ToolCacheService {
    * @return The cache entry record.
    */
   public record CacheEntry(String value, Instant expiresAt) {
+    /** Compact constructor enforcing non-null expiration. */
+    public CacheEntry {
+      java.util.Objects.requireNonNull(expiresAt, "Expiration timestamp cannot be null");
+      if (value == null) {
+        value = "";
+      }
+    }
+
     /**
      * Checks whether the current instant is past the expiration timestamp.
      *

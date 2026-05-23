@@ -3,6 +3,7 @@ package com.orasaka.tools.mcp;
 import com.orasaka.core.config.CoreProperties;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 /**
@@ -25,12 +26,9 @@ public class OrasakaMcpService {
   }
 
   private void initializeClients() {
-    if (properties.mcp() != null && properties.mcp().endpoints() != null) {
-      for (String endpoint : properties.mcp().endpoints()) {
-        // Initialize MCP Client for endpoint. Currently a placeholder.
-        Objects.requireNonNull(endpoint);
-      }
-    }
+    Optional.ofNullable(properties.mcp())
+        .map(CoreProperties.McpConfig::endpoints)
+        .ifPresent(endpoints -> endpoints.forEach(Objects::requireNonNull));
   }
 
   /**

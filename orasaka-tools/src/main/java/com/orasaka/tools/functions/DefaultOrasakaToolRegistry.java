@@ -93,23 +93,25 @@ public class DefaultOrasakaToolRegistry implements OrasakaToolRegistry {
    */
   @Override
   public List<ToolCallback> getRegisteredTools() {
-    List<ToolCallback> decorated = new ArrayList<>();
-    for (ToolCallback tool : registeredTools) {
-      String name = tool.getToolDefinition().name();
-      ToolConfig toolConfig =
-          (properties != null && properties.configs() != null)
-              ? properties.configs().get(name)
-              : null;
+    return registeredTools.stream()
+        .map(
+            tool -> {
+              String name = tool.getToolDefinition().name();
+              ToolConfig toolConfig =
+                  (properties != null && properties.configs() != null)
+                      ? properties.configs().get(name)
+                      : null;
 
-      if (toolConfig != null && toolConfig.cache() != null && toolConfig.cache().enabled()) {
-        decorated.add(
-            new CachingToolCallback(tool, cacheService, true, toolConfig.cache().ttlSeconds()));
-      } else {
-        // Bypass decorator entirely when cache config is omitted or disabled
-        decorated.add(tool);
-      }
-    }
-    return List.copyOf(decorated);
+              if (toolConfig != null
+                  && toolConfig.cache() != null
+                  && toolConfig.cache().enabled()) {
+                return new CachingToolCallback(
+                    tool, cacheService, true, toolConfig.cache().ttlSeconds());
+              } else {
+                return tool;
+              }
+            })
+        .toList();
   }
 
   /**
@@ -122,12 +124,8 @@ public class DefaultOrasakaToolRegistry implements OrasakaToolRegistry {
     if (properties == null || properties.configs() == null) {
       return false;
     }
-    for (ToolConfig config : properties.configs().values()) {
-      if (config.rag() != null && config.rag().enabled()) {
-        return true;
-      }
-    }
-    return false;
+    return properties.configs().values().stream()
+        .anyMatch(config -> config.rag() != null && config.rag().enabled());
   }
 
   /**
@@ -145,43 +143,49 @@ public class DefaultOrasakaToolRegistry implements OrasakaToolRegistry {
       return;
     }
 
-    for (Map.Entry<String, ToolConfig> entry : properties.configs().entrySet()) {
-      String toolId = entry.getKey();
-      ToolConfig toolConfig = entry.getValue();
+    properties
+        .configs()
+        .forEach(
+            (toolId, toolConfig) -> {
+              if (toolConfig.rag() != null && toolConfig.rag().enabled()) {
+                String chunkerType = toolConfig.rag().chunkerType();
+                OrasakaChunker chunker = OrasakaChunkingStrategies.resolve(chunkerType);
 
-      if (toolConfig.rag() != null && toolConfig.rag().enabled()) {
-        String chunkerType = toolConfig.rag().chunkerType();
-        OrasakaChunker chunker = OrasakaChunkingStrategies.resolve(chunkerType);
+                log.info(
+                    "Processing RAG ingestion for tool '{}' using chunker '{}'...",
+                    toolId,
+                    chunkerType);
 
-        log.info(
-            "Processing RAG ingestion for tool '{}' using chunker '{}'...", toolId, chunkerType);
+                List<OrasakaToolRagSourceEntity> rows =
+                    ragSourceRepository.findByToolIdAndIngestedFalse(toolId);
 
-        List<OrasakaToolRagSourceEntity> rows =
-            ragSourceRepository.findByToolIdAndIngestedFalse(toolId);
+                rows.forEach(
+                    row -> {
+                      try {
+                        Map<String, Object> metadataMap = new HashMap<>(row.getMetadata());
+                        metadataMap.put("tool_id", toolId);
 
-        for (OrasakaToolRagSourceEntity row : rows) {
-          try {
-            Map<String, Object> metadataMap = new HashMap<>(row.getMetadata());
-            metadataMap.put("tool_id", toolId);
+                        List<Document> chunks = chunker.chunk(row.getContent(), metadataMap);
+                        if (!chunks.isEmpty()) {
+                          knowledgeService.getVectorStore().add(chunks);
+                          log.debug(
+                              "Ingested {} chunks for tool '{}', source row ID {}",
+                              chunks.size(),
+                              toolId,
+                              row.getId());
+                        }
 
-            List<Document> chunks = chunker.chunk(row.getContent(), metadataMap);
-            if (!chunks.isEmpty()) {
-              knowledgeService.getVectorStore().add(chunks);
-              log.debug(
-                  "Ingested {} chunks for tool '{}', source row ID {}",
-                  chunks.size(),
-                  toolId,
-                  row.getId());
-            }
-
-            row.setIngested(true);
-            ragSourceRepository.save(row);
-          } catch (Exception e) {
-            log.error("Failed to process RAG row ID {} for tool '{}'", row.getId(), toolId, e);
-          }
-        }
-      }
-    }
+                        row.setIngested(true);
+                        ragSourceRepository.save(row);
+                      } catch (Exception e) {
+                        log.error(
+                            "Failed to process RAG row ID {} for tool '{}'",
+                            row.getId(),
+                            toolId,
+                            e);
+                      }
+                    });
+              }
+            });
   }
-
 }
