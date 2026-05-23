@@ -1,7 +1,7 @@
-package com.orasaka.gateway.rest;
+package com.orasaka.gateway.endpoint;
 
-import com.orasaka.core.graph.OrasakaGraphEngine;
-import com.orasaka.core.graph.OrasakaOperationGraph;
+import com.orasaka.core.engine.OrasakaGraphEngine;
+import com.orasaka.core.engine.OrasakaOperationGraph;
 import java.util.Objects;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

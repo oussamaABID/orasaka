@@ -1,17 +1,19 @@
-package com.orasaka.gateway.graphql;
+package com.orasaka.gateway.endpoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.orasaka.core.client.OrasakaAiClient;
-import com.orasaka.core.model.OrasakaChatRequest;
-import com.orasaka.core.model.OrasakaChatResponse;
+import com.orasaka.core.engine.OrasakaAiClient;
+import com.orasaka.core.engine.OrasakaGraphEngine;
+import com.orasaka.core.support.OrasakaChatRequest;
+import com.orasaka.core.support.OrasakaChatResponse;
 import com.orasaka.gateway.service.ChatStreamService;
 import com.orasaka.identity.config.IdentityInfrastructureProperties;
 import com.orasaka.identity.domain.User;
 import com.orasaka.identity.service.IdentityService;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -27,6 +29,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+/** Unit tests verifying AiController capability routing and request processing. */
 @GraphQlTest(AiController.class)
 public class AiControllerTest {
 
@@ -40,6 +43,9 @@ public class AiControllerTest {
 
   @MockitoBean private IdentityInfrastructureProperties identityProperties;
 
+  @MockitoBean private OrasakaGraphEngine graphEngine;
+
+  /** Set up testing environment and mock user session context. */
   @BeforeEach
   void setUp() {
     User mockUser =
@@ -50,20 +56,20 @@ public class AiControllerTest {
             true,
             Set.of("ROLE_USER"),
             Map.of("tts-voice", "alloy"),
-            java.util.List.of());
+            List.of());
     when(identityService.getUser("550e8400-e29b-41d4-a716-446655440000")).thenReturn(mockUser);
 
     var authorities =
         mockUser.authorities().stream()
-            .map(auth -> new SimpleGrantedAuthority(auth))
+            .map(SimpleGrantedAuthority::new)
             .collect(Collectors.toList());
     var authToken = new UsernamePasswordAuthenticationToken(mockUser, null, authorities);
     SecurityContextHolder.getContext().setAuthentication(authToken);
   }
 
+  /** Verify that user details and chat properties are routed cleanly. */
   @Test
   void shouldPropagateContextOnChat() {
-    // Given
     OrasakaChatResponse mockResponse =
         new OrasakaChatResponse("Hello from AI", "session-123", Map.of());
     when(aiClient.chat(any(OrasakaChatRequest.class))).thenReturn(mockResponse);
@@ -78,7 +84,6 @@ public class AiControllerTest {
             }
         """;
 
-    // When
     graphQlTester
         .document(document)
         .execute()
@@ -89,7 +94,6 @@ public class AiControllerTest {
         .entity(String.class)
         .isEqualTo("session-123");
 
-    // Then
     ArgumentCaptor<OrasakaChatRequest> requestCaptor =
         ArgumentCaptor.forClass(OrasakaChatRequest.class);
     verify(aiClient).chat(requestCaptor.capture());

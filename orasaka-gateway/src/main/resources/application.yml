@@ -4,6 +4,15 @@ server:
 spring:
   application:
     name: orasaka-gateway
+  ai:
+    ollama:
+      base-url: ${SPRING_AI_OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        options:
+          model: ${SPRING_AI_OLLAMA_CHAT_MODEL:phi3:mini}
+      image:
+        options:
+          model: ${SPRING_AI_OLLAMA_IMAGE_MODEL:stable-diffusion-xe}
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/orasaka_db}
     username: ${SPRING_DATASOURCE_USERNAME:orasaka_admin}
@@ -22,6 +31,42 @@ spring:
       allow-credentials: true
 
 orasaka:
+  features:
+    "orasaka.core.chat.image":
+      enabled: true
+      label: "Generate Image"
+      icon: "image"
+      uri-path: "/api/v1/chat/image"
+      http-method: "POST"
+      payload-template: "{\"prompt\":\"${prompt}\"}"
+    "orasaka.core.chat.speech":
+      enabled: true
+      label: "Text to Speech"
+      icon: "mic"
+      uri-path: "/api/v1/chat/speech"
+      http-method: "POST"
+      payload-template: "{\"text\":\"${text}\"}"
+    "orasaka.core.media.vision":
+      enabled: true
+      label: "Analyze Poster"
+      icon: "image"
+      uri-path: "/api/v1/media/analyze-image"
+      http-method: "POST"
+      payload-template: "{\"posterBase64\":\"${posterBase64}\",\"prompt\":\"${prompt}\"}"
+    "orasaka.core.media.audio":
+      enabled: true
+      label: "Analyze Audio"
+      icon: "mic"
+      uri-path: "/api/v1/media/analyze-audio"
+      http-method: "POST"
+      payload-template: "{\"audioBase64\":\"${audioBase64}\",\"threadId\":\"${threadId}\"}"
+    "orasaka.core.chat.text":
+      enabled: true
+      label: "Text Chat"
+      icon: "chat"
+      uri-path: "/api/v1/chat/stream"
+      http-method: "POST"
+      payload-template: "{\"prompt\":\"${prompt}\"}"
   gateway:
     cors:
       # Comma-separated list of allowed origins. Override via ORASAKA_GATEWAY_CORS_ALLOWED_ORIGINS env var.

@@ -1,9 +1,9 @@
 package com.orasaka.gateway.service;
 
-import com.orasaka.core.client.OrasakaAiClient;
-import com.orasaka.core.context.OrasakaContext;
-import com.orasaka.core.model.OrasakaChatRequest;
-import com.orasaka.core.model.OrasakaChatResponse;
+import com.orasaka.core.engine.OrasakaAiClient;
+import com.orasaka.core.support.OrasakaChatRequest;
+import com.orasaka.core.support.OrasakaChatResponse;
+import com.orasaka.core.support.OrasakaContext;
 import com.orasaka.identity.domain.User;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -87,7 +87,6 @@ public class ChatStreamService {
                   try {
                     emitter.completeWithError(error);
                   } catch (Exception ex) {
-                    // Ignored if connection is already closed
                   }
                 },
                 () -> {
@@ -96,7 +95,6 @@ public class ChatStreamService {
                   try {
                     emitter.complete();
                   } catch (Exception ex) {
-                    // Ignored if connection is already closed
                   }
                 });
           } catch (Exception e) {
@@ -107,7 +105,6 @@ public class ChatStreamService {
             try {
               emitter.completeWithError(e);
             } catch (Exception ex) {
-              // Ignored if connection is already closed
             }
           }
         });

@@ -1,6 +1,6 @@
 package com.orasaka.gateway.config;
 
-import com.orasaka.core.graph.OrasakaGraphEngine;
+import com.orasaka.core.engine.OrasakaGraphEngine;
 import com.orasaka.identity.service.IdentityService;
 import java.util.List;
 import java.util.Optional;

@@ -2,7 +2,10 @@ package com.orasaka.gateway.config;
 
 import static org.mockito.Mockito.*;
 
-import com.orasaka.core.graph.*;
+import com.orasaka.core.engine.*;
+import com.orasaka.core.engine.NodeState.Active;
+import com.orasaka.core.engine.NodeState.Invisible;
+import com.orasaka.core.engine.NodeState.Locked;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;

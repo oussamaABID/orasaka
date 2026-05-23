@@ -1,6 +1,9 @@
 package com.orasaka.gateway.config;
 
-import com.orasaka.core.graph.*;
+import com.orasaka.core.engine.*;
+import com.orasaka.core.engine.NodeState.Active;
+import com.orasaka.core.engine.NodeState.Invisible;
+import com.orasaka.core.engine.NodeState.Locked;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,7 +41,6 @@ public class OrasakaOperationGraphFilter extends OncePerRequestFilter {
 
     OrasakaOperationGraph graph = graphEngine.compileGraph();
 
-    // 1. GraphQL request handling: parse query/mutation context
     if (path.equals("/graphql") && method.equalsIgnoreCase("POST")) {
       CachedBodyHttpServletRequest wrappedRequest = new CachedBodyHttpServletRequest(request);
       String body = wrappedRequest.getBody();
@@ -46,7 +48,6 @@ public class OrasakaOperationGraphFilter extends OncePerRequestFilter {
       for (OperationNode node : graph.nodes()) {
         String operationName = getGraphQLOperationName(node.id());
         if (body.contains(operationName)) {
-          // Switch expression pattern matching over sealed NodeState hierarchy (ERR-107)
           boolean allowed =
               switch (node.state()) {
                 case Active active -> true;
@@ -74,7 +75,6 @@ public class OrasakaOperationGraphFilter extends OncePerRequestFilter {
       return;
     }
 
-    // 2. Standard REST paths validation
     Optional<OperationNode> matchingNode =
         graph.nodes().stream()
             .filter(node -> matches(path, method, node.executionDetails()))
@@ -82,7 +82,6 @@ public class OrasakaOperationGraphFilter extends OncePerRequestFilter {
 
     if (matchingNode.isPresent()) {
       OperationNode node = matchingNode.get();
-      // Switch expression pattern matching over sealed NodeState hierarchy (ERR-107)
       boolean allowed =
           switch (node.state()) {
             case Active active -> true;

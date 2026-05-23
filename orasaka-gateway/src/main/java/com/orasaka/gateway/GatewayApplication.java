@@ -17,7 +17,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * hierarchy.
  *
  * @see org.springframework.boot.autoconfigure.SpringBootApplication
- * @see com.orasaka.gateway.controller.ChatStreamController
  */
 @SpringBootApplication(scanBasePackages = "com.orasaka")
 @ConfigurationPropertiesScan("com.orasaka")
