@@ -1,5 +1,6 @@
 package com.orasaka.gateway.config;
 
+import com.orasaka.core.graph.OrasakaGraphEngine;
 import com.orasaka.identity.service.IdentityService;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +39,7 @@ public class SecurityConfig {
   private final IdentityService identityService;
   private final GatewayProperties gatewayProperties;
   private final Optional<RateLimitFilter> rateLimitFilter;
+  private final OrasakaGraphEngine graphEngine;
 
   /**
    * Constructs the security configuration with its dependencies.
@@ -46,14 +48,17 @@ public class SecurityConfig {
    *     authenticated users from the Bearer token header.
    * @param gatewayProperties Environment-driven gateway properties config mapping.
    * @param rateLimitFilter The optional rate limiting filter to register.
+   * @param graphEngine The short-circuit graph compilation engine.
    */
   public SecurityConfig(
       IdentityService identityService,
       GatewayProperties gatewayProperties,
-      Optional<RateLimitFilter> rateLimitFilter) {
+      Optional<RateLimitFilter> rateLimitFilter,
+      OrasakaGraphEngine graphEngine) {
     this.identityService = identityService;
     this.gatewayProperties = gatewayProperties;
     this.rateLimitFilter = rateLimitFilter;
+    this.graphEngine = graphEngine;
   }
 
   /**
@@ -95,6 +100,8 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/api/v1/auth/oauth")
                         .permitAll()
+                        .requestMatchers("/api/v1/operations/graph")
+                        .permitAll()
                         .requestMatchers("/graphiql")
                         .permitAll()
                         .requestMatchers("/graphql")
@@ -109,6 +116,7 @@ public class SecurityConfig {
                 new OrasakaSecurityFilter(identityService),
                 UsernamePasswordAuthenticationFilter.class);
 
+    chain.addFilterAfter(new OrasakaOperationGraphFilter(graphEngine), OrasakaSecurityFilter.class);
     rateLimitFilter.ifPresent(filter -> chain.addFilterAfter(filter, OrasakaSecurityFilter.class));
 
     return chain.build();
