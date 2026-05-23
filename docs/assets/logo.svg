@@ -1,34 +1,85 @@
 <svg width="1000" height="280" viewBox="0 0 1000 280" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Background gradient: deep obsidian -->
+    <!-- Font styling and custom CRT/scanline variables -->
+    <style type="text/css">
+      @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&amp;family=Share+Tech+Mono&amp;family=Syne:wght@800&amp;display=swap');
+      
+      .font-wordmark {
+        font-family: 'Syne', 'Orbitron', 'Inter', -apple-system, sans-serif;
+        text-transform: uppercase;
+      }
+      .font-hud {
+        font-family: 'Share Tech Mono', 'Courier New', monospace;
+      }
+      .font-tagline {
+        font-family: 'Orbitron', 'Inter', -apple-system, sans-serif;
+      }
+      .scanlines-overlay {
+        pointer-events: none;
+        mix-blend-mode: overlay;
+      }
+    </style>
+
+    <!-- Background gradient: deep obsidian console screen -->
     <radialGradient id="bgGrad" cx="50%" cy="50%" r="70%">
-      <stop offset="0%" stop-color="#0F172A" />
-      <stop offset="100%" stop-color="#020617" />
+      <stop offset="0%" stop-color="#0E1321" />
+      <stop offset="100%" stop-color="#03050A" />
     </radialGradient>
 
-    <!-- Gold metallic gradient for the wordmark -->
+    <!-- Metallic chrome gold for wordmark -->
     <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#F5DEB3" />
-      <stop offset="30%" stop-color="#D4AF37" />
-      <stop offset="60%" stop-color="#B8860B" />
-      <stop offset="100%" stop-color="#8B6914" />
+      <stop offset="0%" stop-color="#FFF3C4" />
+      <stop offset="25%" stop-color="#F5C037" />
+      <stop offset="50%" stop-color="#A56E0D" />
+      <stop offset="75%" stop-color="#FFEFA8" />
+      <stop offset="100%" stop-color="#805707" />
+    </linearGradient>
+
+    <!-- Glowing cyan for reactor details -->
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22D3EE" />
+      <stop offset="100%" stop-color="#0891B2" />
+    </linearGradient>
+
+    <!-- Glowing orange for reactor core -->
+    <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FDBA74" />
+      <stop offset="50%" stop-color="#F97316" />
+      <stop offset="100%" stop-color="#C2410C" />
     </linearGradient>
 
     <!-- Animated shine sweep across text -->
     <linearGradient id="shine" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#D4AF37" stop-opacity="0" />
-      <stop offset="40%" stop-color="#D4AF37" stop-opacity="0" />
-      <stop offset="50%" stop-color="#FFFACD" stop-opacity="0.9" />
-      <stop offset="60%" stop-color="#D4AF37" stop-opacity="0" />
-      <stop offset="100%" stop-color="#D4AF37" stop-opacity="0" />
-      <animateTransform attributeName="gradientTransform" type="translate" from="-1.5 0" to="1.5 0"
-        dur="4s" repeatCount="indefinite" />
+      <stop offset="0%" stop-color="#E2B13C" stop-opacity="0" />
+      <stop offset="35%" stop-color="#E2B13C" stop-opacity="0" />
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.9" />
+      <stop offset="65%" stop-color="#E2B13C" stop-opacity="0" />
+      <stop offset="100%" stop-color="#E2B13C" stop-opacity="0" />
+      <animateTransform attributeName="gradientTransform" type="translate" from="-1.5 0" to="1.5 0" dur="4.5s" repeatCount="indefinite" />
     </linearGradient>
 
-    <!-- Glow filter for accents -->
-    <filter id="goldGlow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="6" result="blur" />
-      <feFlood flood-color="#D4AF37" flood-opacity="0.4" result="color" />
+    <!-- Laser slash gradient -->
+    <linearGradient id="slashGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0" />
+      <stop offset="50%" stop-color="#E0F2FE" stop-opacity="1" />
+      <stop offset="100%" stop-color="#06B6D4" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Gauges gradients -->
+    <linearGradient id="barCyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#22D3EE" />
+    </linearGradient>
+    <linearGradient id="barOrange" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#EA580C" />
+      <stop offset="80%" stop-color="#F97316" />
+      <stop offset="100%" stop-color="#FCD34D" />
+    </linearGradient>
+
+    <!-- Glow filters -->
+    <filter id="cyanGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3.5" result="blur" />
+      <feFlood flood-color="#06B6D4" flood-opacity="0.75" result="color" />
       <feComposite in="color" in2="blur" operator="in" result="glow" />
       <feMerge>
         <feMergeNode in="glow" />
@@ -36,142 +87,190 @@
       </feMerge>
     </filter>
 
-    <!-- Subtle glow for the orb -->
-    <filter id="orbGlow" x="-100%" y="-100%" width="300%" height="300%">
-      <feGaussianBlur stdDeviation="12" result="blur" />
-      <feFlood flood-color="#D4AF37" flood-opacity="0.3" result="color" />
+    <filter id="orangeGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4.5" result="blur" />
+      <feFlood flood-color="#F97316" flood-opacity="0.6" result="color" />
       <feComposite in="color" in2="blur" operator="in" result="glow" />
       <feMerge>
         <feMergeNode in="glow" />
         <feMergeNode in="SourceGraphic" />
       </feMerge>
     </filter>
+
+    <!-- CRT Scanline Pattern -->
+    <pattern id="scanlines" width="1000" height="4" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="1000" y2="0" stroke="#000000" stroke-width="1.2" opacity="0.22" />
+    </pattern>
 
     <!-- Clip for shine overlay -->
     <clipPath id="textClip">
-      <text x="260" y="155" font-family="'Inter', 'Helvetica Neue', sans-serif" font-size="82"
-        font-weight="800" letter-spacing="16">OROSAKA</text>
+      <g transform="translate(250, 155) skewX(-12)">
+        <text x="0" y="0" font-family="'Syne', 'Orbitron', 'Inter', -apple-system, sans-serif" font-size="86" font-weight="900" letter-spacing="18">ORASAKA</text>
+      </g>
     </clipPath>
   </defs>
 
   <!-- Background -->
   <rect width="1000" height="280" rx="12" fill="url(#bgGrad)" />
 
-  <!-- Subtle grid lines -->
-  <g stroke="#1E293B" stroke-width="0.4" opacity="0.3">
-    <line x1="0" y1="70" x2="1000" y2="70" />
-    <line x1="0" y1="210" x2="1000" y2="210" />
-    <line x1="100" y1="0" x2="100" y2="280" stroke-dasharray="4 12" />
-    <line x1="900" y1="0" x2="900" y2="280" stroke-dasharray="4 12" />
+  <!-- Grid lines -->
+  <g stroke="#1E293B" stroke-width="0.5" opacity="0.22">
+    <line x1="0" y1="40" x2="1000" y2="40" />
+    <line x1="0" y1="240" x2="1000" y2="240" />
+    <line x1="80" y1="0" x2="80" y2="280" stroke-dasharray="2 10" />
+    <line x1="920" y1="0" x2="920" y2="280" stroke-dasharray="2 10" />
   </g>
 
-  <!-- ═══ EMBLEM: Rotating orbital ring ═══ -->
+  <!-- ═══ LEFT SIDE: Rotating orbital reactor core ═══ -->
   <g transform="translate(140, 140)">
-    <!-- Outer orbital ring -->
-    <circle r="52" stroke="#334155" stroke-width="0.8" fill="none" stroke-dasharray="3 9"
-      opacity="0.6">
-      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="30s"
-        repeatCount="indefinite" />
+    <!-- Outer dashed tech circle -->
+    <circle r="60" stroke="#334155" stroke-width="0.8" fill="none" stroke-dasharray="4 12" opacity="0.7">
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="40s" repeatCount="indefinite" />
     </circle>
-
-    <!-- Inner orbital ring (counter-rotate) -->
-    <circle r="38" stroke="#475569" stroke-width="0.5" fill="none" stroke-dasharray="2 14"
-      opacity="0.4">
-      <animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="20s"
-        repeatCount="indefinite" />
+    
+    <!-- Outer solid rings with gap cuts -->
+    <circle r="53" stroke="url(#cyanGrad)" stroke-width="1.2" fill="none" stroke-dasharray="140 20 60 20" opacity="0.8" filter="url(#cyanGlow)">
+      <animateTransform attributeName="transform" type="rotate" from="0" to="-360" dur="25s" repeatCount="indefinite" />
     </circle>
+    
+    <!-- Inner dashed indicator -->
+    <circle r="42" stroke="url(#orangeGrad)" stroke-width="0.6" fill="none" stroke-dasharray="2 6" opacity="0.6">
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="12s" repeatCount="indefinite" />
+    </circle>
+    
+    <!-- Outer tech crosshair notches -->
+    <line x1="-70" x2="-62" y1="0" y2="0" stroke="#334155" stroke-width="1" />
+    <line x1="62" x2="70" y1="0" y2="0" stroke="#334155" stroke-width="1" />
+    <line x1="0" x2="0" y1="-70" y2="-62" stroke="#334155" stroke-width="1" />
+    <line x1="0" x2="0" y1="62" y2="70" stroke="#334155" stroke-width="1" />
+    
+    <!-- Corner bracket markings around reactor -->
+    <path d="M-55 -55 L-47 -55 M-55 -55 V-47" stroke="#475569" stroke-width="0.8" opacity="0.5" />
+    <path d="M55 -55 L47 -55 M55 -55 V-47" stroke="#475569" stroke-width="0.8" opacity="0.5" />
+    <path d="M-55 55 L-47 55 M-55 55 V47" stroke="#475569" stroke-width="0.8" opacity="0.5" />
+    <path d="M55 55 L47 55 M55 55 V47" stroke="#475569" stroke-width="0.8" opacity="0.5" />
 
-    <!-- Core diamond shape -->
-    <g filter="url(#orbGlow)">
-      <path d="M0 -22 L14 0 L0 22 L-14 0 Z" fill="#D4AF37" opacity="0.9">
-        <animate attributeName="opacity" values="0.7;1;0.7" dur="3s" repeatCount="indefinite" />
-      </path>
+    <!-- Center Reactor Core Diamond/Hexagon shape -->
+    <g>
+      <animateTransform attributeName="transform" type="scale" values="0.96;1.06;0.96" dur="2.5s" repeatCount="indefinite" />
+      <!-- Glow backing -->
+      <path d="M0 -22 L14 -8 L14 8 L0 22 L-14 8 L-14 -8 Z" fill="url(#orangeGrad)" opacity="0.35" filter="url(#orangeGlow)" />
+      <!-- Sharp central shard -->
+      <path d="M0 -18 L11 -6 L11 6 L0 18 L-11 6 L-11 -6 Z" fill="url(#metallicGold)" opacity="0.95" />
+      <path d="M0 -18 L0 18" stroke="#FFFFFF" stroke-width="0.5" opacity="0.5" />
+      <path d="-11 0 H11" stroke="#FFFFFF" stroke-width="0.5" opacity="0.5" />
     </g>
 
-    <!-- Orbiting dot -->
-    <circle r="3" fill="#F5DEB3" filter="url(#goldGlow)">
-      <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="8s"
-        repeatCount="indefinite" />
-      <animate attributeName="cx" values="45" dur="8s" repeatCount="indefinite" />
-    </circle>
-
-    <!-- Crosshair lines -->
-    <line y1="-30" y2="30" stroke="#334155" stroke-width="0.6" opacity="0.5" />
-    <line x1="-30" x2="30" stroke="#334155" stroke-width="0.6" opacity="0.5" />
+    <!-- Orbiting core particles -->
+    <!-- Particle 1 (cyan) -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="6s" repeatCount="indefinite" />
+      <circle cx="46" cy="0" r="3.5" fill="#22D3EE" filter="url(#cyanGlow)" />
+    </g>
+    <!-- Particle 2 (orange - offset) -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="180" to="540" dur="4s" repeatCount="indefinite" />
+      <circle cx="32" cy="0" r="2.5" fill="#FB923C" filter="url(#orangeGlow)" />
+    </g>
   </g>
 
-  <!-- ═══ WORDMARK ═══ -->
-  <!-- Base gold text -->
-  <text x="260" y="155" font-family="'Inter', 'Helvetica Neue', sans-serif" font-size="82"
-    font-weight="800" letter-spacing="16" fill="url(#goldGrad)">OROSAKA</text>
-
-  <!-- Animated shine overlay -->
-  <rect x="0" y="0" width="1000" height="280" fill="url(#shine)" clip-path="url(#textClip)" />
-
-  <!-- ═══ TAGLINE ═══ -->
-  <text x="268" y="190" font-family="'Inter', 'Helvetica Neue', sans-serif" font-size="11.5"
-    font-weight="600" fill="#94A3B8" letter-spacing="8">THE INTELLIGENT CORE</text>
-
-  <!-- ═══ NEURAL DATA STREAM (left of text) ═══ -->
-  <g filter="url(#goldGlow)" opacity="0.6">
-    <path d="M200 140 H250" stroke="#D4AF37" stroke-width="1.5" stroke-dasharray="2 6">
-      <animate attributeName="stroke-dashoffset" from="40" to="0" dur="3s" repeatCount="indefinite" />
-    </path>
+  <!-- ═══ CENTER: WORDMARK & TAGLINE ═══ -->
+  <g transform="translate(250, 155) skewX(-12)">
+    <!-- Base gold text (Spelled correctly as ORASAKA) -->
+    <text x="0" y="0" font-family="'Syne', 'Orbitron', 'Inter', -apple-system, sans-serif" font-size="86" font-weight="900" letter-spacing="18" fill="url(#goldGrad)" class="font-wordmark">
+      ORASAKA
+      <animate attributeName="opacity" values="0.99;0.99;0.75;0.99;0.82;0.99;0.99;0.4;0.99;0.88;0.99" keyTimes="0;0.4;0.41;0.42;0.43;0.44;0.8;0.81;0.82;0.83;1" dur="7s" repeatCount="indefinite" />
+    </text>
+    
+    <!-- Neon strike cut (diagonal slash running directly through text) -->
+    <line x1="-30" x2="520" y1="-28" y2="-28" stroke="url(#slashGrad)" stroke-width="2.5" filter="url(#cyanGlow)" stroke-dasharray="120 430">
+      <animate attributeName="stroke-dashoffset" values="550;-550" dur="3.5s" repeatCount="indefinite" />
+    </line>
   </g>
 
-  <!-- ═══ NEURAL DATA STREAM (right side) ═══ -->
-  <g filter="url(#goldGlow)" opacity="0.5">
-    <path d="M820 140 H920" stroke="#D4AF37" stroke-width="1.5" stroke-dasharray="2 8">
-      <animate attributeName="stroke-dashoffset" from="60" to="0" dur="4s" repeatCount="indefinite" />
-    </path>
+  <!-- Animated shine overlay (applied to text clip path) -->
+  <rect width="1000" height="280" fill="url(#shine)" clip-path="url(#textClip)" />
 
-    <!-- Traveling pulse dot 1 -->
-    <circle r="2.5" fill="#D4AF37">
-      <animateMotion path="M820,140 H920" dur="2s" repeatCount="indefinite" />
-      <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" />
-    </circle>
+  <!-- Tagline -->
+  <text x="254" y="195" font-family="'Orbitron', 'Inter', -apple-system, sans-serif" font-size="11" font-weight="700" fill="#38BDF8" letter-spacing="5.5" class="font-tagline">
+    NATIVE AI ENGINE
+    <animate attributeName="opacity" values="0.9;1;0.9" dur="3s" repeatCount="indefinite" />
+  </text>
 
-    <!-- Traveling pulse dot 2 (offset) -->
-    <circle r="2" fill="#F5DEB3">
-      <animateMotion path="M820,140 H920" dur="2s" begin="1s" repeatCount="indefinite" />
-      <animate attributeName="opacity" values="0;0.8;0" dur="2s" begin="1s" repeatCount="indefinite" />
-    </circle>
-  </g>
-
-  <!-- ═══ STATUS INDICATORS ═══ -->
+  <!-- ═══ BOTTOM HUD LAYER ═══ -->
   <!-- Version badge -->
-  <g transform="translate(268, 215)">
-    <rect width="58" height="18" rx="3" fill="#1E293B" stroke="#334155" stroke-width="0.5" />
-    <text x="29" y="13" font-family="'Inter', monospace" font-size="9" font-weight="600"
-      fill="#D4AF37" text-anchor="middle">v1.0.0-SNAPSHOT</text>
+  <g transform="translate(254, 215)">
+    <rect width="66" height="18" rx="3" fill="#1E293B" stroke="#334155" stroke-width="0.5" />
+    <text x="33" y="12" font-family="monospace" font-size="8.5" font-weight="700" fill="#F5C037" text-anchor="middle" class="font-hud">v1.0.0-DEV</text>
   </g>
 
   <!-- Status dot + text -->
-  <g transform="translate(340, 215)">
+  <g transform="translate(332, 215)">
     <circle cx="6" cy="9" r="3" fill="#22C55E">
-      <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
     </circle>
-    <text x="16" y="13" font-family="'Inter', sans-serif" font-size="9" font-weight="500"
-      fill="#64748B">PILOT ALPHA</text>
+    <text x="16" y="12" font-family="monospace" font-size="8.5" font-weight="700" fill="#22C55E" class="font-hud">ONLINE // CONTEXT STABLE</text>
   </g>
 
-  <!-- Progress bar -->
-  <g transform="translate(268, 242)">
-    <rect width="120" height="2" rx="1" fill="#1E293B" />
-    <rect width="0" height="2" rx="1" fill="#D4AF37">
-      <animate attributeName="width" values="0;120;0" dur="6s" repeatCount="indefinite" />
-    </rect>
+  <!-- Left/Right HUD Gauges -->
+  <g transform="translate(254, 244)">
+    <!-- Label for bar 1 -->
+    <text x="0" y="7" font-family="monospace" font-size="8" font-weight="600" fill="#64748B" class="font-hud">SYS.PWR</text>
+    
+    <!-- Segmented Gauge 1 (power) -->
+    <g transform="translate(50, 0)">
+      <rect x="0" y="0" width="130" height="8" rx="2" fill="#1E293B" />
+      <rect x="0" y="0" width="130" height="8" rx="2" fill="url(#barCyan)">
+        <animate attributeName="width" values="0;130;130;0" keyTimes="0;0.35;0.9;1" dur="6s" repeatCount="indefinite" />
+      </rect>
+    </g>
+
+    <!-- Label for bar 2 -->
+    <text x="200" y="7" font-family="monospace" font-size="8" font-weight="600" fill="#64748B" class="font-hud">CTX.MAX</text>
+
+    <!-- Segmented Gauge 2 (context) -->
+    <g transform="translate(250, 0)">
+      <rect x="0" y="0" width="130" height="8" rx="2" fill="#1E293B" />
+      <rect x="0" y="0" width="130" height="8" rx="2" fill="url(#barOrange)">
+        <animate attributeName="width" values="0;40;130;130;0" keyTimes="0;0.2;0.5;0.9;1" dur="6s" repeatCount="indefinite" />
+      </rect>
+    </g>
+
+    <!-- Flashing "MAX" badge -->
+    <g transform="translate(390, 8)" class="font-hud">
+      <rect x="0" y="-8" width="28" height="10" rx="1.5" fill="#EF4444">
+        <animate attributeName="fill" values="#EF4444;#F59E0B;#EF4444" dur="0.6s" repeatCount="indefinite" />
+      </rect>
+      <text x="14" y="0" font-family="monospace" font-size="7.5" font-weight="900" fill="#FFF" text-anchor="middle">MAX</text>
+    </g>
   </g>
 
-  <!-- ═══ RIGHT SIDE: Rotating ring indicator ═══ -->
-  <g transform="translate(920, 70)">
-    <circle r="18" stroke="#334155" stroke-width="0.6" fill="none" stroke-dasharray="3 6">
-      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="12s"
-        repeatCount="indefinite" />
-    </circle>
-    <circle r="3.5" fill="#D4AF37" opacity="0.8" filter="url(#goldGlow)">
-      <animate attributeName="r" values="3;4.5;3" dur="3s" repeatCount="indefinite" />
-    </circle>
+  <!-- ═══ RIGHT SIDE: TECH MONITOR PANEL ═══ -->
+  <g transform="translate(860, 130)">
+    <!-- Circular diagnostic radar -->
+    <g transform="translate(0, 0)">
+      <circle r="34" stroke="#1E293B" stroke-width="1" fill="none" />
+      <circle r="26" stroke="#334155" stroke-width="0.8" fill="none" stroke-dasharray="4 6" opacity="0.7">
+        <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="40s" repeatCount="indefinite" />
+      </circle>
+      <circle r="18" stroke="url(#cyanGrad)" stroke-width="1.2" fill="none" stroke-dasharray="100 20" opacity="0.8" filter="url(#cyanGlow)">
+        <animateTransform attributeName="transform" type="rotate" from="0" to="-360" dur="25s" repeatCount="indefinite" />
+      </circle>
+      <circle r="4" fill="#F5C037" filter="url(#orangeGlow)" />
+      
+      <!-- Sweeper line -->
+      <line x1="0" y1="0" x2="0" y2="-34" stroke="#22D3EE" stroke-width="1.5" opacity="0.6">
+        <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="4s" repeatCount="indefinite" />
+      </line>
+    </g>
+
+    <!-- Side Data values -->
+    <g transform="translate(54, -20)" class="font-hud">
+      <text x="0" y="0" font-family="monospace" font-size="8" font-weight="600" fill="#64748B">MODEL: L3-8B</text>
+      <text x="0" y="11" font-family="monospace" font-size="8" font-weight="700" fill="#E2B13C">LAT: 12.5ms</text>
+      <text x="0" y="22" font-family="monospace" font-size="8" font-weight="600" fill="#22C55E">MEM.POOL: OK</text>
+      <text x="0" y="33" font-family="monospace" font-size="8" font-weight="600" fill="#38BDF8">V-THREADS</text>
+    </g>
   </g>
 
   <!-- Corner accent marks -->
@@ -179,4 +278,7 @@
   <path d="M980 20 H960 M980 20 V40" stroke="#334155" stroke-width="0.8" opacity="0.4" />
   <path d="M20 260 H40 M20 260 V240" stroke="#334155" stroke-width="0.8" opacity="0.4" />
   <path d="M980 260 H960 M980 260 V240" stroke="#334155" stroke-width="0.8" opacity="0.4" />
+
+  <!-- Scanline Screen Filter Overlay -->
+  <rect width="1000" height="280" fill="url(#scanlines)" class="scanlines-overlay" />
 </svg>

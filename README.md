@@ -1,10 +1,10 @@
-# ORASAKA: Domain-Driven AI Monorepo
+# ORASAKA - Java Spring Architecture for Agentic AI Systems
 
 ![Orasaka Logo](docs/assets/logo.svg)
 
 > **Precision in Implementation. Intelligence through Decoupling.**
 
-Orasaka is a professional-grade AI platform architected for **Multi-Session & Multi-Modal Context Memory**. It enforces strict domain isolation, stateless library design, and high-concurrency execution via Java 21 Virtual Threads.
+Orasaka is a professional-grade Java solution based on Spring, architected for **Multi-Session & Multi-Modal Context Memory**. It enforces strict domain isolation, stateless library design, and high-concurrency execution via Java 21 Virtual Threads.
 
 ---
 
@@ -12,9 +12,10 @@ Orasaka is a professional-grade AI platform architected for **Multi-Session & Mu
 
 | Document | Description |
 | :--- | :--- |
+| [Architecture Reference](docs/ARCHITECTURE.md) | Complete system architecture, BFF topology, and cognitive engine flows |
 | [API Reference](docs/API_REFERENCE.md) | Full specification of public types, facades, and engine abstractions |
 | [Glossary](docs/GLOSSARY.md) | Definitions of all ecosystem terms and design patterns |
-| [Architecture Decisions (ADR)](docs/CONTEXT.md) | Architectural Decision Records governing the platform |
+| [Architectural Decisions (ADR)](docs/CONTEXT.md) | Architectural Decision Records governing the platform |
 
 ---
 
@@ -27,10 +28,50 @@ Orasaka is a professional-grade AI platform architected for **Multi-Session & Mu
 | **`orasaka-identity`** | User management, RBAC, and cross-modality security contracts via Java 21 Sealed Interfaces. |
 | **`orasaka-tools`** | Concrete implementations of MCP orchestrators and Function Tool registries. Depends on `orasaka-core`. |
 | **`orasaka-gateway`** | GraphQL BFF (Spring Boot 3.5). Merges context from Identity and Core; streams results to UI and CLI. |
-| **`orasaka-ui`** | Next.js frontend application. |
-| **`orasaka-cli`** | Node.js/TypeScript CLI (future, executable via `npx`). |
+| **`orasaka-ui`** | Next.js frontend application (BFF pattern). Routes client chat streams and queries. |
+| **`orasaka-cli`** | Node.js/TypeScript terminal client. Authenticates via JWT/UUID credentials and consumes SSE streams. |
 
-> **Dependency Flow**: `orasaka-core` → `orasaka-identity`, `orasaka-tools` → `orasaka-gateway`. Strictly unidirectional. No circular dependencies.
+> **Dependency Flow**: 
+> - `orasaka-core` → `orasaka-identity`
+> - `orasaka-tools` → `orasaka-gateway`
+>
+> Strictly unidirectional. No circular dependencies.
+
+## 📁 Repository Layout
+
+```
+orasaka/
+├── ops/                     # DevOps, infrastructure, scripts, and testing assets
+│   ├── docker/              # Docker Compose and container orchestration configs
+│   │   └── docker-compose.yml
+│   ├── http/                # REST/GraphQL environment test files
+│   │   └── orasaka.http
+│   ├── postgres/            # Relational database migration and seeding scripts
+│   │   └── init/
+│   │       ├── 01-schema.sql
+│   │       └── 02-data.sql
+│   └── scripts/             # Operational automation scripts (e.g. bootstrap)
+│       └── setup.sh
+├── orasaka-core/            # Pure AI Orchestration Engine (Bridge Pattern 2.0)
+├── orasaka-gateway/         # Spring Boot BFF Routing & Streaming orchestrator
+├── orasaka-identity/        # User Authentication and Identity domain module
+├── orasaka-tools/           # MCP Integration and Concrete Tool registry
+├── orasaka-ui/              # Next.js Front-End Client App
+└── orasaka-cli/             # TS Node Terminal Client
+```
+
+---
+
+## 🏢 Building on Orasaka: The Business Layer
+
+Orasaka is built to be an **enabler framework**. When implementing a new business venture or a unique domain use-case (e.g., cross-platform media recommendation engines, automated market research tools, or financial analysts), you do not alter the stateless `orasaka-core`. 
+
+Instead, you implement a dedicated vertical domain. The business recipe always follows a 3-step pipeline:
+1. **Context & Profile Extraction**: Let `orasaka-identity` resolve who the customer is and what their explicit preferences are (e.g., favorite streaming services, language, content restrictions).
+2. **Agentic Knowledge Retrieval**: Use `orasaka-tools` to connect custom **MCP (Model Context Protocol) Servers** capable of fetching real-time real-world data (e.g., pulling active trending charts from Netflix, Apple TV, or Amazon Prime APIs).
+3. **Structured Orchestration**: The AI engine in `orasaka-core` processes the dynamic context, formats the outputs into strict, predictable schemas, and streams tailored, hyper-personalized value back to the `orasaka-ui` or `orasaka-cli`.
+
+> To see a comprehensive blueprint of a real-world startup feature implemented on this framework, read the [Business Implementation Guide](docs/BUSINESS_IMPLEMENTATION.md).
 
 ---
 
@@ -59,6 +100,8 @@ For non-conversational AI (TTS, Image Generation), request records (e.g., `Orasa
 | **No Starter Leaks** | `orasaka-core` must never import `spring-boot-starter` dependencies. |
 | **Real-time Streaming** | Gateway stream endpoints use GraphQL Subscriptions or HTTP SSE. |
 | **Virtual Threads** | All I/O-intensive and AI-inference tasks run on `Executors.newVirtualThreadPerTaskExecutor()`. |
+| **Multi-Tier Cache** | Transparent, passive caching decorator (`CachingToolCallback`) utilizing local Caffeine in-memory store and a persistent PostgreSQL database cache tier. |
+| **Asynchronous RAG** | Daily background schedule (`OrasakaBackgroundScheduler`) invoking modular chunkers (`OrasakaChunkingStrategies`) to ingest document metadata into vector storage. |
 
 ---
 
@@ -71,15 +114,31 @@ For non-conversational AI (TTS, Image Generation), request records (e.g., `Orasa
 - **Node.js 20+** (required for `orasaka-ui` and `orasaka-cli`)
 - **Docker Compose** (to spin up auxiliary services)
 
+### 🔐 Pre-seeded Test Credentials
+
+For local development and testing, the database is pre-seeded with the following roles and default credentials:
+
+| Email | Plaintext Password | Authorities / Roles | Default Preferences |
+| :--- | :--- | :--- | :--- |
+| `admin@orasaka.com` | `admin` | `ROLE_ADMIN` | `{"language":"en", "tts-voice":"alloy", "chat-temperature":0.7}` |
+| `user@orasaka.com` | `user` | `ROLE_USER` | `{"language":"en", "tts-voice":"nova", "chat-temperature":0.7}` |
+| `guest@orasaka.com` | `guest` | `ROLE_GUEST` | `{"language":"en", "tts-voice":"shimmer", "chat-temperature":0.9}` |
+
 ### Local Environment Setup
 
 Run the bundled setup script which validates the JDK, checks for a native Ollama instance, pulls required models, and starts auxiliary containers:
 
 ```bash
-./bin/setup.sh
+./ops/scripts/setup.sh
 ```
 
-> The script will also launch the `pgvector` database and the MCP debug server defined in [docker‑compose.yml](docker-compose.yml).
+> The script will also launch the `pgvector` database and the MCP debug server defined in [docker-compose.yml](ops/docker/docker-compose.yml).
+
+> [!TIP]
+> To run Docker containers manually, specify the project name and the configuration file path:
+> ```bash
+> docker compose -p orasaka -f ops/docker/docker-compose.yml up -d
+> ```
 
 ### Build & Run All Modules
 
@@ -98,12 +157,38 @@ mvn clean install -pl orasaka-core
 ### Run the Gateway locally
 
 ```bash
+# Build and update dependencies in local repository
+mvn clean install
+
+# Launch Gateway
 mvn spring-boot:run -pl orasaka-gateway
 ```
 
 The GraphQL Playground will be available at `http://localhost:8080/graphiql`.
 
-For more details, see the [API Reference](docs/API_REFERENCE.md) and the [Architecture Decisions](docs/CONTEXT.md).
+### Run the UI (Next.js BFF) locally
+
+```bash
+cd orasaka-ui
+npm install
+npm run dev
+```
+
+The application will run at `http://localhost:3000`. Next.js API Routes act as a BFF proxying GraphQL queries to `http://localhost:8080/graphql` and Server-Sent Events to `http://localhost:8080/api/v1/chat/stream/[conversationId]`.
+
+### Run the CLI Client locally
+
+```bash
+cd orasaka-cli
+npm install
+# Run login command to save session configs in ~/.orasaka-cli.json
+npx ts-node src/index.ts login user@orasaka.com user
+
+# Execute streaming chat query
+npx ts-node src/index.ts chat "Explain quantum computing in one sentence."
+```
+
+For more details, see the [Architecture Reference](docs/ARCHITECTURE.md), [API Reference](docs/API_REFERENCE.md), and the [Architectural Decisions](docs/CONTEXT.md).
 
 ---
 
