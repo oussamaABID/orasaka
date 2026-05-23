@@ -460,3 +460,41 @@ private Optional<User> safeGetUser(String userId) {
   }
 }
 ```
+
+---
+
+## 🌐 Server-Driven UX via the Orasaka Operation Graph
+
+To satisfy Guardrail `[ERR-106]` and `[ERR-107]`, Orasaka structures its interactive capabilities into an Operation Graph matrix compiled dynamically. 
+
+### 1. Sealed Interface NodeState Hierarchy
+Nodes in the operation graph are assigned polymorphic status values modeled via sealed record interfaces to enable compile-time exhaustiveness:
+
+```java
+public sealed interface NodeState permits Active, Locked, Invisible {}
+public final record Active() implements NodeState {}
+public final record Locked(String reason, LocalDateTime lockedAt) implements NodeState {}
+public final record Invisible() implements NodeState {}
+```
+
+### 2. Switch-Expression Pattern-Matching Reduction Loop
+When verifying capability states, services and mappers utilize switch expressions with pattern matching over `NodeState` subclasses to enforce safety dynamically and reject legacy `instanceof` blocks:
+
+```java
+boolean allowed = switch (node.state()) {
+  case Active active -> true;
+  case Locked locked -> false;
+  case Invisible invisible -> false;
+};
+```
+
+### 3. Stateless Short-Circuit Graph Compilation
+The `OrasakaGraphEngine` evaluates configurations with short-circuit boolean checking: if a capability's blueprint is disabled in the static YAML configuration, data access locks checking is bypassed entirely, immediately evaluating to `Invisible` to optimize connection lease times under heavy Virtual Thread workloads:
+
+```java
+if (!config.enabled()) {
+  nodes.add(new OperationNode(id, ..., new Invisible(), ...));
+  return; // Short-circuited bypass
+}
+```
+

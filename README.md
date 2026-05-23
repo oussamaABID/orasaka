@@ -213,8 +213,12 @@ Execution lifecycle events are emitted asynchronously and reactively, enabling n
 
 ### C. Self-Validating Records & Compile-Time Defensiveness
 We enforce compile-time verification and runtime safety by migrating defensive copies, default parameters, and structural validation from anemic services directly into the **Compact Constructors** of Java 21 records:
-* **Invariants Enforcement**: Payloads are fully validated and defensively copied at construction time (`List.copyOf()`, `Map.copyOf()`), guaranteeing complete immunity to `NullPointerException`.
 * **Zero-Allocation Payloads**: Rich domain methods like `compileMessages()` eliminate procedural loop structures from the service layer, keeping service classes clean and orchestration-focused.
+
+### D. Server-Driven UX via the Orasaka Operation Graph
+Orasaka implements a Server-Driven UI capability architecture via the polymorphic `OrasakaOperationGraph`. Rather than hardcoding feature toggles in the frontend, the UI constructs its contextual "+" actions menu dynamically by querying the `/api/v1/operations/graph` endpoint:
+* **Polymorphic Capability States**: Capabilities can evaluate to `Active`, `Locked` (providing a contextual locking explanation and audit timestamp), or `Invisible` (which is skipped entirely in frontend rendering).
+* **Frontier Ingress Security**: The gateway boundary enforces matching access control via the `OrasakaOperationGraphFilter`. Calls to locked or invisible capabilities are aborted immediately at the frontier, returning an HTTP `403 Forbidden` response.
 
 ---
 
