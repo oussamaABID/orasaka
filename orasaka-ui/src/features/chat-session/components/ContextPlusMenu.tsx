@@ -21,6 +21,19 @@ export interface OperationNode {
   executionDetails: TargetExecutionUri;
 }
 
+export const fetchOperationGraph = async (): Promise<OperationNode[]> => {
+  const query = `query GetOperationGraph { operationGraph { nodes { id label icon presentationContext state { type reason lockedAt } executionDetails { uriPath httpMethod payloadTemplate } } } }`;
+  const response = await fetch("/api/graphql", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query }),
+  });
+  if (!response.ok) throw new Error("Failed to fetch Operation Graph");
+  const result = await response.json();
+  if (result.errors?.length > 0) throw new Error(result.errors[0].message);
+  return result.data?.operationGraph?.nodes || [];
+};
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;

@@ -10,25 +10,16 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useTranslation } from "@/core/context/LocaleContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ContextPlusMenu, OperationNode } from "./ContextPlusMenu";
+import {
+  ContextPlusMenu,
+  OperationNode,
+  fetchOperationGraph,
+} from "./ContextPlusMenu";
 import { ChatMessage } from "../types/chat.types";
 
 interface Props {
   initialConversationId: string;
 }
-
-const fetchOperationGraph = async (): Promise<OperationNode[]> => {
-  const query = `query GetOperationGraph { operationGraph { nodes { id label icon presentationContext state { type reason lockedAt } executionDetails { uriPath httpMethod payloadTemplate } } } }`;
-  const response = await fetch("/api/graphql", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query }),
-  });
-  if (!response.ok) throw new Error("Failed to fetch Operation Graph");
-  const result = await response.json();
-  if (result.errors?.length > 0) throw new Error(result.errors[0].message);
-  return result.data?.operationGraph?.nodes || [];
-};
 
 export const ChatWindow: React.FC<Props> = ({ initialConversationId }) => {
   const [activeConversationId, setActiveConversationId] = useState<string>(
