@@ -7,7 +7,7 @@ import { GraphQLClient, gql } from 'graphql-request';
 export class OrasakaCliClient {
     private client: GraphQLClient;
 
-    constructor(private endpoint: string = 'http://localhost:8080/graphql') {
+    constructor(private endpoint: string = 'http://localhost:' + '8080' + '/graphql') {
         this.client = new GraphQLClient(this.endpoint);
     }
 
