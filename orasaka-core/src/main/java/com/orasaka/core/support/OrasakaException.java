@@ -6,6 +6,8 @@ package com.orasaka.core.support;
  */
 public class OrasakaException extends RuntimeException {
 
+  private static final long serialVersionUID = 1L;
+
   /**
    * Constructs a new exception with the specified message.
    *

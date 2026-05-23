@@ -16,7 +16,9 @@ class DefaultOrasakaToolRegistryTest {
 
   @BeforeEach
   void setUp() {
-    registry = new DefaultOrasakaToolRegistry();
+    DefaultOrasakaToolRegistry reg = new DefaultOrasakaToolRegistry();
+    reg.registerDefaultTools();
+    registry = reg;
   }
 
   @Test

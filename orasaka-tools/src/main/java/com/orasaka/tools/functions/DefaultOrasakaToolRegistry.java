@@ -8,6 +8,7 @@ import com.orasaka.tools.config.OrasakaToolsProperties;
 import com.orasaka.tools.config.OrasakaToolsProperties.ToolConfig;
 import com.orasaka.tools.entity.OrasakaToolRagSourceEntity;
 import com.orasaka.tools.repository.OrasakaToolRagSourceRepository;
+import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +45,6 @@ public class DefaultOrasakaToolRegistry implements OrasakaToolRegistry {
     this.cacheService = null;
     this.ragSourceRepository = null;
     this.knowledgeService = null;
-    registerDefaultTools();
   }
 
   /**
@@ -64,10 +64,10 @@ public class DefaultOrasakaToolRegistry implements OrasakaToolRegistry {
     this.cacheService = cacheService;
     this.ragSourceRepository = ragSourceRepository;
     this.knowledgeService = knowledgeService;
-    registerDefaultTools();
   }
 
-  private void registerDefaultTools() {
+  @PostConstruct
+  void registerDefaultTools() {
     registerTool(
         "analyzePoster",
         "Analyzes a movie poster provided as a base64 encoded string using vision model.",

@@ -6,6 +6,8 @@ package com.orasaka.identity.exception;
  */
 public class UserAlreadyExistsException extends RuntimeException {
 
+  private static final long serialVersionUID = 1L;
+
   /**
    * Constructs a new exception with the specified detail message.
    *

@@ -52,18 +52,59 @@ public class GatewayApplication {
             .coercing(
                 new Coercing<Object, Object>() {
                   @Override
-                  public Object serialize(Object dataFetcherResult) {
+                  public Object serialize(
+                      Object dataFetcherResult,
+                      graphql.GraphQLContext graphQLContext,
+                      java.util.Locale locale) {
                     return dataFetcherResult;
                   }
 
                   @Override
-                  public Object parseValue(Object input) {
+                  public Object parseValue(
+                      Object input,
+                      graphql.GraphQLContext graphQLContext,
+                      java.util.Locale locale) {
                     return input;
                   }
 
                   @Override
-                  public Object parseLiteral(Object input) {
-                    return input;
+                  public Object parseLiteral(
+                      graphql.language.Value<?> input,
+                      graphql.execution.CoercedVariables variables,
+                      graphql.GraphQLContext graphQLContext,
+                      java.util.Locale locale) {
+                    return parseLiteralValue(input);
+                  }
+
+                  private Object parseLiteralValue(graphql.language.Value<?> value) {
+                    if (value instanceof graphql.language.StringValue stringValue) {
+                      return stringValue.getValue();
+                    }
+                    if (value instanceof graphql.language.BooleanValue booleanValue) {
+                      return booleanValue.isValue();
+                    }
+                    if (value instanceof graphql.language.IntValue intValue) {
+                      return intValue.getValue();
+                    }
+                    if (value instanceof graphql.language.FloatValue floatValue) {
+                      return floatValue.getValue();
+                    }
+                    if (value instanceof graphql.language.NullValue) {
+                      return null;
+                    }
+                    if (value instanceof graphql.language.ArrayValue arrayValue) {
+                      return arrayValue.getValues().stream().map(this::parseLiteralValue).toList();
+                    }
+                    if (value instanceof graphql.language.ObjectValue objectValue) {
+                      java.util.Map<String, Object> map = new java.util.HashMap<>();
+                      objectValue
+                          .getObjectFields()
+                          .forEach(
+                              field ->
+                                  map.put(field.getName(), parseLiteralValue(field.getValue())));
+                      return map;
+                    }
+                    return value != null ? value.toString() : null;
                   }
                 })
             .build();
