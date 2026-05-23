@@ -1,5 +1,6 @@
 package com.orasaka.identity.domain;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -45,7 +46,7 @@ public record User(
     authorities = (authorities == null) ? Set.of() : Set.copyOf(authorities);
 
     Map<String, Object> tempPrefs =
-        (preferences == null) ? new java.util.HashMap<>() : new java.util.HashMap<>(preferences);
+        (preferences == null) ? new HashMap<>() : new HashMap<>(preferences);
     tempPrefs.compute("language", (k, v) -> (v == null || String.valueOf(v).isBlank()) ? "en" : v);
     preferences = Map.copyOf(tempPrefs);
 

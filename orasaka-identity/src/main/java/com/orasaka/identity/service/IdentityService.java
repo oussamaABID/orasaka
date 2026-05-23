@@ -93,8 +93,6 @@ public class IdentityService {
     this.transactionTemplate = new TransactionTemplate(transactionManager);
   }
 
-  // ─── Public API ──────────────────────────────────────────────────────────
-
   /**
    * Resolves a complete {@link User} profile by their unique identifier.
    *
@@ -174,7 +172,6 @@ public class IdentityService {
     String userId = UUID.randomUUID().toString();
     String passwordHash = "{locked}";
 
-    // Instantiate User domain record first to enforce validations
     User validatedUser =
         new User(
             UUID.fromString(userId), username, email, true, Set.of(), Map.of("language", "en"));
@@ -219,12 +216,9 @@ public class IdentityService {
    * @return Fully resolved {@link User} or {@code null} if registration is rejected.
    */
   public User register(String username, String email, String password, String language) {
-    // Hash password outside @Transactional to optimize virtual thread connection hold times
     String passwordHash = passwordEncoder.encode(password);
     String userId = UUID.randomUUID().toString();
 
-    // Instantiate User domain record first to enforce domain validations and apply fallback
-    // defaults.
     User validatedUser =
         new User(
             UUID.fromString(userId),
@@ -358,7 +352,6 @@ public class IdentityService {
       userInterceptionRepository.saveAndFlush(entity);
       logger.info("Triggered interception '{}' for user {}", interceptionType, userId);
     } catch (DataIntegrityViolationException e) {
-      // Interception already triggered; safe to ignore
       logger.debug("Interception '{}' already exists for user {}", interceptionType, userId);
     }
   }
@@ -421,8 +414,6 @@ public class IdentityService {
     logger.info("Successfully verified token and enabled user {}", row.getUserId());
     return true;
   }
-
-  // ─── Private Helpers ─────────────────────────────────────────────────────
 
   /** Computes the SHA-256 hash of a verification token string. */
   private String hashToken(String token) {
