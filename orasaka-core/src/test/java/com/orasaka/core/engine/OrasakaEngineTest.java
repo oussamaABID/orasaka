@@ -4,20 +4,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.orasaka.core.config.CoreProperties;
-import com.orasaka.core.exception.OrasakaException;
-import com.orasaka.core.interceptors.mcp.McpOrchestrator;
-import com.orasaka.core.interceptors.mcp.OrasakaMcpInterceptor;
-import com.orasaka.core.interceptors.memory.OrasakaMemoryInterceptor;
-import com.orasaka.core.interceptors.memory.OrasakaMemoryResolver;
-import com.orasaka.core.interceptors.rag.OrasakaKnowledgeService;
-import com.orasaka.core.interceptors.rag.OrasakaRagInterceptor;
-import com.orasaka.core.interceptors.tool.OrasakaToolInterceptor;
-import com.orasaka.core.interceptors.tool.OrasakaToolRegistry;
-import com.orasaka.core.model.OrasakaChatRequest;
-import com.orasaka.core.model.OrasakaChatResponse;
-import com.orasaka.core.model.OrasakaImageRequest;
-import com.orasaka.core.model.OrasakaImageResponse;
+import com.orasaka.core.pipeline.McpOrchestrator;
+import com.orasaka.core.pipeline.OrasakaContextInterceptor;
+import com.orasaka.core.pipeline.OrasakaKnowledgeService;
+import com.orasaka.core.pipeline.OrasakaMemoryResolver;
+import com.orasaka.core.pipeline.OrasakaOrchestrationPipeline;
+import com.orasaka.core.pipeline.OrasakaToolRegistry;
+import com.orasaka.core.pipeline.SystemContextProvider;
+import com.orasaka.core.support.OrasakaChatRequest;
+import com.orasaka.core.support.OrasakaChatResponse;
+import com.orasaka.core.support.OrasakaException;
+import com.orasaka.core.support.OrasakaImageRequest;
+import com.orasaka.core.support.OrasakaImageResponse;
+import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Assertions;
@@ -57,7 +56,7 @@ class OrasakaEngineTest {
   private CoreProperties properties;
 
   @BeforeEach
-  void setUp() {
+  void setUp() throws Exception {
     properties =
         new CoreProperties(
             "ollama",
@@ -65,10 +64,10 @@ class OrasakaEngineTest {
             new CoreProperties.RagConfig(false, null, 3),
             new CoreProperties.McpConfig(List.of()));
 
-    OrasakaMemoryInterceptor memoryInterceptor = new OrasakaMemoryInterceptor(memoryResolver);
-    OrasakaMcpInterceptor mcpInterceptor = new OrasakaMcpInterceptor(mcpOrchestrator);
-    OrasakaRagInterceptor ragInterceptor = new OrasakaRagInterceptor(properties, knowledgeService);
-    OrasakaToolInterceptor toolInterceptor = new OrasakaToolInterceptor(toolRegistry);
+    var memoryInterceptor = createMemoryInterceptor(memoryResolver);
+    var mcpInterceptor = createMcpInterceptor(mcpOrchestrator);
+    var ragInterceptor = createRagInterceptor(properties, knowledgeService);
+    var toolInterceptor = createToolInterceptor(toolRegistry);
 
     engine =
         new OrasakaEngine(
@@ -102,7 +101,7 @@ class OrasakaEngineTest {
   }
 
   @Test
-  void shouldInjectRagContextWhenEnabled() {
+  void shouldInjectRagContextWhenEnabled() throws Exception {
     // Given
     properties =
         new CoreProperties(
@@ -111,10 +110,10 @@ class OrasakaEngineTest {
             new CoreProperties.RagConfig(true, "pgvector", 3),
             new CoreProperties.McpConfig(List.of()));
 
-    OrasakaMemoryInterceptor memoryInterceptor = new OrasakaMemoryInterceptor(memoryResolver);
-    OrasakaMcpInterceptor mcpInterceptor = new OrasakaMcpInterceptor(mcpOrchestrator);
-    OrasakaRagInterceptor ragInterceptor = new OrasakaRagInterceptor(properties, knowledgeService);
-    OrasakaToolInterceptor toolInterceptor = new OrasakaToolInterceptor(toolRegistry);
+    var memoryInterceptor = createMemoryInterceptor(memoryResolver);
+    var mcpInterceptor = createMcpInterceptor(mcpOrchestrator);
+    var ragInterceptor = createRagInterceptor(properties, knowledgeService);
+    var toolInterceptor = createToolInterceptor(toolRegistry);
 
     engine =
         new OrasakaEngine(
@@ -147,7 +146,7 @@ class OrasakaEngineTest {
   }
 
   @Test
-  void shouldInjectMcpContextWhenAvailable() {
+  void shouldInjectMcpContextWhenAvailable() throws Exception {
     // Given
     OrasakaChatRequest request = OrasakaChatRequest.simple("Hello");
     when(mcpOrchestrator.resolveExternalContext()).thenReturn("External knowledge");
@@ -193,7 +192,6 @@ class OrasakaEngineTest {
 
     when(img.getUrl()).thenReturn("http://orasaka.ai/sunset.png");
     when(imgGen.getOutput()).thenReturn(img);
-    when(imageResponse.getResults()).thenReturn(List.of(imgGen));
     when(imageResponse.getResult()).thenReturn(imgGen);
     when(imageModel.call(any(ImagePrompt.class))).thenReturn(imageResponse);
 
@@ -227,7 +225,7 @@ class OrasakaEngineTest {
   }
 
   @Test
-  void shouldExecutePipelineWhenEnabled() {
+  void shouldExecutePipelineWhenEnabled() throws Exception {
     // Given
     CoreProperties.OrchestrationConfig orchConfig =
         new CoreProperties.OrchestrationConfig(
@@ -257,26 +255,23 @@ class OrasakaEngineTest {
     when(openaiChatModel.call(any(Prompt.class)))
         .thenReturn(new ChatResponse(List.of(new Generation(finalResponse))));
 
-    var userResolver = new com.orasaka.core.orchestration.UserContextResolver();
-    var sysInjector =
-        new com.orasaka.core.orchestration.SystemContextInjector(
-            List.of(() -> Map.of("signal", "high-alert")));
-    var refiner =
-        new com.orasaka.core.orchestration.RefinerInterceptor(
-            Map.of("ollama", chatModel), enabledProps);
-    var router =
-        new com.orasaka.core.orchestration.RouterInterceptor(
-            Map.of("ollama", chatModel, "openai", openaiChatModel), enabledProps);
+    Object userResolver = createUserResolver();
+    List<SystemContextProvider> providers = List.of(() -> Map.of("signal", "high-alert"));
+    Object sysInjector = createSysInjector(providers);
+    Object refiner = createRefiner(Map.of("ollama", chatModel), enabledProps);
+    Object router =
+        createRouter(Map.of("ollama", chatModel, "openai", openaiChatModel), enabledProps);
 
-    var pipeline =
-        new com.orasaka.core.orchestration.OrasakaOrchestrationPipeline(
+    Constructor<OrasakaOrchestrationPipeline> pipelineConstructor =
+        OrasakaOrchestrationPipeline.class.getConstructor(List.class, CoreProperties.class);
+    OrasakaOrchestrationPipeline pipeline =
+        pipelineConstructor.newInstance(
             List.of(userResolver, sysInjector, refiner, router), enabledProps);
 
-    OrasakaMemoryInterceptor memoryInterceptor = new OrasakaMemoryInterceptor(memoryResolver);
-    OrasakaMcpInterceptor mcpInterceptor = new OrasakaMcpInterceptor(mcpOrchestrator);
-    OrasakaRagInterceptor ragInterceptor =
-        new OrasakaRagInterceptor(enabledProps, knowledgeService);
-    OrasakaToolInterceptor toolInterceptor = new OrasakaToolInterceptor(toolRegistry);
+    var memoryInterceptor = createMemoryInterceptor(memoryResolver);
+    var mcpInterceptor = createMcpInterceptor(mcpOrchestrator);
+    var ragInterceptor = createRagInterceptor(enabledProps, knowledgeService);
+    var toolInterceptor = createToolInterceptor(toolRegistry);
 
     OrasakaEngine customEngine =
         new OrasakaEngine(
@@ -304,5 +299,68 @@ class OrasakaEngineTest {
                 (Prompt prompt) ->
                     prompt.getInstructions().stream()
                         .anyMatch(m -> m.getText().contains("Refined prompt instruction"))));
+  }
+
+  private OrasakaContextInterceptor createMemoryInterceptor(OrasakaMemoryResolver resolver)
+      throws Exception {
+    Class<?> clazz = Class.forName("com.orasaka.core.pipeline.OrasakaMemoryInterceptor");
+    var constructor = clazz.getDeclaredConstructor(OrasakaMemoryResolver.class);
+    constructor.setAccessible(true);
+    return (OrasakaContextInterceptor) constructor.newInstance(resolver);
+  }
+
+  private OrasakaContextInterceptor createMcpInterceptor(McpOrchestrator orchestrator)
+      throws Exception {
+    Class<?> clazz = Class.forName("com.orasaka.core.pipeline.OrasakaMcpInterceptor");
+    var constructor = clazz.getDeclaredConstructor(McpOrchestrator.class);
+    constructor.setAccessible(true);
+    return (OrasakaContextInterceptor) constructor.newInstance(orchestrator);
+  }
+
+  private Object createUserResolver() throws Exception {
+    Class<?> clazz = Class.forName("com.orasaka.core.pipeline.UserContextResolver");
+    var constructor = clazz.getDeclaredConstructor();
+    constructor.setAccessible(true);
+    return constructor.newInstance();
+  }
+
+  private Object createSysInjector(List<SystemContextProvider> providers) throws Exception {
+    Class<?> clazz = Class.forName("com.orasaka.core.pipeline.SystemContextInjector");
+    var constructor = clazz.getDeclaredConstructor(List.class);
+    constructor.setAccessible(true);
+    return constructor.newInstance(providers);
+  }
+
+  private Object createRefiner(Map<String, ChatModel> chatModels, CoreProperties properties)
+      throws Exception {
+    Class<?> clazz = Class.forName("com.orasaka.core.pipeline.RefinerInterceptor");
+    var constructor = clazz.getDeclaredConstructor(Map.class, CoreProperties.class);
+    constructor.setAccessible(true);
+    return constructor.newInstance(chatModels, properties);
+  }
+
+  private Object createRouter(Map<String, ChatModel> chatModels, CoreProperties properties)
+      throws Exception {
+    Class<?> clazz = Class.forName("com.orasaka.core.pipeline.RouterInterceptor");
+    var constructor = clazz.getDeclaredConstructor(Map.class, CoreProperties.class);
+    constructor.setAccessible(true);
+    return constructor.newInstance(chatModels, properties);
+  }
+
+  private OrasakaContextInterceptor createRagInterceptor(
+      CoreProperties properties, OrasakaKnowledgeService knowledgeService) throws Exception {
+    Class<?> clazz = Class.forName("com.orasaka.core.pipeline.OrasakaRagInterceptor");
+    var constructor =
+        clazz.getDeclaredConstructor(CoreProperties.class, OrasakaKnowledgeService.class);
+    constructor.setAccessible(true);
+    return (OrasakaContextInterceptor) constructor.newInstance(properties, knowledgeService);
+  }
+
+  private OrasakaContextInterceptor createToolInterceptor(OrasakaToolRegistry toolRegistry)
+      throws Exception {
+    Class<?> clazz = Class.forName("com.orasaka.core.pipeline.OrasakaToolInterceptor");
+    var constructor = clazz.getDeclaredConstructor(OrasakaToolRegistry.class);
+    constructor.setAccessible(true);
+    return (OrasakaContextInterceptor) constructor.newInstance(toolRegistry);
   }
 }
