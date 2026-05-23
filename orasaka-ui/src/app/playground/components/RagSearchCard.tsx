@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -7,26 +8,33 @@ import { Search, Loader2 } from "lucide-react";
 export function RagSearchCard() {
   const [ragQuery, setRagQuery] = useState("");
   const [ragResult, setRagResult] = useState("");
-  const [isRagLoading, setIsRagLoading] = useState(false);
 
-  const runRagSearch = async () => {
-    if (!ragQuery.trim()) return;
-    setIsRagLoading(true);
-    setRagResult("");
-    try {
+  const searchMutation = useMutation({
+    mutationFn: async (query: string) => {
       const response = await fetch(
-        `/api/v1/media/search-rag?q=${encodeURIComponent(ragQuery)}`,
+        `/api/v1/media/search-rag?q=${encodeURIComponent(query)}`,
         {
           headers: { Authorization: "Bearer user-mock" },
         },
       );
+      if (!response.ok) {
+        throw new Error(`RAG query failed with status ${response.status}`);
+      }
       const data = await response.json();
-      setRagResult(data.context || "No context found matching query.");
-    } catch (e: unknown) {
-      setRagResult(e instanceof Error ? e.message : "RAG query failed.");
-    } finally {
-      setIsRagLoading(false);
-    }
+      return data.context || "No context found matching query.";
+    },
+    onSuccess: (context) => {
+      setRagResult(context);
+    },
+    onError: (e: Error) => {
+      setRagResult(e.message || "RAG query failed.");
+    },
+  });
+
+  const runRagSearch = () => {
+    if (!ragQuery.trim()) return;
+    setRagResult("");
+    searchMutation.mutate(ragQuery);
   };
 
   return (
@@ -46,10 +54,10 @@ export function RagSearchCard() {
         />
         <Button
           onClick={runRagSearch}
-          disabled={isRagLoading || !ragQuery.trim()}
+          disabled={searchMutation.isPending || !ragQuery.trim()}
           className="flex items-center gap-1"
         >
-          {isRagLoading ? (
+          {searchMutation.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <Search className="h-4 w-4" />
