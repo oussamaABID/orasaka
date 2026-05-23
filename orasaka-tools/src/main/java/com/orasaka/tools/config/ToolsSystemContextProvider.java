@@ -1,6 +1,6 @@
 package com.orasaka.tools.config;
 
-import com.orasaka.core.orchestration.SystemContextProvider;
+import com.orasaka.core.pipeline.SystemContextProvider;
 import java.util.Map;
 import org.springframework.stereotype.Component;
 

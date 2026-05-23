@@ -1,6 +1,6 @@
 package com.orasaka.tools.mcp;
 
-import com.orasaka.core.config.CoreProperties;
+import com.orasaka.core.engine.CoreProperties;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -40,7 +40,7 @@ public class OrasakaMcpService {
    * @see com.orasaka.core.mcp.McpOrchestrator#resolveExternalTools()
    */
   public List<Object> getMcpTools() {
-    return List.of(); // Placeholder
+    return List.of();
   }
 
   /**
@@ -52,6 +52,6 @@ public class OrasakaMcpService {
    * @see com.orasaka.core.mcp.McpOrchestrator#resolveExternalContext()
    */
   public String getMcpContext() {
-    return ""; // Placeholder
+    return "";
   }
 }

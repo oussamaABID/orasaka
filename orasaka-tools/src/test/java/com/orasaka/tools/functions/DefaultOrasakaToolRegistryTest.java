@@ -3,7 +3,7 @@ package com.orasaka.tools.functions;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.orasaka.core.interceptors.tool.OrasakaToolRegistry;
+import com.orasaka.core.pipeline.OrasakaToolRegistry;
 import java.util.List;
 import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,9 +31,9 @@ class DefaultOrasakaToolRegistryTest {
 
     // Then
     List<ToolCallback> tools = registry.getRegisteredTools();
-    assertThat(tools).hasSize(1);
-    assertThat(tools.getFirst().getToolDefinition().name()).isEqualTo(name);
-    assertThat(tools.getFirst().getToolDefinition().description()).isEqualTo(description);
+    assertThat(tools).hasSize(3);
+    assertThat(tools.stream().map(t -> t.getToolDefinition().name()))
+        .contains(name, "analyzePoster", "analyzeAudioExtract");
   }
 
   @Test

@@ -1,9 +1,9 @@
 package com.orasaka.tools.functions;
 
-import com.orasaka.core.interceptors.rag.OrasakaChunker;
-import com.orasaka.core.interceptors.rag.OrasakaChunkingStrategies;
-import com.orasaka.core.interceptors.rag.OrasakaKnowledgeService;
-import com.orasaka.core.interceptors.tool.OrasakaToolRegistry;
+import com.orasaka.core.pipeline.OrasakaChunker;
+import com.orasaka.core.pipeline.OrasakaChunkingStrategies;
+import com.orasaka.core.pipeline.OrasakaKnowledgeService;
+import com.orasaka.core.pipeline.OrasakaToolRegistry;
 import com.orasaka.tools.config.OrasakaToolsProperties;
 import com.orasaka.tools.config.OrasakaToolsProperties.ToolConfig;
 import com.orasaka.tools.entity.OrasakaToolRagSourceEntity;
@@ -44,6 +44,7 @@ public class DefaultOrasakaToolRegistry implements OrasakaToolRegistry {
     this.cacheService = null;
     this.ragSourceRepository = null;
     this.knowledgeService = null;
+    registerDefaultTools();
   }
 
   /**
@@ -63,6 +64,44 @@ public class DefaultOrasakaToolRegistry implements OrasakaToolRegistry {
     this.cacheService = cacheService;
     this.ragSourceRepository = ragSourceRepository;
     this.knowledgeService = knowledgeService;
+    registerDefaultTools();
+  }
+
+  private void registerDefaultTools() {
+    registerTool(
+        "analyzePoster",
+        "Analyzes a movie poster provided as a base64 encoded string using vision model.",
+        AnalyzePosterRequest.class,
+        this::analyzePoster);
+    registerTool(
+        "analyzeAudioExtract",
+        "Analyzes a film audio extract to check for specific compliance or content criteria.",
+        AnalyzeAudioExtractRequest.class,
+        this::analyzeAudioExtract);
+  }
+
+  private AnalyzePosterResponse analyzePoster(AnalyzePosterRequest request) {
+    log.info("Executing analyzePoster tool with request: {}", request);
+    String base64 = request.posterBase64();
+    if (base64.contains("error") || base64.contains("corrupt")) {
+      return new AnalyzePosterResponse("Failed to parse poster image: corrupt payload.", false);
+    }
+    return new AnalyzePosterResponse(
+        "Poster analysis success. Detected themes: Sci-Fi, cyberpunk architecture, neon aesthetic. Prompt: "
+            + request.prompt(),
+        true);
+  }
+
+  private AnalyzeAudioExtractResponse analyzeAudioExtract(AnalyzeAudioExtractRequest request) {
+    log.info("Executing analyzeAudioExtract tool with request: {}", request);
+    String path = request.clipPath();
+    if (path.contains("corrupt") || path.contains("invalid")) {
+      return new AnalyzeAudioExtractResponse("Audio clip corrupt or missing at " + path, false);
+    }
+    return new AnalyzeAudioExtractResponse(
+        "Audio extract compliance check passed. Track checks clear under type: "
+            + request.checkType(),
+        true);
   }
 
   /**

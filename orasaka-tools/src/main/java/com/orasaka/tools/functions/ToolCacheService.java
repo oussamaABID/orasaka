@@ -71,7 +71,6 @@ public class ToolCacheService {
   public String get(String toolId, String cacheKey) {
     String fullKey = toolId + ":" + cacheKey;
 
-    // 1. Check local in-memory cache
     CacheEntry localEntry = localCache.getIfPresent(fullKey);
     if (localEntry != null) {
       if (!localEntry.isExpired()) {
@@ -85,7 +84,6 @@ public class ToolCacheService {
       }
     }
 
-    // 2. Check PostgreSQL cache
     log.debug("Local cache miss. Checking DB for tool={}, key={}", toolId, cacheKey);
     try {
       Optional<OrasakaToolCacheEntity> dbOpt =
@@ -123,10 +121,8 @@ public class ToolCacheService {
     Instant expiresAt = Instant.now().plusSeconds(ttlSeconds);
     CacheEntry entry = new CacheEntry(value, expiresAt);
 
-    // 1. Put in Caffeine
     localCache.put(fullKey, entry);
 
-    // 2. Put in PostgreSQL
     try {
       OrasakaToolCacheId id = new OrasakaToolCacheId(toolId, cacheKey);
       OrasakaToolCacheEntity entity = new OrasakaToolCacheEntity();

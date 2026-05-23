@@ -1,7 +1,7 @@
 package com.orasaka.tools.mcp;
 
-import com.orasaka.core.config.CoreProperties;
-import com.orasaka.core.interceptors.mcp.McpOrchestrator;
+import com.orasaka.core.engine.CoreProperties;
+import com.orasaka.core.pipeline.McpOrchestrator;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -27,7 +27,7 @@ public class DefaultMcpOrchestrator implements McpOrchestrator {
    * Instantiates a new DefaultMcpOrchestrator using the provided configuration properties.
    *
    * @param properties Configuration properties mapping the target MCP server endpoints.
-   * @see com.orasaka.core.config.CoreProperties
+   * @see com.orasaka.core.engine.CoreProperties
    */
   public DefaultMcpOrchestrator(CoreProperties properties) {
     this.properties = properties;
@@ -52,7 +52,7 @@ public class DefaultMcpOrchestrator implements McpOrchestrator {
     try (HttpClient client =
         HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(2))
-            .executor(Executors.newVirtualThreadPerTaskExecutor()) // Enforce Virtual Threads
+            .executor(Executors.newVirtualThreadPerTaskExecutor())
             .build()) {
 
       List<CompletableFuture<String>> futures =
@@ -69,7 +69,7 @@ public class DefaultMcpOrchestrator implements McpOrchestrator {
                     return client
                         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
                         .thenApply(HttpResponse::body)
-                        .exceptionally(ex -> ""); // Silently fail for individual endpoints
+                        .exceptionally(ex -> "");
                   })
               .toList();
 
@@ -83,7 +83,7 @@ public class DefaultMcpOrchestrator implements McpOrchestrator {
                       .collect(Collectors.joining("\n")))
           .get();
     } catch (Exception e) {
-      return ""; // Fallback to empty context on global failure
+      return "";
     }
   }
 
@@ -98,7 +98,6 @@ public class DefaultMcpOrchestrator implements McpOrchestrator {
    */
   @Override
   public List<Object> resolveExternalTools() {
-    // Future: Fetch tool definitions from /tools endpoint of MCP servers
     return new ArrayList<>();
   }
 }

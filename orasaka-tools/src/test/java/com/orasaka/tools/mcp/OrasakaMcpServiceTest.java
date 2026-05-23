@@ -2,7 +2,7 @@ package com.orasaka.tools.mcp;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.orasaka.core.config.CoreProperties;
+import com.orasaka.core.engine.CoreProperties;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
