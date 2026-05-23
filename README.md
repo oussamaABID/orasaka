@@ -1,4 +1,4 @@
-# ORASAKA - Java Spring Architecture for Agentic AI Systems
+# ORASAKA - Native IA Orchestrator Engine
 
 ![Orasaka Logo](docs/assets/logo.svg)
 
@@ -189,6 +189,32 @@ npx ts-node src/index.ts login user@orasaka.com user
 # Execute streaming chat query
 npx ts-node src/index.ts chat "Explain quantum computing in one sentence."
 ```
+
+## 🎙️ Elite Developer Experience (DevX) & Extensibility Matrix
+
+Orasaka is architected to provide an elite, modern development experience (DevX), leveraging cutting-edge Java 21 features and a decoupled component-driven extension model.
+
+### A. Dynamic Context Interceptor Pipeline
+Third-party developers can extend the orchestration engine without modifying the core cognitive code. By implementing the `OrasakaContextInterceptor` interface, custom components are automatically discovered via Spring dependency injection and woven into the functional execution pipeline:
+
+```mermaid
+graph LR
+    Request[OrasakaChatRequest] --> Interceptors[Stream/Reduce Pipeline]
+    Interceptors --> Interceptor1[UserContextResolver]
+    Interceptors --> Interceptor2[SystemContextInjector]
+    Interceptors --> Interceptor3[RefinerInterceptor]
+    Interceptors --> Interceptor4[RouterInterceptor]
+    Interceptor4 --> Engine[AbstractOrasakaEngine]
+```
+
+### B. Decoupled Event-Driven Extensibility
+Execution lifecycle events are emitted asynchronously and reactively, enabling non-blocking analytics, auditing, and observability integrations:
+* **`OrasakaChatCompletedEvent`**: An immutable record published using Spring's `ApplicationEventPublisher` upon successful completion of synchronous chat executions or reactive token streams.
+
+### C. Self-Validating Records & Compile-Time Defensiveness
+We enforce compile-time verification and runtime safety by migrating defensive copies, default parameters, and structural validation from anemic services directly into the **Compact Constructors** of Java 21 records:
+* **Invariants Enforcement**: Payloads are fully validated and defensively copied at construction time (`List.copyOf()`, `Map.copyOf()`), guaranteeing complete immunity to `NullPointerException`.
+* **Zero-Allocation Payloads**: Rich domain methods like `compileMessages()` eliminate procedural loop structures from the service layer, keeping service classes clean and orchestration-focused.
 
 ---
 

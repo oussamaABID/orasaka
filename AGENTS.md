@@ -2,7 +2,7 @@
 
 > [!IMPORTANT]
 > **AGENT EXECUTION CONTRACT & CONTEXT LOADING ORDER**
-
+>
 > 1. **Pre-requisite**: You MUST dynamically load, parse, and strictly adhere to all active definitions found within `.agent/rules/*` and `.agent/workflows/*` prior to any file modification or code generation task.
 > 2. **Rule Aggregation**: Treat the specialized local rules inside the `.agent/` directory as strict, non-negotiable extensions of this global master specification ledger.
 > 3. **Validation Gate**: Every task, architectural review, code compilation, and documentation synchronization loop must simultaneously satisfy both the local manifests and this ledger.
@@ -20,6 +20,7 @@
 ### B. The Bridge Pattern 2.0
 
 Direct exposure of external AI frameworks to the rest of the application is strictly forbidden:
+
 * **Encapsulation**: All third-party AI framework models, prompts, and options must be safely wrapped inside Orasaka-native abstractions (e.g., `OrasakaChatRequest`, `OrasakaOptions`).
 * **Facade Access**: External modules and clients must interact with the core engine exclusively through the unified `OrasakaAiClient` facade.
 
@@ -40,20 +41,51 @@ When processing fuzzy queries, execution must flow sequentially through an isola
 
 * **Java 21 Virtual Threads**: Every blocking action, network invocation, remote model inference, or Vector database retrieval must execute inside un-pinned Virtual Threads utilizing `Executors.newVirtualThreadPerTaskExecutor()`. Never use heavy `synchronized` blocks over I/O loops.
 * **Reactive Streams**: Continuous token streaming to clients must utilize native reactive non-blocking structures (`Flux<OrasakaChatResponse>`).
-* **Persistence Pattern & I/O Isolation (Formal Mandate)**: 
+* **Persistence Pattern & I/O Isolation (Formal Mandate)**:
   * **Rule**: Database-query duplication is formally and strictly banned. Service methods must never query the database for records that have been freshly created, updated, or already loaded in memory within the current execution/transaction block.
   * **Model Separation**: Database entities (`*Entity`) must remain strictly isolated and decoupled from clean, immutable domain records (e.g., `User`).
   * **Remediation**: Force the implementation of static or private in-memory domain mappers to assemble the output data layer instantly, cutting database roundtrips by 50%.
-
+* **Ports & Adapters Architecture & Packaging**:
+  * **Rule**: Decouple domain logic from web/ingress infrastructure. The `orasaka-identity` and `orasaka-core` packages act as pure Java domain hexagons (Ports) and must remain completely web-agnostic.
+  * **Rule**: `orasaka-gateway` acts as the poly-protocol infrastructure adapter layer of the Orasaka ecosystem. All ingress traffic formats (such as REST or GraphQL) must be isolated inside dedicated, flat protocol-driven packages (`rest/`, `graphql/`) within `orasaka-gateway` to prevent protocol bleed.
 
 ### B. Fast-Iteration Build Rebuild Workflow
 
 When internal contracts, schema definitions, or module dependencies evolve, the compilation cascade must be strictly respected to prevent dependency staleness inside the target build execution context:
 
-1. **Install and Update Contract Contexts**: 
+1. **Install and Update Contract Contexts**:
    Command: `mvn clean install -pl orasaka-identity`
    *Use case: Forces the synchronization of core security, cryptography, and data entity schemas into the local repository.*
 
-2. **Recompile the Entire Integration Mesh (Automated Upstream Cascade)**: 
+2. **Recompile the Entire Integration Mesh (Automated Upstream Cascade)**:
    Command: `mvn clean compile -pl orasaka-gateway -am`
    *Use case: The `-am` (also-make) flag forces Maven to analyze and automatically rebuild all modified dependencies (including `orasaka-core` and `orasaka-tools`) that the gateway relies on, eradicating stale code anomalies in a single command.*
+
+---
+
+## 🏛️ 3. Architectural Decisions Log (ADR)
+
+### ADR-004: Shift to Self-Validating Rich Domain Records via Java 21 Compact Constructors
+
+* **Context**: Moving away from legacy procedural Java 8 coding patterns where services were littered with null-checks, leading to runtime risk and bloated service code.
+* **Consequence**: Complete immunity against NullPointerException across the agent pipeline (orasaka-core, orasaka-gateway). Service retention windows are minimized, fully unlocking Virtual Threads performance.
+* **Concurrency & Thread Safety**: Mandate short transaction retention windows under Virtual Threads by computing cryptographic operations outside `@Transactional` and letting PostgreSQL handle identity collisions atomically via unique constraints.
+
+### ADR-005: Decoupled Cognitive Core & Open/Closed Interceptor Pipeline
+
+* **Context**: The `orasaka-core` execution engines (`AbstractOrasakaEngine` and `OrasakaEngine`) were directly coupled with concrete components such as `OrasakaToolRegistry`, `McpOrchestrator`, `OrasakaKnowledgeService`, and `OrasakaMemoryResolver`. This violates the Open/Closed Principle and couples the core orchestration engine to specific infrastructure or RAG/MCP logic.
+* **Consequence**: Full encapsulation of RAG, MCP, Memory, and Tool calling operations inside concrete `OrasakaContextInterceptor` implementations. The cognitive engine is now purely generic, invoking the pipeline of context interceptors (`List<OrasakaContextInterceptor>`) during the chat execution cycle. This ensures the core engine is decoupled, extensible, and adheres strictly to the Ports & Adapters boundary.
+* **Cross-Module Compliance Boundary & Data Purity**:
+  * To prevent N+1 queries and manual JSON serialization overhead inside business service layers (e.g. `orasaka-identity`), serialization logic must be offloaded to native JPA Attribute Converters (`@Convert`), and multi-table entity lookups combined using JPQL `LEFT JOIN FETCH` operations to enforce a single atomic database roundtrip.
+  * This monorepo-wide data fetch and parsing optimization guarantees microsecond-range database connection windows, preventing connection pool exhaustion and ensuring structural stability and high throughput for the Java 21 Virtual Thread engine.
+
+### ADR-006: Protocol-Driven Workspace Indexing via Externalized MCP Workspace Database
+
+* **Context**: Iterative directory-walking and file-looping across package boundaries inside multi-module repositories are slow, redundant, and exhaust model context windows.
+* **Consequence**: Full transition to protocol-driven workspace indexing via an externalized MCP Workspace Database (`orasaka-code-intel`). Direct iterative scanning is strictly banned. Broad architectural review sweeps are driven exclusively by targeting files using semantic coordinates resolved via workspace tools (`search_symbols`, `grep_pattern`).
+
+### ADR-007: Enforcing Self-Validating Domain Records & Anemic Service Orchestration
+
+* **Context**: Application services (`IdentityService`) and core cognitive engines (`AbstractOrasakaEngine`) were previously burdened with procedural data-assembly checks, null-checks, collection fallback mappings, and payload compilation loops. This leaked domain-integrity validation logic from the data layer into the orchestration/service layer, violating the separation of concerns.
+* **Consequence**: Universal enforcement of the Self-Validating Domain Records pattern. All operational payloads and domain records (`User`, `OrasakaChatRequest`) must handle state constraints, collection defensive copying (`List.copyOf`, `Map.copyOf`), and fallback parameter defaults (e.g. language fallback) in their **Compact Constructors**. Services and engines are strictly anemic orchestration layers, relying on rich, self-contained domain methods (like `request.compileMessages(...)`) to retrieve compiled payloads ready for downstream consumption.
+* **Data Purity**: Complete eradication of procedural conditionals inside `AbstractOrasakaEngine` and `IdentityService` when preparing inputs, guaranteeing immutability and thread-safety under heavy concurrent execution (Virtual Threads).

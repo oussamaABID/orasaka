@@ -170,7 +170,9 @@ All frontend clients communicate solely through the BFF layer. Direct communicat
 ### 3. BFF GraphQL Server-Side Extensions (Next.js BFF)
 
 To maintain security boundaries, public validation endpoints are proxied as BFF mutations:
+
 - **Mutations**:
+
   - `VerifyEmail(token: String!)`: Executed on the Next.js server, making an internal private M2M REST call to `orasaka-gateway` at `/api/v1/auth/verify`.
 
 ---
@@ -182,7 +184,7 @@ To maintain security boundaries, public validation endpoints are proxied as BFF 
 The root [pom.xml](../pom.xml) configures `maven-javadoc-plugin` **3.6.3** in aggregate mode so that a single lifecycle command generates a unified API reference spanning all sub-modules (`orasaka-core`, `orasaka-identity`, `orasaka-gateway`, `orasaka-tools`).
 
 | Property | Value | Notes |
-|---|---|---|
+| --- | --- | --- |
 | `source` | `21` | Records, sealed types, virtual threads |
 | `doclint` | `none` | Prevents formatting noise from breaking CI |
 | `reportOutputDirectory` | `${project.basedir}/docs` | Plugin appends `/apidocs` → final path is `docs/apidocs/` |
