@@ -89,3 +89,19 @@ When internal contracts, schema definitions, or module dependencies evolve, the 
 * **Context**: Application services (`IdentityService`) and core cognitive engines (`AbstractOrasakaEngine`) were previously burdened with procedural data-assembly checks, null-checks, collection fallback mappings, and payload compilation loops. This leaked domain-integrity validation logic from the data layer into the orchestration/service layer, violating the separation of concerns.
 * **Consequence**: Universal enforcement of the Self-Validating Domain Records pattern. All operational payloads and domain records (`User`, `OrasakaChatRequest`) must handle state constraints, collection defensive copying (`List.copyOf`, `Map.copyOf`), and fallback parameter defaults (e.g. language fallback) in their **Compact Constructors**. Services and engines are strictly anemic orchestration layers, relying on rich, self-contained domain methods (like `request.compileMessages(...)`) to retrieve compiled payloads ready for downstream consumption.
 * **Data Purity**: Complete eradication of procedural conditionals inside `AbstractOrasakaEngine` and `IdentityService` when preparing inputs, guaranteeing immutability and thread-safety under heavy concurrent execution (Virtual Threads).
+
+### ADR-008: Strict Data Component Naming & Record Conventions
+
+* **Context**: Avoiding pseudo-record naming patterns on mutable standard Java classes.
+* **Consequence**: All pure data carriers and context transfer contexts must be modeled as immutable Java 21 `record` types. If a component is a standard `public class`, it MUST adhere strictly to JavaBean naming conventions (e.g., using `get` prefixes for accessors). Mixing Record naming patterns (e.g., `userMetadata()`) inside standard mutable classes is strictly banned.
+
+### ADR-009: Collapse Package Architecture & Encapsulation Boundary
+
+* **Context**: Avoiding structural bleed, package-private leakage, and maintaining a high-cohesion API boundary within monorepo modules.
+* **Consequence**: Inner classes, orchestrator implementations, and pipeline utility beans must be marked package-private. Only the main entry points (e.g. interfaces, factories, or facades) may be public. All internal mechanisms within a package must be hidden from external access.
+
+### ADR-010: Code Locality, Fluid Cohesion & Unified Frontiers
+* **Context**: Traditional Java codebases separate every single class, record, or enum into an independent file, cluttering the directory tree and breaking cognitive focus.
+* **Consequence**: Maximize Java 21 file density. Group tightly coupled records, sealed hierarchies, and inner implementation steps inside the same file boundary using nested types or package-private inline structures. This leads to shorter, cleaner file structures, faster navigation, and immediate context visibility for the engineer.
+* **Unified Frontiers Expanded Scope**: Application edge boundaries must present a unified facade. Protocols are just transport details; the domain component is the true owner. Split packages by technical transport protocols (e.g. `rest` and `graphql`) are strictly prohibited; entry points must reside in a unified `.endpoint` package boundary, and interconnected data transport objects (DTOs) must maintain ultimate density to prevent file-tree explosion by grouping them inline within singular container contract files (e.g., `AuthContracts.java`).
+

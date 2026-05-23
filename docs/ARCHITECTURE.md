@@ -136,3 +136,45 @@ The `orasaka-identity` module implements an "Intercept & Resume" Session Engine.
 1. **Zero-Polling Profile Injection**: Checked during initial Gateway token verification and cached in JWT payloads, preventing unnecessary runtime API queries.
 2. **Generic Database Tracking**: Registered in `orasaka_user_interceptions` (mapping a `user_id` to an active `interception_type` and `schema_id`).
 3. **Opt-in Passive Activation**: Controlled dynamically by feature flags inside backend configurations.
+
+---
+
+## 🌊 5. High-Density Pipeline Orchestration & Interceptor Lego Pattern
+
+### 5.1 The Architecture Principle
+Orasaka pipelines are stateless, sequential orchestration layers executing safely over Java 21 Virtual Threads. Instead of mutating or fragmenting core logic into different hardcoded service layers, the framework treats the pipeline as an anemic processing sequence driven by a chain of package-private interceptors (`List<OrasakaContextInterceptor>`).
+
+### ⚙️ 5.2 Pattern A: Dynamic Declarative Routing via Configuration
+New, isolated execution pipelines can be instantiated purely through metadata declaration within application configuration boundaries (`application.yml`). This prevents code duplication and keeps internal interceptor strategies strictly sealed.
+
+```yaml
+orasaka:
+  pipelines:
+    fast-chat: # Lightweight profile (No RAG, No heavy security validation)
+      interceptors:
+        - routerInterceptor
+        - promptInterceptor
+    secure-enterprise-rag: # Fully enriched contextual enterprise profile
+      interceptors:
+        - securityContextInterceptor
+        - orasakaRagInterceptor
+        - orasakaMemoryInterceptor
+        - promptInterceptor
+```
+
+### 🛠️ 5.3 Pattern B: Programmable Fluent Construction (The Pipeline Builder)
+For contextual testing or runtime isolation, the framework exposes a strict, type-safe Builder pattern to assemble internal implementation blocks:
+
+```java
+// Instantiating a specialized high-density pipeline at runtime
+OrasakaOrchestrationPipeline customCodingPipeline = OrasakaPipelineBuilder.create()
+    .addInterceptor(routerInterceptor)
+    .addInterceptor(codeSandboxInterceptor)
+    .addInterceptor(promptInterceptor)
+    .build();
+```
+
+### 🔒 5.4 Encapsulation & Concurrency Invariance
+- **Absolute Package Privacy**: All individual concrete interceptor definitions must remain package-private within `com.orasaka.core.pipeline`. Only the Orchestrator and the Builder are allowed to be public.
+- **Virtual Thread Purity**: Because interceptors rely entirely on linear functional reduction (`Stream.reduce`), adding or removing nodes into a pipeline layout introduces zero race conditions or thread-local storage leaks.
+

@@ -468,6 +468,7 @@ private Optional<User> safeGetUser(String userId) {
 To satisfy Guardrail `[ERR-106]` and `[ERR-107]`, Orasaka structures its interactive capabilities into an Operation Graph matrix compiled dynamically. 
 
 ### 1. Sealed Interface NodeState Hierarchy
+
 Nodes in the operation graph are assigned polymorphic status values modeled via sealed record interfaces to enable compile-time exhaustiveness:
 
 ```java
@@ -478,6 +479,7 @@ public final record Invisible() implements NodeState {}
 ```
 
 ### 2. Switch-Expression Pattern-Matching Reduction Loop
+
 When verifying capability states, services and mappers utilize switch expressions with pattern matching over `NodeState` subclasses to enforce safety dynamically and reject legacy `instanceof` blocks:
 
 ```java

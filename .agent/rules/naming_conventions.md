@@ -7,12 +7,9 @@
   * Core execution blueprints must extend `AbstractOrasakaEngine`.
   * Core configurations must map to `CoreProperties` bound strictly to the `orasaka.core.*` namespace.
 * **Package Structure**: Must respect strict domain boundaries within `orasaka-core`:
-  * `com.orasaka.core.client` -> Client interfaces and external API connectors.
   * `com.orasaka.core.engine` -> Core execution loops, engine, and option mappers.
-  * `com.orasaka.core.config` -> Configuration binders and properties.
-  * `com.orasaka.core.model` -> Request/Response models and options schemas.
-  * `com.orasaka.core.exception` -> Framework custom exception hierarchy.
-  * `com.orasaka.core.interceptors` -> Interceptor interfaces and specialized implementations (e.g. `mcp`, `tool`, `rag`, `memory`).
+  * `com.orasaka.core.pipeline` -> Dynamic interceptors, context resolvers, tool registries, and mappers.
+  * `com.orasaka.core.support` -> Public APIs, facades, exceptions, request/response models, and unified records.
 * **Zero Infrastructure Coupling in Core Engine [ERR-100]**:
   * The core execution engine classes (`AbstractOrasakaEngine` and `OrasakaEngine`) must remain completely decoupled from specialized domain services, vector stores, registries, or orchestrators. They must never directly reference classes like `OrasakaToolRegistry`, `McpOrchestrator`, `OrasakaKnowledgeService`, or `OrasakaMemoryResolver` as fields or constructor arguments. Instead, all context-enrichment behaviors must be executed dynamically through the generic interceptor pipeline (`List<OrasakaContextInterceptor>`).
 * **Stateless Core IoC Isolation**:
@@ -37,7 +34,7 @@
 ## 🏛️ 3. Hexagonal Edge Packaging & Protocol Isolation
 
 * **Rule**: `orasaka-identity` must NEVER declare dependencies on `spring-boot-starter-web` or `graphql`. It must remain a pure Java business core.
-* **Rule**: All ingress networks must be strictly isolated inside `orasaka-gateway` and packaged into flat protocol folders (`rest/`, `graphql/`). Mixing REST components with GraphQL schemas inside a single generic controller package is strictly prohibited.
+* **Rule**: All ingress entry points (REST, SSE, GraphQL) inside `orasaka-gateway` must be unified under the `com.orasaka.gateway.endpoint` package. Technical splitting of entry points into folders by protocol (such as separating `rest/` and `graphql/` directories) is strictly banned to treat protocol as a transport detail. Transport DTO records must be nested together within single unified container classes (e.g. `AuthContracts.java`).
 
 ## 🛡️ 4. Rich Domain Records & Defensive Architecture
 
