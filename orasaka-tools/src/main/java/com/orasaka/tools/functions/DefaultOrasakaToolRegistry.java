@@ -1,11 +1,9 @@
 package com.orasaka.tools.functions;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.orasaka.core.rag.OrasakaChunker;
-import com.orasaka.core.rag.OrasakaChunkingStrategies;
-import com.orasaka.core.rag.OrasakaKnowledgeService;
-import com.orasaka.core.tool.OrasakaToolRegistry;
+import com.orasaka.core.interceptors.rag.OrasakaChunker;
+import com.orasaka.core.interceptors.rag.OrasakaChunkingStrategies;
+import com.orasaka.core.interceptors.rag.OrasakaKnowledgeService;
+import com.orasaka.core.interceptors.tool.OrasakaToolRegistry;
 import com.orasaka.tools.config.OrasakaToolsProperties;
 import com.orasaka.tools.config.OrasakaToolsProperties.ToolConfig;
 import com.orasaka.tools.entity.OrasakaToolRagSourceEntity;
@@ -163,7 +161,7 @@ public class DefaultOrasakaToolRegistry implements OrasakaToolRegistry {
 
         for (OrasakaToolRagSourceEntity row : rows) {
           try {
-            Map<String, Object> metadataMap = parseMetadataJson(row.getMetadata());
+            Map<String, Object> metadataMap = new HashMap<>(row.getMetadata());
             metadataMap.put("tool_id", toolId);
 
             List<Document> chunks = chunker.chunk(row.getContent(), metadataMap);
@@ -186,21 +184,4 @@ public class DefaultOrasakaToolRegistry implements OrasakaToolRegistry {
     }
   }
 
-  /**
-   * Parses RAG metadata JSON string.
-   *
-   * @param json The RAG metadata JSON string.
-   * @return The parsed RAG metadata.
-   */
-  private Map<String, Object> parseMetadataJson(String json) {
-    if (json == null || json.isBlank()) {
-      return new HashMap<>();
-    }
-    try {
-      return new ObjectMapper().readValue(json, new TypeReference<Map<String, Object>>() {});
-    } catch (Exception e) {
-      log.error("Failed to parse RAG metadata JSON string: {}", json, e);
-      return new HashMap<>();
-    }
-  }
 }

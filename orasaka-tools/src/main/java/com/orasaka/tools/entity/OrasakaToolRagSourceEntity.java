@@ -7,7 +7,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Convert;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import com.orasaka.tools.entity.converter.JsonMapConverter;
 
 /**
  * JPA Entity mapping the {@code orasaka_tools_rag_source} database table.
@@ -35,8 +39,9 @@ public class OrasakaToolRagSourceEntity {
   @Column(name = "content", nullable = false)
   private String content;
 
-  @Column(name = "metadata")
-  private String metadata;
+  @Convert(converter = JsonMapConverter.class)
+  @Column(name = "metadata", columnDefinition = "jsonb")
+  private Map<String, Object> metadata = new HashMap<>();
 
   @Column(name = "ingested")
   private Boolean ingested = false;
@@ -104,18 +109,18 @@ public class OrasakaToolRagSourceEntity {
   /**
    * Gets the JSON metadata attributes.
    *
-   * @return The metadata JSON string.
+   * @return The metadata map.
    */
-  public String getMetadata() {
+  public Map<String, Object> getMetadata() {
     return metadata;
   }
 
   /**
    * Sets the JSON metadata attributes.
    *
-   * @param metadata The metadata JSON string.
+   * @param metadata The metadata map.
    */
-  public void setMetadata(String metadata) {
+  public void setMetadata(Map<String, Object> metadata) {
     this.metadata = metadata;
   }
 
