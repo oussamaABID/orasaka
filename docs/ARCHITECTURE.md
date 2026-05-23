@@ -104,10 +104,18 @@ graph TD
     User([Developer]) --> Client[OrasakaAiClient Facade]
     Client --> Engine[OrasakaEngine]
     
-    subgraph Cognitive Layer
-        Engine --> ToolRegistry[OrasakaToolRegistry]
-        Engine --> KnowledgeService[OrasakaKnowledgeService]
-        Engine --> McpService[OrasakaMcpService]
+    subgraph Cognitive Pipeline
+        Engine --> Interceptors[OrasakaContextInterceptor Pipeline]
+        Interceptors --> ToolInterceptor[OrasakaToolInterceptor]
+        Interceptors --> RagInterceptor[OrasakaRagInterceptor]
+        Interceptors --> McpInterceptor[OrasakaMcpInterceptor]
+        Interceptors --> MemoryInterceptor[OrasakaMemoryInterceptor]
+    end
+    
+    subgraph Services & Registry
+        ToolInterceptor --> ToolRegistry[OrasakaToolRegistry]
+        RagInterceptor --> KnowledgeService[OrasakaKnowledgeService]
+        McpInterceptor --> McpOrchestrator[McpOrchestrator]
     end
     
     subgraph Spring AI Layer
@@ -121,7 +129,7 @@ graph TD
     
     subgraph Infrastructure
         KnowledgeService --> VectorStore[(VectorStore)]
-        McpService --> McpServer[External MCP Servers]
+        McpOrchestrator --> McpServer[External MCP Servers]
         ToolRegistry --> JavaMethods[Local Java Methods]
     end
 ```

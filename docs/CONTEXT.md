@@ -78,3 +78,44 @@
 - **Rationale**: Eliminates polling overhead from browser-side apps by checking interception status on Gateway token queries, ensuring a high-performance session state resolution.
 - **Status**: Approved (2026-05-22).
 
+## ADR 014: Shift to Self-Validating Rich Domain Records via Java 21 Compact Constructors
+
+- **Decision**: All operational payloads and domain records (such as `User`, `OrasakaChatRequest`) must handle state constraints, collection defensive copying (`List.copyOf`, `Map.copyOf`), and fallback parameter defaults (e.g. language fallback) in their Compact Constructors.
+- **Rationale**: Complete immunity against NullPointerException across the agent pipeline (`orasaka-core`, `orasaka-gateway`). Service retention windows are minimized, fully unlocking Virtual Threads performance.
+- **Status**: Approved.
+
+## ADR 015: Decoupled Cognitive Core & Open/Closed Interceptor Pipeline
+
+- **Decision**: Full encapsulation of RAG, MCP, Memory, and Tool calling operations inside concrete `OrasakaContextInterceptor` implementations. The cognitive engine is purely generic, invoking the pipeline of context interceptors (`List<OrasakaContextInterceptor>`) during the chat execution cycle.
+- **Rationale**: Decouples the core orchestration engine from specific infrastructure or RAG/MCP logic, satisfying the Open/Closed Principle and adhering strictly to the Ports & Adapters boundary.
+- **Status**: Approved.
+
+## ADR 016: Protocol-Driven Workspace Indexing via Externalized MCP Workspace Database
+
+- **Decision**: Transition to protocol-driven workspace indexing via an externalized MCP Workspace Database (`orasaka-code-intel`). Direct iterative scanning is strictly banned.
+- **Rationale**: Iterative directory-walking and file-looping across package boundaries inside multi-module repositories are slow, redundant, and exhaust model context windows.
+- **Status**: Approved.
+
+## ADR 017: Enforcing Self-Validating Domain Records & Anemic Service Orchestration
+
+- **Decision**: Services and engines are strictly anemic orchestration layers, relying on rich, self-contained domain methods (like `request.compileMessages(...)`) to retrieve compiled payloads ready for downstream consumption.
+- **Rationale**: Eradicates procedural state validation from services, guaranteeing immutability and thread-safety under heavy concurrent execution (Virtual Threads).
+- **Status**: Approved.
+
+## ADR 018: Strict Data Component Naming & Record Conventions
+
+- **Decision**: All pure data carriers and context transfer contexts must be modeled as immutable Java 21 `record` types. If a component is a standard `public class`, it must adhere strictly to JavaBean naming conventions.
+- **Rationale**: Prevents pseudo-record naming patterns on mutable standard Java classes.
+- **Status**: Approved.
+
+## ADR 019: Collapse Package Architecture & Encapsulation Boundary
+
+- **Decision**: Inner classes, orchestrator implementations, and pipeline utility beans must be marked package-private. Only the main entry points (e.g. interfaces, facades) may be public.
+- **Rationale**: Prevents structural bleed, package-private leakage, and maintains a high-cohesion API boundary within monorepo modules.
+- **Status**: Approved.
+
+## ADR 020: Code Locality, Fluid Cohesion & Unified Frontiers
+
+- **Decision**: Group tightly coupled records, sealed hierarchies, and inner implementation steps inside the same file boundary using nested types or package-private inline structures. Split packages by transport protocols are strictly prohibited; entry points must reside in a unified `.endpoint` package boundary, and interconnected data transport objects (DTOs) must maintain ultimate density to prevent file-tree explosion by grouping them inline within singular container contract files.
+- **Rationale**: Maximizes Java 21 file density, leading to shorter, cleaner file structures, faster navigation, and immediate context visibility.
+- **Status**: Approved. (2026-05-22).

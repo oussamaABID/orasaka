@@ -17,7 +17,7 @@
 | **Virtual Thread Executor** | dedicated virtual-thread executor (`newVirtualThreadPerTaskExecutor()`). | Runs heavy non-blocking I/O operations and AI calls with near-zero memory footprint. |
 | **Role** | Sealed interface hierarchical roles. | Enforces type-safe User, Admin, and Guest roles with dynamic authority resolution. |
 | **Passive Multi-Tier Caching** | Configuration-driven cache wrapping. | Intercepts tool execution to resolve cached results via fast local memory (Caffeine) or cross-node persistent storage (PostgreSQL). |
-| **Background RAG Ingestion** | Asynchronous scheduler pipeline. | Automatically scans and indexes RAG source records into the vector database daily on a virtual-thread schedule. |
+| **Background RAG Ingestion** | Asynchronous pipeline. | Scans and indexes RAG source records into the vector database dynamically via context interceptor executions. |
 | **OrasakaChunker / Strategies** | Text-splitting algorithm registry. | Slices raw content strings into clean vector documents via plain text paragraph, markdown headers, or JSON array chunkers. |
 | **Ops Consolidation** | Core infrastructure directory isolation (`/ops`). | Separates docker layouts, postgres schemas, scripts, and HTTP tests from application code boundaries. |
 | **Verification Token** | Hash-based registration validation (`orasaka_verification_tokens`). | Enforces secure, passive double opt-in account enablement. |

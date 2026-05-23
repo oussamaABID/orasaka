@@ -173,10 +173,10 @@ Implement the Resolver (Virtual Threads Mandate):
 ```java
 package com.orasaka.gateway.media;
 
-import com.orasaka.core.client.OrasakaAiClient;
-import com.orasaka.core.context.OrasakaContext;
-import com.orasaka.core.model.OrasakaChatRequest;
-import com.orasaka.core.model.OrasakaChatResponse;
+import com.orasaka.core.engine.OrasakaAiClient;
+import com.orasaka.core.support.OrasakaContext;
+import com.orasaka.core.support.OrasakaChatRequest;
+import com.orasaka.core.support.OrasakaChatResponse;
 import com.orasaka.gateway.config.OrasakaSecurityFilter;
 import com.orasaka.identity.service.IdentityService;
 import com.orasaka.identity.domain.User;

@@ -6,7 +6,7 @@ This document specifies the public API interfaces, configuration properties, gat
 
 ## 🧠 Core Facade
 
-### [OrasakaAiClient](../orasaka-core/src/main/java/com/orasaka/core/client/OrasakaAiClient.java)
+### [OrasakaAiClient](../orasaka-core/src/main/java/com/orasaka/core/engine/OrasakaAiClient.java)
 
 - **Role**: Primary entry point for developers consuming Orasaka AI capabilities.
 - **Methods**:
@@ -20,7 +20,7 @@ This document specifies the public API interfaces, configuration properties, gat
 
 ## ⚙️ Configuration Properties
 
-### [CoreProperties](../orasaka-core/src/main/java/com/orasaka/core/config/CoreProperties.java)
+### [CoreProperties](../orasaka-core/src/main/java/com/orasaka/core/engine/CoreProperties.java)
 
 - **Role**: Type-safe configuration for the `orasaka-core` module.
 - **Components**:
@@ -50,23 +50,17 @@ This document specifies the public API interfaces, configuration properties, gat
   - `chat(OrasakaChatRequest)`: Executes a synchronous context-augmented LLM prompt.
   - `stream(OrasakaChatRequest)`: Executes a reactive token-augmented stream using `resolveChatModel().stream(prompt)`.
 
-### [McpOrchestrator](../orasaka-core/src/main/java/com/orasaka/core/mcp/McpOrchestrator.java) & [OrasakaToolRegistry](../orasaka-core/src/main/java/com/orasaka/core/tool/OrasakaToolRegistry.java)
+### [McpOrchestrator](../orasaka-core/src/main/java/com/orasaka/core/pipeline/McpOrchestrator.java) & [OrasakaToolRegistry](../orasaka-core/src/main/java/com/orasaka/core/pipeline/OrasakaToolRegistry.java)
 
 - **Role**: Pure interfaces defined in `orasaka-core` to decouple tool and context resolution logic from engine orchestration.
 
-### [OrasakaChunker](../orasaka-core/src/main/java/com/orasaka/core/rag/OrasakaChunker.java) & [OrasakaChunkingStrategies](../orasaka-core/src/main/java/com/orasaka/core/rag/OrasakaChunkingStrategies.java)
+### [OrasakaChunker](../orasaka-core/src/main/java/com/orasaka/core/pipeline/OrasakaChunker.java) & [OrasakaChunkingStrategies](../orasaka-core/src/main/java/com/orasaka/core/pipeline/OrasakaChunkingStrategies.java)
 
 - **Role**: Core text-splitting abstractions for RAG vectorization.
 - **Strategies**:
   - `PLAIN_TEXT`: Splits raw content strings into paragraphs (separated by double newlines).
   - `MARKDOWN_CHUNKERS`: Identifies and splits sections using Markdown headers (`#`, `##`, etc.).
   - `JSON_ARRAY`: Parses array elements into independent documents, appending structured fields to metadata mappings.
-
-### [OrasakaBackgroundScheduler](../orasaka-core/src/main/java/com/orasaka/core/rag/OrasakaBackgroundScheduler.java)
-
-- **Role**: Daily automated execution scheduler running on a lightweight virtual thread background pool.
-- **Cron Trigger**: Daily at 3:00 AM (configured via `${orasaka.tools.rag.cron:0 0 3 * * ?}`).
-- **Behavior**: Inspects registry configurations, triggers asynchronous RAG vector store generation if ingestion is active, and safely skips execution via a passive bypass if disabled.
 
 ---
 
@@ -105,14 +99,14 @@ This document specifies the public API interfaces, configuration properties, gat
 
 ## 🛡️ Context & Security Models
 
-### [OrasakaContext](../orasaka-core/src/main/java/com/orasaka/core/context/OrasakaContext.java)
+### [OrasakaContext](../orasaka-core/src/main/java/com/orasaka/core/support/OrasakaContext.java)
 
 - **Role**: Immutable request envelope carrying user preferences and security privileges.
 - **Fields**:
   - `userId`: Unique identifier of the authenticated user.
   - `conversationId`: Active session thread identifier.
   - `preferences`: Map of user overrides (e.g., specific voices, model names, aspects).
-  - `authorities`: Set of granted `OrasakaAuthority` records.
+  - `roles`: Set of resolved security roles tied to the user session.
 
 ### [Role](../orasaka-identity/src/main/java/com/orasaka/identity/domain/Role.java)
 
@@ -138,7 +132,7 @@ This document specifies the public API interfaces, configuration properties, gat
 
 All frontend clients communicate solely through the BFF layer. Direct communication with the backend core engine or Ollama ports is prohibited.
 
-### 1. GraphQL Gateway: [AiController](../orasaka-gateway/src/main/java/com/orasaka/gateway/graphql/AiController.java)
+### 1. GraphQL Gateway: [AiController](../orasaka-gateway/src/main/java/com/orasaka/gateway/endpoint/AiController.java)
 
 - **GraphQL Schema**: [schema.graphqls](../orasaka-gateway/src/main/resources/graphql/schema.graphqls)
 - **Queries**:
@@ -152,16 +146,20 @@ All frontend clients communicate solely through the BFF layer. Direct communicat
 - **Subscriptions**:
   - `chatStream(prompt: String!, conversationId: String): ChatResponse`: Reactive subscription streaming word-by-word responses.
 
-### 2. REST API Gateway: [ChatStreamController](../orasaka-gateway/src/main/java/com/orasaka/gateway/controller/ChatStreamController.java) & [VerificationController](../orasaka-gateway/src/main/java/com/orasaka/gateway/controller/VerificationController.java)
+### 2. REST API Gateway: [ChatStreamController](../orasaka-gateway/src/main/java/com/orasaka/gateway/endpoint/ChatStreamController.java) & [AuthController](../orasaka-gateway/src/main/java/com/orasaka/gateway/endpoint/AuthController.java)
 
-- **Authentication & Verification Endpoints**:
+- **Authentication & Verification Endpoints (AuthController)**:
   - `POST /api/v1/auth/login`: Authenticates the user and returns their UUID session token.
     - *Payload*: `{"email": "<email>", "password": "<pass>"}`
-    - *Response*: `{"token": "<user-uuid>", "username": "<name>"}`
+    - *Response*: `{"token": "<user-uuid>", "username": "<name>", "active_interceptions": []}`
+  - `POST /api/v1/auth/oauth`: Authenticates or provisions an OAuth2 user and returns their UUID session token.
+    - *Payload*: `{"email": "<email>", "username": "<name>"}`
+    - *Response*: `{"token": "<user-uuid>", "username": "<name>", "active_interceptions": []}`
+  - `POST /api/v1/auth/register`: Self-service user account registration.
+    - *Payload*: `{"username": "<name>", "email": "<email>", "password": "<pass>", "language": "<lang>"}`
   - `POST /api/v1/auth/verify`: Private machine-to-machine validation endpoint to activate user accounts using email tokens.
     - *Payload*: `{"token": "<verification-token>"}`
-    - *Response*: `{"username": "<name>", "email": "<email>", "enabled": true}`
-- **Server-Sent Events (SSE) Streaming**:
+- **Server-Sent Events (SSE) Streaming (ChatStreamController)**:
   - `GET /api/v1/chat/stream/{conversationId}?prompt=...`
     - *Headers*: `Authorization: Bearer <userId>`
     - *Response Type*: `text/event-stream`

@@ -103,7 +103,7 @@ For non-conversational AI (TTS, Image Generation), request records (e.g., `Orasa
 | **Real-time Streaming** | Gateway stream endpoints use GraphQL Subscriptions or HTTP SSE. |
 | **Virtual Threads** | All I/O-intensive and AI-inference tasks run on `Executors.newVirtualThreadPerTaskExecutor()`. |
 | **Multi-Tier Cache** | Transparent, passive caching decorator (`CachingToolCallback`) utilizing local Caffeine in-memory store and a persistent PostgreSQL database cache tier. |
-| **Asynchronous RAG** | Daily background schedule (`OrasakaBackgroundScheduler`) invoking modular chunkers (`OrasakaChunkingStrategies`) to ingest document metadata into vector storage. |
+| **Asynchronous RAG** | Asynchronous pipeline invoking modular chunkers (`OrasakaChunkingStrategies`) to ingest document metadata into vector storage dynamically via context interceptor executions. |
 
 ---
 
