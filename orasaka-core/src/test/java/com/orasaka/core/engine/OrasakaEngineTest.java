@@ -62,7 +62,13 @@ class OrasakaEngineTest {
             "ollama",
             Map.of(),
             new CoreProperties.RagConfig(false, null, 3),
-            new CoreProperties.McpConfig(List.of()));
+            new CoreProperties.McpConfig(List.of()),
+            new CoreProperties.OrchestrationConfig(
+                false,
+                new CoreProperties.UserContextConfig(false),
+                new CoreProperties.SystemContextConfig(false),
+                new CoreProperties.RefinerConfig(false, null, null, 0.0),
+                new CoreProperties.RouterConfig(false, null, null, 0.0)));
 
     var memoryInterceptor = createMemoryInterceptor(memoryResolver);
     var mcpInterceptor = createMcpInterceptor(mcpOrchestrator);
@@ -108,7 +114,13 @@ class OrasakaEngineTest {
             "ollama",
             Map.of(),
             new CoreProperties.RagConfig(true, "pgvector", 3),
-            new CoreProperties.McpConfig(List.of()));
+            new CoreProperties.McpConfig(List.of()),
+            new CoreProperties.OrchestrationConfig(
+                false,
+                new CoreProperties.UserContextConfig(false),
+                new CoreProperties.SystemContextConfig(false),
+                new CoreProperties.RefinerConfig(false, null, null, 0.0),
+                new CoreProperties.RouterConfig(false, null, null, 0.0)));
 
     var memoryInterceptor = createMemoryInterceptor(memoryResolver);
     var mcpInterceptor = createMcpInterceptor(mcpOrchestrator);
@@ -171,7 +183,18 @@ class OrasakaEngineTest {
   @Test
   void shouldThrowExceptionWhenProviderMissing() {
     // Given
-    CoreProperties emptyProps = new CoreProperties(null, Map.of(), null, null);
+    CoreProperties emptyProps =
+        new CoreProperties(
+            null,
+            Map.of(),
+            null,
+            null,
+            new CoreProperties.OrchestrationConfig(
+                false,
+                new CoreProperties.UserContextConfig(false),
+                new CoreProperties.SystemContextConfig(false),
+                new CoreProperties.RefinerConfig(false, null, null, 0.0),
+                new CoreProperties.RouterConfig(false, null, null, 0.0)));
     OrasakaEngine badEngine =
         new OrasakaEngine(
             Map.of(), Map.of(), Map.of(), Map.of(), emptyProps, List.of(), eventPublisher);

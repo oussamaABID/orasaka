@@ -36,9 +36,18 @@ public class OrasakaCoreConfiguration {
 
   @Bean
   public CoreProperties coreProperties(Environment env) {
-    return Binder.get(env)
-        .bind("orasaka.core", CoreProperties.class)
-        .orElseThrow(() -> new IllegalStateException("Failed to bind CoreProperties"));
+    try {
+      return Binder.get(env)
+          .bind("orasaka.core", CoreProperties.class)
+          .orElseThrow(
+              () ->
+                  new IllegalStateException(
+                      "Configuration prefix 'orasaka.core' is missing in application.yml"));
+    } catch (Exception e) {
+      throw new IllegalStateException(
+          "CRITICAL BINDING FAILURE: Verify that your application.yml fields match CoreProperties records exactly.",
+          e);
+    }
   }
 
   @Bean

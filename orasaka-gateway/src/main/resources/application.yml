@@ -74,22 +74,21 @@ orasaka:
   core:
     default-provider: ${ORASAKA_DEFAULT_PROVIDER:ollama}
     orchestration:
-      pipeline:
-        enabled: ${ORASAKA_ORCHESTRATION_ENABLED:true}
-        user-context:
-          enabled: ${ORASAKA_USER_CONTEXT_ENABLED:true}
-        system-context:
-          enabled: ${ORASAKA_SYSTEM_CONTEXT_ENABLED:true}
-        refiner:
-          enabled: ${ORASAKA_REFINER_ENABLED:true}
-          provider: ${ORASAKA_REFINER_PROVIDER:openai}
-          model: ${ORASAKA_REFINER_MODEL:gpt-4-turbo}
-          temperature: ${ORASAKA_REFINER_TEMPERATURE:0.2}
-        router:
-          enabled: true
-          provider: ${ORASAKA_ROUTER_PROVIDER:ollama}
-          model: ${ORASAKA_ROUTER_MODEL:llama3}
-          temperature: ${ORASAKA_ROUTER_TEMPERATURE:0.0}
+      enabled: ${ORASAKA_ORCHESTRATION_ENABLED:true}
+      user-context:
+        enabled: ${ORASAKA_USER_CONTEXT_ENABLED:true}
+      system-context:
+        enabled: ${ORASAKA_SYSTEM_CONTEXT_ENABLED:true}
+      refiner:
+        enabled: ${ORASAKA_REFINER_ENABLED:true}
+        provider: ${ORASAKA_REFINER_PROVIDER:openai}
+        model: ${ORASAKA_REFINER_MODEL:gpt-4-turbo}
+        temperature: ${ORASAKA_REFINER_TEMPERATURE:0.2}
+      router:
+        enabled: true
+        provider: ${ORASAKA_ROUTER_PROVIDER:ollama}
+        model: ${ORASAKA_ROUTER_MODEL:llama3}
+        temperature: ${ORASAKA_ROUTER_TEMPERATURE:0.0}
     overrides:
       ollama:
         base-url: ${ORASAKA_OLLAMA_BASE_URL:http://localhost:11434}

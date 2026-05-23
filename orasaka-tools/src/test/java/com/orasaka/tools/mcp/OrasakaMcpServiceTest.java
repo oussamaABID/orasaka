@@ -14,7 +14,18 @@ class OrasakaMcpServiceTest {
     // Given
     CoreProperties.McpConfig mcpProps =
         new CoreProperties.McpConfig(List.of("http://localhost:8080/mcp"));
-    CoreProperties props = new CoreProperties("ollama", Map.of(), null, mcpProps);
+    CoreProperties props =
+        new CoreProperties(
+            "ollama",
+            Map.of(),
+            null,
+            mcpProps,
+            new CoreProperties.OrchestrationConfig(
+                false,
+                new CoreProperties.UserContextConfig(false),
+                new CoreProperties.SystemContextConfig(false),
+                new CoreProperties.RefinerConfig(false, null, null, 0.0),
+                new CoreProperties.RouterConfig(false, null, null, 0.0)));
 
     // When
     OrasakaMcpService service = new OrasakaMcpService(props);

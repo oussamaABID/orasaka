@@ -23,20 +23,6 @@ public record CoreProperties(
     RagConfig rag,
     McpConfig mcp,
     OrchestrationConfig orchestration) {
-  public CoreProperties(
-      String defaultProvider, Map<String, ProviderConfig> overrides, RagConfig rag, McpConfig mcp) {
-    this(
-        defaultProvider,
-        overrides,
-        rag,
-        mcp,
-        new OrchestrationConfig(
-            false,
-            new UserContextConfig(false),
-            new SystemContextConfig(false),
-            new RefinerConfig(false, null, null, 0.0),
-            new RouterConfig(false, null, null, 0.0)));
-  }
 
   /**
    * Configuration for a specific AI provider.
