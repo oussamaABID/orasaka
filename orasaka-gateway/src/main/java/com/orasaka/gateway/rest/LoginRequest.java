@@ -1,4 +1,4 @@
-package com.orasaka.gateway.controller;
+package com.orasaka.gateway.rest;
 
 /**
  * Immutable request payload for the {@code POST /api/v1/auth/login} endpoint.
@@ -9,6 +9,6 @@ package com.orasaka.gateway.controller;
  *
  * @param username The user's login name (case-sensitive).
  * @param password The user's plaintext password to verify against the stored BCrypt hash.
- * @see com.orasaka.gateway.controller.ChatStreamController#login(LoginRequest)
+ * @see com.orasaka.gateway.rest.ChatStreamController#login(LoginRequest)
  */
 public record LoginRequest(String email, String password) {}

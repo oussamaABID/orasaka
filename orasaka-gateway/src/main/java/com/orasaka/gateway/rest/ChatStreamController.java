@@ -1,5 +1,6 @@
-package com.orasaka.gateway.controller;
+package com.orasaka.gateway.rest;
 
+import com.orasaka.gateway.graphql.RegisterRequest;
 import com.orasaka.gateway.service.ChatStreamService;
 import com.orasaka.identity.config.IdentityInfrastructureProperties;
 import com.orasaka.identity.domain.User;
@@ -125,29 +126,12 @@ public class ChatStreamController {
             "active_interceptions", user.activeInterceptions()));
   }
 
-  /** Registers a new user account and returns their credentials on success. */
   @PostMapping("/api/v1/auth/register")
   public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
     logger.debug("Received registration request for email: {}", req.email());
 
-    // Basic server-side field validation
-    if (req.username() == null
-        || req.username().isBlank()
-        || req.email() == null
-        || req.email().isBlank()
-        || req.password() == null
-        || req.password().isBlank()) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(Map.of("error", "username, email, and password are required"));
-    }
-
     User created =
         identityService.register(req.username(), req.email(), req.password(), req.language());
-    if (created == null) {
-      logger.warn("Registration conflict — email already in use: {}", req.email());
-      return ResponseEntity.status(HttpStatus.CONFLICT)
-          .body(Map.of("error", "An account with this email already exists"));
-    }
 
     logger.debug("User registered successfully: {} ({})", req.username(), created.id());
 

@@ -5,6 +5,7 @@ import com.orasaka.core.context.OrasakaContext;
 import com.orasaka.core.model.OrasakaChatRequest;
 import com.orasaka.core.model.OrasakaChatResponse;
 import com.orasaka.identity.domain.User;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.slf4j.Logger;
@@ -62,8 +63,9 @@ public class ChatStreamService {
         () -> {
           try {
             String userId = user.id().toString();
+            Set<String> roles = user.authorities();
             OrasakaContext context =
-                new OrasakaContext(userId, conversationId, user.preferences(), user.authorities());
+                new OrasakaContext(userId, conversationId, user.preferences(), roles);
             OrasakaChatRequest request = new OrasakaChatRequest(prompt, null, null, context);
 
             Flux<OrasakaChatResponse> stream = aiClient.stream(request);
@@ -126,8 +128,8 @@ public class ChatStreamService {
     logger.debug("Constructing GraphQL subscription stream for conversation: {}", conversationId);
 
     String userId = user.id().toString();
-    OrasakaContext context =
-        new OrasakaContext(userId, conversationId, user.preferences(), user.authorities());
+    Set<String> roles = user.authorities();
+    OrasakaContext context = new OrasakaContext(userId, conversationId, user.preferences(), roles);
     OrasakaChatRequest request = new OrasakaChatRequest(prompt, null, null, context);
 
     return aiClient.stream(request);

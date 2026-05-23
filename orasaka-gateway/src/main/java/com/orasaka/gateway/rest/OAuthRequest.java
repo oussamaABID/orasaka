@@ -1,4 +1,4 @@
-package com.orasaka.gateway.controller;
+package com.orasaka.gateway.rest;
 
 /**
  * Immutable request payload for the {@code POST /api/v1/auth/oauth} endpoint.
@@ -8,6 +8,6 @@ package com.orasaka.gateway.controller;
  *
  * @param email The user's registered social email address.
  * @param username The user's screen name or display handle.
- * @see com.orasaka.gateway.controller.ChatStreamController#oauthLogin(OAuthRequest)
+ * @see com.orasaka.gateway.rest.ChatStreamController#oauthLogin(OAuthRequest)
  */
 public record OAuthRequest(String email, String username) {}

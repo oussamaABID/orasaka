@@ -69,6 +69,7 @@ public class RateLimitConfig {
    * @see io.github.bucket4j.distributed.proxy.ProxyManager
    */
   @Bean
+  @SuppressWarnings("deprecation")
   public ProxyManager<String> proxyManager(StatefulRedisConnection<String, byte[]> connection) {
     return LettuceBasedProxyManager.builderFor(connection).build();
   }

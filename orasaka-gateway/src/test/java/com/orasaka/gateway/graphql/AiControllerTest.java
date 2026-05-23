@@ -6,7 +6,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.orasaka.core.client.OrasakaAiClient;
-import com.orasaka.core.identity.OrasakaAuthority;
 import com.orasaka.core.model.OrasakaChatRequest;
 import com.orasaka.core.model.OrasakaChatResponse;
 import com.orasaka.gateway.service.ChatStreamService;
@@ -49,14 +48,14 @@ public class AiControllerTest {
             "test-user",
             "test-user@orasaka.com",
             true,
-            Set.of(new OrasakaAuthority("ROLE_USER")),
+            Set.of("ROLE_USER"),
             Map.of("tts-voice", "alloy"),
             java.util.List.of());
     when(identityService.getUser("550e8400-e29b-41d4-a716-446655440000")).thenReturn(mockUser);
 
     var authorities =
         mockUser.authorities().stream()
-            .map(auth -> new SimpleGrantedAuthority(auth.name()))
+            .map(auth -> new SimpleGrantedAuthority(auth))
             .collect(Collectors.toList());
     var authToken = new UsernamePasswordAuthenticationToken(mockUser, null, authorities);
     SecurityContextHolder.getContext().setAuthentication(authToken);

@@ -7,7 +7,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.stream.Collectors;
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,6 +35,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * @see com.orasaka.identity.service.IdentityService
  */
 public class OrasakaSecurityFilter extends OncePerRequestFilter {
+
+  private static final Logger logger = LoggerFactory.getLogger(OrasakaSecurityFilter.class);
 
   private final IdentityService identityService;
 
@@ -72,36 +76,41 @@ public class OrasakaSecurityFilter extends OncePerRequestFilter {
   protected void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
-    String authHeader = request.getHeader("Authorization");
-    String userId = null;
 
-    if (authHeader != null && authHeader.startsWith("Bearer ")) {
-      userId = authHeader.substring(7).trim();
-    } else {
-      String tokenParam = request.getParameter("token");
-      if (tokenParam != null && !tokenParam.isBlank()) {
-        userId = tokenParam.trim();
-      }
-    }
-
-    User user = null;
-    if (userId != null) {
-      try {
-        user = identityService.getUser(userId);
-      } catch (Exception e) {
-        // Ignore and proceed to fallback
-      }
-    }
-
-    if (user != null && user.enabled()) {
-      var authorities =
-          user.authorities().stream()
-              .map(auth -> new SimpleGrantedAuthority(auth.name()))
-              .collect(Collectors.toList());
-      var authToken = new UsernamePasswordAuthenticationToken(user, null, authorities);
-      SecurityContextHolder.getContext().setAuthentication(authToken);
-    }
+    extractUserId(request)
+        .flatMap(this::safeGetUser)
+        .filter(User::enabled)
+        .ifPresent(
+            user -> {
+              var authorities =
+                  user.authorities().stream().map(SimpleGrantedAuthority::new).toList();
+              var authToken = new UsernamePasswordAuthenticationToken(user, null, authorities);
+              SecurityContextHolder.getContext().setAuthentication(authToken);
+            });
 
     filterChain.doFilter(request, response);
+  }
+
+  /** Extracts user ID from Authorization header or request token query parameter. */
+  private Optional<String> extractUserId(HttpServletRequest request) {
+    return Optional.ofNullable(request.getHeader("Authorization"))
+        .filter(header -> header.startsWith("Bearer "))
+        .map(header -> header.substring(7).trim())
+        .filter(token -> !token.isEmpty())
+        .or(
+            () ->
+                Optional.ofNullable(request.getParameter("token"))
+                    .map(String::trim)
+                    .filter(token -> !token.isEmpty()));
+  }
+
+  /** Resolves a user profile safely, logging failures if the data layer is unreachable. */
+  private Optional<User> safeGetUser(String userId) {
+    try {
+      return Optional.ofNullable(identityService.getUser(userId));
+    } catch (Exception e) {
+      logger.error("Failed to resolve user context from identity layer for userId: {}", userId, e);
+      return Optional.empty();
+    }
   }
 }

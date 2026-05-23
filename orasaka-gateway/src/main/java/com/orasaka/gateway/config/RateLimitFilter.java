@@ -93,18 +93,20 @@ public class RateLimitFilter extends OncePerRequestFilter {
   protected void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
-    var authentication = SecurityContextHolder.getContext().getAuthentication();
-    String key;
-    String tier = null;
+    Optional<User> authenticatedUser =
+        Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+            .filter(auth -> auth.getPrincipal() instanceof User)
+            .map(auth -> (User) auth.getPrincipal());
 
-    if (authentication != null && authentication.getPrincipal() instanceof User user) {
-      key = user.id().toString();
-      tier = user.rateLimitTier();
-    } else {
-      key = request.getRemoteAddr();
-    }
+    String key =
+        authenticatedUser.map(user -> user.id().toString()).orElseGet(request::getRemoteAddr);
 
-    String resolvedTier = (tier != null && !tier.isBlank()) ? tier : properties.defaultTier();
+    String resolvedTier =
+        authenticatedUser
+            .map(User::rateLimitTier)
+            .filter(tier -> !tier.isBlank())
+            .orElseGet(properties::defaultTier);
+
     CachedTier tierConfig = getTierConfig(resolvedTier);
 
     BucketConfiguration configuration =

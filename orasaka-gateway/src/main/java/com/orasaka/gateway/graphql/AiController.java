@@ -2,7 +2,6 @@ package com.orasaka.gateway.graphql;
 
 import com.orasaka.core.client.OrasakaAiClient;
 import com.orasaka.core.context.OrasakaContext;
-import com.orasaka.core.identity.OrasakaAuthority;
 import com.orasaka.core.model.OrasakaChatRequest;
 import com.orasaka.core.model.OrasakaChatResponse;
 import com.orasaka.gateway.service.ChatStreamService;
@@ -14,6 +13,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -106,7 +106,7 @@ public class AiController {
    */
   @SchemaMapping(typeName = "User", field = "authorities")
   public List<String> authorities(User user) {
-    return user.authorities().stream().map(OrasakaAuthority::name).toList();
+    return user.authorities().stream().toList();
   }
 
   /**
@@ -157,7 +157,7 @@ public class AiController {
    * @param conversationId The session identifier for conversation memory resolution.
    * @return A {@link CompletableFuture} resolving to the {@link OrasakaChatResponse}.
    * @see OrasakaAiClient#chat(OrasakaChatRequest)
-   * @see com.orasaka.core.engine.OrasakaMemoryResolver
+   * @see com.orasaka.core.interceptors.memory.OrasakaMemoryResolver
    */
   @MutationMapping
   public CompletableFuture<OrasakaChatResponse> chat(
@@ -169,9 +169,11 @@ public class AiController {
         () -> {
           String userId = user.id().toString();
 
-          // Build immutable context with user preferences and authorities
+          Set<String> roles = user.authorities();
+
+          // Build immutable context with user preferences and raw roles
           OrasakaContext context =
-              new OrasakaContext(userId, conversationId, user.preferences(), user.authorities());
+              new OrasakaContext(userId, conversationId, user.preferences(), roles);
 
           // Dispatch to Core via facade — engine handles RAG, MCP, and tool attachment
           OrasakaChatRequest request = new OrasakaChatRequest(prompt, null, null, context);

@@ -1,4 +1,4 @@
-package com.orasaka.gateway.controller;
+package com.orasaka.gateway.rest;
 
 import com.orasaka.identity.service.IdentityService;
 import org.slf4j.Logger;

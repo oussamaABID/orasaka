@@ -4,7 +4,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-import com.orasaka.core.identity.OrasakaAuthority;
 import com.orasaka.identity.domain.User;
 import com.orasaka.identity.entity.OrasakaRateLimitTierEntity;
 import com.orasaka.identity.repository.OrasakaRateLimitTierRepository;
@@ -67,7 +66,7 @@ public class RateLimitFilterTest {
             "test-user",
             "test@orasaka.com",
             true,
-            Set.of(new OrasakaAuthority("ROLE_USER")),
+            Set.of("ROLE_USER"),
             Map.of(),
             List.of(),
             "premium");
@@ -118,7 +117,7 @@ public class RateLimitFilterTest {
             "test-user",
             "test@orasaka.com",
             true,
-            Set.of(new OrasakaAuthority("ROLE_USER")),
+            Set.of("ROLE_USER"),
             Map.of(),
             List.of(),
             "free");
