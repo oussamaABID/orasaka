@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { OperationNode } from "../types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -33,7 +34,6 @@ export function PlaygroundNodeCard({
     success: boolean;
     data: string;
   } | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   const idLower = node.id.toLowerCase();
   const kind =
@@ -66,18 +66,8 @@ export function PlaygroundNodeCard({
     reader.readAsDataURL(file);
   };
 
-  const executeNode = async () => {
-    let payload = "";
-    if (template) {
-      let temp = template;
-      for (const p of placeholders) {
-        temp = temp.replace(`\${${p}}`, inputs[p] || "");
-      }
-      payload = temp;
-    }
-    setIsLoading(true);
-    setResult(null);
-    try {
+  const executeMutation = useMutation({
+    mutationFn: async (payload: string) => {
       const response = await fetch(node.executionDetails.uriPath, {
         method: node.executionDetails.httpMethod,
         headers: {
@@ -94,26 +84,37 @@ export function PlaygroundNodeCard({
         );
       }
       const contentType = response.headers.get("content-type") || "";
-      let outputText = "";
       if (contentType.includes("application/json")) {
         const json = await response.json();
-        outputText =
-          json.analysis || json.content || JSON.stringify(json, null, 2);
-      } else {
-        outputText = await response.text();
+        return json.analysis || json.content || JSON.stringify(json, null, 2);
       }
-      setResult({ success: true, data: outputText });
+      return response.text();
+    },
+    onSuccess: (data) => {
+      setResult({ success: true, data });
       if (onExecuted) {
         onExecuted();
       }
-    } catch (e: unknown) {
+    },
+    onError: (e: Error) => {
       setResult({
         success: false,
-        data: e instanceof Error ? e.message : "Unknown execution error",
+        data: e.message || "Unknown execution error",
       });
-    } finally {
-      setIsLoading(false);
+    },
+  });
+
+  const executeNode = () => {
+    let payload = "";
+    if (template) {
+      let temp = template;
+      for (const p of placeholders) {
+        temp = temp.replace(`\${${p}}`, inputs[p] || "");
+      }
+      payload = temp;
     }
+    setResult(null);
+    executeMutation.mutate(payload);
   };
 
   const isLocked = node.state.type === "LOCKED";
@@ -187,10 +188,10 @@ export function PlaygroundNodeCard({
 
       <Button
         onClick={executeNode}
-        disabled={isLoading || isLocked}
+        disabled={executeMutation.isPending || isLocked}
         className="w-full flex items-center justify-center gap-2 mt-2"
       >
-        {isLoading ? (
+        {executeMutation.isPending ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" /> Running Ingestion...
           </>
