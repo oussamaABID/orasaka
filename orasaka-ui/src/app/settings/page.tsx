@@ -1,19 +1,24 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { Header } from '@/components/layout/Header';
-import { SettingsForm } from '@/features/settings/components/SettingsForm';
-import { useAuth } from '@/features/auth/hooks/useAuth';
-import { useRouter } from 'next/navigation';
+import * as React from "react";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { Header } from "@/components/layout/Header";
+import { SettingsForm } from "@/features/settings/components/SettingsForm";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useRouter } from "next/navigation";
 
+/**
+ * SettingsPage component allowing users to view and customize their preferences.
+ *
+ * @returns The rendered React element for the settings page.
+ */
 export default function SettingsPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
 
   React.useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+      router.push("/login");
     }
   }, [isLoading, isAuthenticated, router]);
 

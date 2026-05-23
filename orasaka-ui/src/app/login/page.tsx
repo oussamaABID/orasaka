@@ -1,47 +1,67 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import * as React from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 
+// ─── Reusable field wrapper ─────────────────────────────────────────────────
+const fieldLabelClass =
+  "text-sm font-medium leading-none text-zinc-700 dark:text-zinc-300 peer-disabled:cursor-not-allowed peer-disabled:opacity-70";
+
+// ─── Component ─────────────────────────────────────────────────────────────
+/**
+ * LoginPage component that handles user login.
+ *
+ * @returns The user login interface.
+ */
 export default function LoginPage() {
   const router = useRouter();
   const { isAuthenticated, loginWithGithub, loginWithGoogle } = useAuth();
-  
-  const [username, setUsername] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [error, setError] = React.useState('');
+
+  // Form fields
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+
+  // UI state
+  const [error, setError] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
 
   React.useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/');
-    }
+    if (isAuthenticated) router.push("/");
   }, [isAuthenticated, router]);
 
-  const handleCredentialsLogin = async (e: React.FormEvent) => {
+  // ── Login ──────────────────────────────────────────────────────────────
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const res = await signIn('credentials', {
-        username,
+      const res = await signIn("credentials", {
+        email,
         password,
         redirect: false,
       });
 
       if (res?.error) {
-        setError('Invalid username or password');
+        setError("Invalid email or password. Please check your credentials.");
       } else if (res?.ok) {
-        router.push('/');
+        router.push("/");
       }
-    } catch (err) {
-      setError('An error occurred during login');
+    } catch {
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -50,65 +70,100 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Orasaka Gateway</CardTitle>
-          <CardDescription>
-            Enter your credentials or use an OAuth provider
+        {/* ── Header ─────────────────────────────────────────────────── */}
+        <CardHeader className="space-y-1 text-center pb-2">
+          <CardTitle className="text-2xl font-bold tracking-tight">
+            Orasaka
+          </CardTitle>
+          <CardDescription className="text-zinc-500 dark:text-zinc-400">
+            Sign in to your workspace
           </CardDescription>
         </CardHeader>
+
         <CardContent className="space-y-4">
-          {error && <div className="text-sm text-red-500 text-center">{error}</div>}
-          
-          <form onSubmit={handleCredentialsLogin} className="space-y-4">
+          {/* ── Feedback banners ─────────────────────────────────────── */}
+          {error && (
+            <div
+              role="alert"
+              className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700 dark:bg-red-950/30 dark:border-red-800 dark:text-red-400"
+            >
+              {error}
+            </div>
+          )}
+
+          {/* ── LOGIN form ───────────────────────────────────────────── */}
+          <form id="form-login" onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Username
+              <label htmlFor="login-email" className={fieldLabelClass}>
+                Email
               </label>
               <Input
-                type="text"
-                placeholder="admin"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="login-email"
+                type="email"
+                placeholder="you@orasaka.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label htmlFor="login-password" className={fieldLabelClass}>
                 Password
               </label>
               <Input
+                id="login-password"
                 type="password"
-                placeholder="admin"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="current-password"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign In'}
+            <Button
+              id="btn-login-submit"
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? "Signing in…" : "Sign In"}
             </Button>
           </form>
 
+          {/* ── OAuth divider ─────────────────────────────────────────── */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-zinc-200 dark:border-zinc-800" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-zinc-500 dark:bg-zinc-950">
+              <span className="bg-white px-2 text-zinc-400 dark:bg-zinc-950">
                 Or continue with
               </span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" onClick={loginWithGithub}>
+            <Button id="btn-github" variant="outline" onClick={loginWithGithub}>
               GitHub
             </Button>
-            <Button variant="outline" onClick={loginWithGoogle}>
+            <Button id="btn-google" variant="outline" onClick={loginWithGoogle}>
               Google
             </Button>
           </div>
         </CardContent>
+
+        <CardFooter className="justify-center pb-4">
+          <p className="text-xs text-zinc-400">
+            No account?{" "}
+            <Link
+              href="/register"
+              className="font-medium text-zinc-700 underline underline-offset-2 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+            >
+              Register
+            </Link>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );
