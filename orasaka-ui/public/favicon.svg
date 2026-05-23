@@ -5,18 +5,55 @@
       <stop offset="0%" stop-color="#a855f7" /> <!-- Violet -->
       <stop offset="100%" stop-color="#06b6d4" /> <!-- Cyan -->
     </linearGradient>
+
+    <!-- Smooth Animations for Tab Favicon -->
+    <style type="text/css">
+      @keyframes spin-cw {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes spin-ccw {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(-360deg); }
+      }
+      @keyframes core-pulse {
+        0%, 100% { transform: scale(0.92); opacity: 0.9; }
+        50% { transform: scale(1.08); opacity: 1; }
+      }
+      
+      .anim-spin-cw {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: spin-cw 35s linear infinite;
+      }
+      .anim-spin-ccw {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: spin-ccw 22s linear infinite;
+      }
+      .anim-pulse-core {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: core-pulse 2.8s ease-in-out infinite;
+      }
+    </style>
   </defs>
 
   <!-- Solid clean circular tracks for maximum readability at 16x16 / 32x32 -->
-  <!-- Outer split ring -->
-  <path d="M 50,12 A 38,38 0 1,1 12,50" fill="none" stroke="url(#orasaka-fav-grad)" stroke-width="8" stroke-linecap="round" />
+  <!-- Outer split ring (Clockwise Spin) -->
+  <g class="anim-spin-cw">
+    <path d="M 50,12 A 38,38 0 1,1 12,50" fill="none" stroke="url(#orasaka-fav-grad)" stroke-width="8" stroke-linecap="round" />
+    <!-- Cyberpunk cut ring detail -->
+    <path d="M 30,19 A 38,38 0 0,1 50,12" fill="none" stroke="url(#orasaka-fav-grad)" stroke-width="8" stroke-linecap="round" stroke-dasharray="2 4" />
+  </g>
   
-  <!-- Cyberpunk cut ring detail -->
-  <path d="M 30,19 A 38,38 0 0,1 50,12" fill="none" stroke="url(#orasaka-fav-grad)" stroke-width="8" stroke-linecap="round" stroke-dasharray="2 4" />
+  <!-- Hexagonal frame structure inside (Counter-Clockwise Spin) -->
+  <g class="anim-spin-ccw">
+    <polygon points="50,25 71,37 71,63 50,75 29,63 29,37" fill="none" stroke="url(#orasaka-fav-grad)" stroke-width="3.5" stroke-opacity="0.6" />
+  </g>
 
-  <!-- Hexagonal frame structure inside -->
-  <polygon points="50,25 71,37 71,63 50,75 29,63 29,37" fill="none" stroke="url(#orasaka-fav-grad)" stroke-width="3.5" stroke-opacity="0.6" />
-
-  <!-- Center focal node (high visibility) -->
-  <circle cx="50" cy="50" r="14" fill="url(#orasaka-fav-grad)" />
+  <!-- Center focal node (high visibility - Pulse) -->
+  <g class="anim-pulse-core">
+    <circle cx="50" cy="50" r="14" fill="url(#orasaka-fav-grad)" />
+  </g>
 </svg>

@@ -12,34 +12,72 @@
       <feGaussianBlur stdDeviation="3" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
+
+    <!-- Smooth Animations -->
+    <style type="text/css">
+      @keyframes spin-cw {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes spin-ccw {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(-360deg); }
+      }
+      @keyframes core-pulse {
+        0%, 100% { transform: scale(0.95); opacity: 0.9; }
+        50% { transform: scale(1.05); opacity: 1; }
+      }
+      
+      .anim-spin-cw {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: spin-cw 35s linear infinite;
+      }
+      .anim-spin-ccw {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: spin-ccw 22s linear infinite;
+      }
+      .anim-pulse-core {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: core-pulse 2.8s ease-in-out infinite;
+      }
+    </style>
   </defs>
 
   <!-- Background grid alignment markers (very subtle) -->
   <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-opacity="0.03" stroke-width="0.5" stroke-dasharray="2 2" />
   <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" stroke-opacity="0.03" stroke-width="0.5" />
   
-  <!-- Outer Decoupled Rings representing multi-tier architecture -->
-  <!-- Ring 1 (Client/Gateway layer) -->
-  <path d="M 50,10 A 40,40 0 0,1 90,50" fill="none" stroke="url(#orasaka-logo-grad)" stroke-width="4" stroke-linecap="round" />
+  <!-- Outer Decoupled Rings representing multi-tier architecture (Clockwise Spin) -->
+  <g class="anim-spin-cw">
+    <!-- Ring 1 (Client/Gateway layer) -->
+    <path d="M 50,10 A 40,40 0 0,1 90,50" fill="none" stroke="url(#orasaka-logo-grad)" stroke-width="4" stroke-linecap="round" />
+    
+    <!-- Ring 2 (Core stateless layer) -->
+    <path d="M 90,50 A 40,40 0 0,1 50,90" fill="none" stroke="url(#orasaka-logo-grad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 6 10 6" />
+    
+    <!-- Ring 3 (Caching/RAG layer) -->
+    <path d="M 50,90 A 40,40 0 0,1 10,50" fill="none" stroke="url(#orasaka-logo-grad)" stroke-width="4" stroke-linecap="round" />
+    
+    <!-- Connecting bridge notches (Cyberpunk details) -->
+    <path d="M 10,50 A 40,40 0 0,1 30,16" fill="none" stroke="url(#orasaka-logo-grad)" stroke-width="4" stroke-linecap="round" />
+
+    <!-- Tech crosshairs/nodes -->
+    <line x1="50" y1="5" x2="50" y2="15" stroke="url(#orasaka-logo-grad)" stroke-width="1.5" stroke-linecap="round" />
+    <line x1="50" y1="85" x2="50" y2="95" stroke="url(#orasaka-logo-grad)" stroke-width="1.5" stroke-linecap="round" />
+    <line x1="5" y1="50" x2="15" y2="50" stroke="url(#orasaka-logo-grad)" stroke-width="1.5" stroke-linecap="round" />
+    <line x1="85" y1="50" x2="95" y2="50" stroke="url(#orasaka-logo-grad)" stroke-width="1.5" stroke-linecap="round" />
+  </g>
   
-  <!-- Ring 2 (Core stateless layer) -->
-  <path d="M 90,50 A 40,40 0 0,1 50,90" fill="none" stroke="url(#orasaka-logo-grad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 6 10 6" />
+  <!-- Inner geometric tech shield (Counter-Clockwise Spin) -->
+  <g class="anim-spin-ccw">
+    <polygon points="50,22 74,36 74,64 50,78 26,64 26,36" fill="none" stroke="url(#orasaka-logo-grad)" stroke-width="1.5" stroke-opacity="0.5" />
+  </g>
   
-  <!-- Ring 3 (Caching/RAG layer) -->
-  <path d="M 50,90 A 40,40 0 0,1 10,50" fill="none" stroke="url(#orasaka-logo-grad)" stroke-width="4" stroke-linecap="round" />
-  
-  <!-- Connecting bridge notches (Cyberpunk details) -->
-  <path d="M 10,50 A 40,40 0 0,1 30,16" fill="none" stroke="url(#orasaka-logo-grad)" stroke-width="4" stroke-linecap="round" />
-  
-  <!-- Inner geometric tech shield -->
-  <polygon points="50,22 74,36 74,64 50,78 26,64 26,36" fill="none" stroke="url(#orasaka-logo-grad)" stroke-width="1.5" stroke-opacity="0.5" />
-  
-  <!-- Active Central Core (The Stateless Database/AI Engine) -->
-  <circle cx="50" cy="50" r="10" fill="url(#orasaka-logo-grad)" filter="url(#core-glow)" />
-  
-  <!-- Tech crosshairs/nodes -->
-  <line x1="50" y1="5" x2="50" y2="15" stroke="url(#orasaka-logo-grad)" stroke-width="1.5" stroke-linecap="round" />
-  <line x1="50" y1="85" x2="50" y2="95" stroke="url(#orasaka-logo-grad)" stroke-width="1.5" stroke-linecap="round" />
-  <line x1="5" y1="50" x2="15" y2="50" stroke="url(#orasaka-logo-grad)" stroke-width="1.5" stroke-linecap="round" />
-  <line x1="85" y1="50" x2="95" y2="50" stroke="url(#orasaka-logo-grad)" stroke-width="1.5" stroke-linecap="round" />
+  <!-- Active Central Core (The Stateless Database/AI Engine - Pulse) -->
+  <g class="anim-pulse-core">
+    <circle cx="50" cy="50" r="10" fill="url(#orasaka-logo-grad)" filter="url(#core-glow)" />
+  </g>
 </svg>
