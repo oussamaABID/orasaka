@@ -22,6 +22,7 @@
 | **Ops Consolidation** | Core infrastructure directory isolation (`/ops`). | Separates docker layouts, postgres schemas, scripts, and HTTP tests from application code boundaries. |
 | **Verification Token** | Hash-based registration validation (`orasaka_verification_tokens`). | Enforces secure, passive double opt-in account enablement. |
 | **Interception Registry** | Contextual interception mapping (`orasaka_user_interceptions`). | Stores active session interruption events (onboarding, reviews) resolved dynamically during login context queries. |
+| **Video Engine** | Local sovereign Text-to-Video engine powered by quantized LTX-Video. | Decoupled generation node running on port 8086. |
 
 ## Environment Variables
 
@@ -34,10 +35,13 @@
 | **SPRING_DATASOURCE_PASSWORD** | Password for PostgreSQL database login credentials. | `orasaka_secure_pass` | High (Secret) |
 | **SPRING_SQL_INIT_MODE** | DB initialization mode control. | `never` | Low |
 | **SPRING_GRAPHQL_GRAPHIQL_ENABLED** | Enables GraphiQL query console playground. | `true` | Low |
+| **SPRING_AI_OLLAMA_BASE_URL** | Base URL for Spring AI auto-configured Ollama client. | `http://localhost:11434` | Low |
+| **SPRING_AI_OLLAMA_CHAT_MODEL** | Model version used for default chat generation. | `phi3:mini` | Low |
+| **SPRING_AI_OLLAMA_IMAGE_MODEL** | Model version used for default image generation. | `stable-diffusion-xe` | Low |
 | **ORASAKA_DEFAULT_PROVIDER** | Default AI model provider (e.g. `ollama`, `openai`). | `ollama` | Low |
 | **ORASAKA_OLLAMA_BASE_URL** | Target base endpoint for running local Ollama model instance. | `http://localhost:11434` | Low |
 | **ORASAKA_OLLAMA_MODEL** | Running local Ollama model identifier. | `llama3:8b` | Low |
-| **ORASAKA_OLLAMA_EMBEDDING_MODEL** | Embedding model identifier used inside local Ollama instance. | `all-minilm` | Low |
+| **ORASAKA_OLLAMA_EMBEDDING_MODEL** | Embedding model identifier used inside local Ollama instance. | `nomic-embed-text:latest` | Low |
 | **ORASAKA_OLLAMA_TEMPERATURE** | Default temperature for Ollama model inference. | `0.7` | Low |
 | **OPENAI_API_KEY** | Credentials token for accessing upstream OpenAI models. | `your_openai_api_key_placeholder` | High (Secret) |
 | **ORASAKA_OPENAI_BASE_URL** | Base URL for OpenAI API (or custom proxies). | `https://api.openai.com/v1` | Low |
@@ -68,3 +72,6 @@
 | **GOOGLE_CLIENT_ID** / **GOOGLE_CLIENT_SECRET** | Third-party Google OAuth credentials. | *(Empty)* | High (Secret) |
 | **ORASAKA_SECURITY_DEV_BYPASS_ID** | Mock user ID used to bypass authentication during local development. | `user-mock` | Medium |
 | **ORASAKA_SECURITY_DEV_BYPASS_ENABLED** | Toggle to enable mock user authentication bypass in development. | `true` | Medium |
+| **ORASAKA_VIDEO_BASE_URL** | Target base endpoint for running local LTX-Video instance. | `http://localhost:8086` | Low |
+| **ORASAKA_VIDEO_MODEL** | Running local video model identifier. | `ltx-video` | Low |
+

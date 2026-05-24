@@ -97,6 +97,32 @@ This document specifies the public API interfaces, configuration properties, gat
 
 ---
 
+## 📹 Video Generation Service & Models
+
+### [OrasakaVideoService](../orasaka-core/src/main/java/com/orasaka/core/engine/video/OrasakaVideoService.java)
+
+- **Role**: Concrete service executing Text-to-Video generation using local `sd-server` runner.
+- **Methods**:
+  - `generateVideo(OrasakaVideoRequest)`: Delegates prompt and duration configurations to local runner on port `8086`.
+
+### [OrasakaVideoRequest](../orasaka-core/src/main/java/com/orasaka/core/engine/video/OrasakaVideoRequest.java)
+
+- **Role**: Immutable record representing a client request for video generation.
+- **Fields**:
+  - `prompt`: String parameter carrying video description prompt.
+  - `durationSeconds`: Optional integer specifying target video duration.
+  - `settings`: Map containing secondary properties (fps, aspect ratios).
+  - `context`: Active request-level contextual profile coordinates.
+
+### [OrasakaVideoResponse](../orasaka-core/src/main/java/com/orasaka/core/engine/video/OrasakaVideoResponse.java)
+
+- **Role**: Compact record wrapper encapsulating the generated binary video data.
+- **Fields**:
+  - `videoData`: Byte array payload containing the raw generated MP4 data.
+  - `format`: Format description string, default fallback is `"mp4"`.
+
+---
+
 ## 🛡️ Context & Security Models
 
 ### [OrasakaContext](../orasaka-core/src/main/java/com/orasaka/core/support/OrasakaContext.java)
@@ -164,6 +190,45 @@ All frontend clients communicate solely through the BFF layer. Direct communicat
     - *Headers*: `Authorization: Bearer <userId>`
     - *Response Type*: `text/event-stream`
     - *Payload*: Event chunks of serialized JSON `OrasakaChatResponse` records.
+- **Text-to-Video Generation (ChatStreamController)**:
+  - `POST /api/v1/ai/video`
+    - *Payload* (`OrasakaVideoRequest`):
+      ```json
+      {
+        "prompt": "A cinematic shot of cyberpunk streets in Neo-Tokyo, neon lighting, heavy rain, 4k",
+        "durationSeconds": 4,
+        "settings": {
+          "fps": 24,
+          "width": 512,
+          "height": 512
+        }
+      }
+      ```
+    - *Response* (RFC 2397 Data URL string):
+      ```json
+      {
+        "format": "mp4",
+        "url": "data:video/mp4;base64,AAAAIGZ0eXBtcDQyAAAAAG1wNDJpc29tYXZjMQ..."
+      }
+      ```
+    - *Core Loop RestClient Request* (delegates request payload to local runner on `http://localhost:8086/v1/videos/generations`):
+      ```json
+      {
+        "prompt": "A cinematic shot of cyberpunk streets in Neo-Tokyo, neon lighting, heavy rain, 4k",
+        "video_length": 4
+      }
+      ```
+    - *Runner Base64 Response Ingestion* (OpenAI-compatible JSON structure):
+      ```json
+      {
+        "created": 1716508800,
+        "data": [
+          {
+            "b64_json": "AAAAIGZ0eXBtcDQyAAAAAG1wNDJpc29tYXZjMQ...[base64 bytes]"
+          }
+        ]
+      }
+      ```
 
 ### 3. BFF GraphQL Server-Side Extensions (Next.js BFF)
 

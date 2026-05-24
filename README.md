@@ -19,6 +19,17 @@ Orasaka is a professional-grade Java solution based on Spring, architected for *
 
 ---
 
+## 🗺️ Ecosystem Feature Matrix
+
+- **Agentic Orchestration Framework (Satsui Engine)**: Multi-agent workflow scheduling, programmatic dynamic routing, and standard Model Context Protocol (MCP) server compliance mappings.
+- **Sovereign LLM Core Processing**: 100% offline text-to-text inference backed by local Ollama clusters running Llama 3.1 8B parameter models.
+- **Bare-Metal Multi-Modal Execution Layer**:
+  - **Text-to-Image Engine**: Native C++ `stable-diffusion.cpp` compiler stack accelerating SD 1.5 tensors over Apple Silicon Metal (Port `8085`).
+  - **Text-to-Video Engine**: Native C++ DiT runner running optimized LTX-Video layers over Apple Unified Memory architectures (Port `8086`).
+- **Decoupled Architecture Stack**: High-efficiency Java Spring Boot 3.x backend infrastructure integrated with a type-safe Next.js / Tailwind CSS reactive workspace canvas (`orasaka-ui`).
+
+---
+
 ## 🏛️ Multi-Module Blueprint
 
 | Module | Role |
@@ -171,6 +182,48 @@ Orasaka supports 100% sovereign, local image generation via a bare-metal `stable
    curl http://localhost:8085/
    # Returns "Stable Diffusion Server is running"
    ```
+
+### Local Sovereign AI Video Generation Setup (LTX-Video)
+
+Orasaka supports 100% sovereign, local video generation via a bare-metal `sd-server` (built above) loaded with quantized LTX-Video.
+
+1. **Quantized Checkpoint Ingestion**:
+   Download the optimized GGUF/Safetensors model checkpoint:
+   ```bash
+   mkdir -p ~/models/stable-diffusion
+   curl -L -o ~/models/stable-diffusion/ltx-video-q4_k_m.safetensors https://huggingface.co/unsloth/LTX-Video-GGUF/resolve/main/ltx-video-v0.9-q4_k_m.safetensors
+   ```
+
+2. **Start the local server**:
+   Run the compiled server on port `8086`:
+   ```bash
+   ./bin/sd-server --listen-port 8086 -m ~/models/stable-diffusion/ltx-video-q4_k_m.safetensors
+   ```
+
+3. **Verify Gateway Integration**:
+   The Orasaka gateway is pre-configured to bind the `localai-video` overrides context pointing directly to `http://localhost:8086`. Ensure connectivity responds:
+   ```bash
+   curl http://localhost:8086/
+   ```
+
+### Quick Start (Local Infrastructure CLI)
+
+To simplify the lifecycle management of our local AI workers (Ollama, Image worker, Video worker), we provide two execution scripts under `ops/scripts/`:
+
+- **Start Infrastructure**: Spin up Ollama and the two `sd-server` instances in the background, verifying port allocation and recording Process IDs (PIDs):
+  ```bash
+  ./ops/scripts/start.sh
+  ```
+  This will check and bind:
+  - **Ollama Core Client**: Port `11434`
+  - **Text-to-Image (Stable Diffusion) Worker**: Port `8085` (logs to `sd-image.log`)
+  - **Text-to-Video (LTX-Video) Worker**: Port `8086` (logs to `sd-video.log`)
+  - **State Tracking**: Active PIDs are saved in `.orasaka.pid` at the root.
+
+- **Stop Infrastructure**: Gracefully shut down background workers by reading the state file (or running socket inspection as a fallback):
+  ```bash
+  ./ops/scripts/stop.sh
+  ```
 
 ### Build & Run All Modules
 

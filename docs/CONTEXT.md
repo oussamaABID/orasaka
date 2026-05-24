@@ -126,3 +126,10 @@
 - **Rationale**: Removes external cloud service dependencies (OpenAI API key requirement) for image generation, ensures 100% data sovereignty, and prevents NullPointerExceptions in local offline sandbox architecture environments by cleanly formatting base64 streams directly to the Next.js UI component display canvas.
 - **Status**: Approved (2026-05-23).
 
+## ADR 022: Local Sovereign Offline Text-to-Video Generation via LTX-Video and RFC 2397 Data URLs
+
+- **Decision**: Integrate a bare-metal `sd-server` video runner running locally on port 8086 with a quantized LTX-Video GGUF/Safetensors model checkpoint, and expose a dedicated `/api/v1/ai/video` REST API endpoint which maps the generated stream into RFC 2397 Data URLs.
+- **Rationale**: Provides high-performance local video rendering without cloud dependencies, isolates heavy video generation traffic on a separate execution port (8086), and ensures safety and boundary compliance by wrapping raw binary streams in a Data URL format that is directly parseable by client-side browser video canvases.
+- **Status**: Approved (2026-05-24).
+
+

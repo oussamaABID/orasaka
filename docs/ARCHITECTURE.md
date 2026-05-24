@@ -171,6 +171,41 @@ The `orasaka-identity` module implements an "Intercept & Resume" Session Engine.
 
 ---
 
+## 📹 Video Generation Architecture & Rendering
+
+### 🏛️ Pipeline Topology
+
+The Text-to-Video pipeline relies on a local GGUF/Safetensors quantized model loader running on a dedicated port. This decouples video generation traffic from other media execution services:
+
+- **Core Gateway**: Runs on port `8080`.
+- **Text-to-Image (Stable Diffusion) Service**: Runs on port `8085`.
+- **Text-to-Video (LTX-Video) Service**: Runs on port `8086`.
+
+```mermaid
+graph TD
+    UI[orasaka-ui React Canvas] -->|POST /api/v1/ai/video| GW[orasaka-gateway]
+    GW -->|Inject context| SV[OrasakaVideoService]
+    SV -->|REST Post| LTR[Local Video Runner Port 8086]
+    LTR -->|LTX-Video Checkpoint| GPU[Apple Silicon Metal / GPU]
+```
+
+### 🎨 Frontend Rendering
+
+The client-side canvas checks for `payload.format === 'mp4'` or `payload.url.startsWith('data:video/')`. It then mounts a standard HTML5 video tag with autoplays, controls, and loops:
+
+```tsx
+<video 
+  src={payload.url} 
+  controls 
+  autoPlay 
+  loop
+  className="max-h-[512px] w-full max-w-[512px] rounded-md bg-black shadow-md"
+/>
+```
+
+---
+
+
 ## 🌊 5. High-Density Pipeline Orchestration & Interceptor Lego Pattern
 
 ### 5.1 The Architecture Principle
