@@ -25,20 +25,23 @@ public class GatewayErrorResolver extends DataFetcherExceptionResolverAdapter {
 
   @Override
   protected GraphQLError resolveToSingleError(Throwable ex, DataFetchingEnvironment env) {
-    if (ex instanceof UserAlreadyExistsException) {
-      logger.warn("GraphQL UserAlreadyExistsException intercepted: {}", ex.getMessage());
-      return GraphqlErrorBuilder.newError(env)
-          .errorType(ErrorType.BAD_REQUEST)
-          .message(ex.getMessage())
-          .build();
-    } else if (ex instanceof InvalidRequestException) {
-      logger.warn("GraphQL InvalidRequestException intercepted: {}", ex.getMessage());
-      return GraphqlErrorBuilder.newError(env)
-          .errorType(ErrorType.BAD_REQUEST)
-          .message(ex.getMessage())
-          .build();
-    }
-    return null;
+    return switch (ex) {
+      case UserAlreadyExistsException e -> {
+        logger.warn("GraphQL UserAlreadyExistsException intercepted: {}", e.getMessage());
+        yield GraphqlErrorBuilder.newError(env)
+            .errorType(ErrorType.BAD_REQUEST)
+            .message(e.getMessage())
+            .build();
+      }
+      case InvalidRequestException e -> {
+        logger.warn("GraphQL InvalidRequestException intercepted: {}", e.getMessage());
+        yield GraphqlErrorBuilder.newError(env)
+            .errorType(ErrorType.BAD_REQUEST)
+            .message(e.getMessage())
+            .build();
+      }
+      default -> null;
+    };
   }
 
   /**
