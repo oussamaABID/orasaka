@@ -4,9 +4,9 @@ import { ReactNode } from "react";
 import { SessionProvider } from "next-auth/react";
 import { QueryProvider } from "./QueryProvider";
 import { ThemeProvider } from "./ThemeProvider";
-import { SidebarProvider } from "../context/SidebarContext";
-import { TenantProvider } from "../../features/tenant/context/TenantContext";
-import { LocaleProvider } from "../context/LocaleContext";
+import { SidebarProvider } from "@/core/context/SidebarContext";
+import { TenantProvider } from "@/features/tenant/context/TenantContext";
+import { LocaleProvider } from "@/core/context/LocaleContext";
 
 interface ProvidersProps {
   children: ReactNode;

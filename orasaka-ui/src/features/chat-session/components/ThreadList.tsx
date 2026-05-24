@@ -1,5 +1,5 @@
 import React from "react";
-import { ChatThread } from "../types/chat.types";
+import { ChatThread } from "@/features/chat-session/types/chat.types";
 import { useTranslation } from "@/core/context/LocaleContext";
 
 interface Props {

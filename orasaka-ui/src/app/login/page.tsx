@@ -68,7 +68,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4">
+    <main className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4">
       <Card className="w-full max-w-md">
         {/* ── Header ─────────────────────────────────────────────────── */}
         <CardHeader className="space-y-1 text-center pb-2">
@@ -132,25 +132,21 @@ export default function LoginPage() {
           </form>
 
           {/* ── OAuth divider ─────────────────────────────────────────── */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-zinc-200 dark:border-zinc-800" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-zinc-400 dark:bg-zinc-950">
-                Or continue with
-              </span>
-            </div>
+          <div className="relative" role="separator" aria-orientation="horizontal">
+            <hr className="border-t border-zinc-200 dark:border-zinc-800" />
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs uppercase text-zinc-400 dark:bg-zinc-950">
+              Or continue with
+            </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <nav className="grid grid-cols-2 gap-4" aria-label="Social login options">
             <Button id="btn-github" variant="outline" onClick={loginWithGithub}>
               GitHub
             </Button>
             <Button id="btn-google" variant="outline" onClick={loginWithGoogle}>
               Google
             </Button>
-          </div>
+          </nav>
         </CardContent>
 
         <CardFooter className="justify-center pb-4">
@@ -165,6 +161,6 @@ export default function LoginPage() {
           </p>
         </CardFooter>
       </Card>
-    </div>
+    </main>
   );
 }

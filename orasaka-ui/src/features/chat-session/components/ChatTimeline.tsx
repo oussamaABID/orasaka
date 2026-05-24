@@ -1,5 +1,5 @@
 import React from "react";
-import { ChatMessage as ChatMessageType } from "../types/chat.types";
+import { ChatMessage as ChatMessageType } from "@/features/chat-session/types/chat.types";
 import { ChatMessage } from "./ChatMessage";
 import { useTranslation } from "@/core/context/LocaleContext";
 

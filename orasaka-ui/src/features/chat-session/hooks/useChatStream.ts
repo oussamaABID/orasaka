@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChatMessage, ChatResponse, ChatThread } from "../types/chat.types";
+import { ChatMessage, ChatResponse, ChatThread } from "@/features/chat-session/types/chat.types";
 
 /**
  * Retrieves cached conversation threads from the browser's local storage.

@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { OrasakaSettings } from "../types/settings.types";
+import { OrasakaSettings } from "@/features/settings/types/settings.types";
 
 /**
  * Fetches user preference configurations from the backend.

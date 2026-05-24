@@ -1,6 +1,6 @@
 import React from "react";
 import { ThreadList } from "./ThreadList";
-import { ChatThread } from "../types/chat.types";
+import { ChatThread } from "@/features/chat-session/types/chat.types";
 
 interface ChatDrawerProps {
   isOpen: boolean;

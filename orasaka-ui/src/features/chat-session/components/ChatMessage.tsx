@@ -1,6 +1,6 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
-import { ChatMessage as ChatMessageType } from "../types/chat.types";
+import { ChatMessage as ChatMessageType } from "@/features/chat-session/types/chat.types";
 import { useTranslation } from "@/core/context/LocaleContext";
 
 interface Props {

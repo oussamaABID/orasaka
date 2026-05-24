@@ -108,11 +108,11 @@ export default function HomePage() {
 
   if (isLoading || !isAuthenticated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950">
+      <section className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950">
         <span className="text-zinc-400 dark:text-zinc-500 text-sm animate-pulse">
           {t.dashboard.loading}
         </span>
-      </div>
+      </section>
     );
   }
 
@@ -122,7 +122,7 @@ export default function HomePage() {
     .slice(0, 3);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950 transition-colors duration-200">
+    <section className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950 transition-colors duration-200">
       <Sidebar />
 
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -131,14 +131,14 @@ export default function HomePage() {
         <main className="flex-1 overflow-auto p-6 scrollbar-thin">
           <div className="mx-auto max-w-5xl space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-300">
             {/* Page Header */}
-            <div className="space-y-1">
+            <header className="space-y-1">
               <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
                 {t.dashboard.welcome}, {user?.name || "Admin"}
               </h2>
               <p className="text-zinc-500 dark:text-zinc-400 text-sm">
                 {t.dashboard.overview}
               </p>
-            </div>
+            </header>
 
             {/* Metrics Grid */}
             <MetricsGrid
@@ -169,6 +169,6 @@ export default function HomePage() {
           </div>
         </main>
       </div>
-    </div>
+    </section>
   );
 }

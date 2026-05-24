@@ -25,7 +25,7 @@ export default function SettingsPage() {
   if (isLoading || !isAuthenticated) return null;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950">
+    <section className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />
@@ -38,6 +38,6 @@ export default function SettingsPage() {
           </div>
         </main>
       </div>
-    </div>
+    </section>
   );
 }

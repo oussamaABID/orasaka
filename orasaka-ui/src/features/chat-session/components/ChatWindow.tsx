@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { useChatStream } from "../hooks/useChatStream";
+import { useChatStream } from "@/features/chat-session/hooks/useChatStream";
 import { ChatTimeline } from "./ChatTimeline";
 import { ThreadList } from "./ThreadList";
 import { ChatHeader } from "./ChatHeader";
@@ -15,7 +15,7 @@ import {
   OperationNode,
   fetchOperationGraph,
 } from "./ContextPlusMenu";
-import { ChatMessage } from "../types/chat.types";
+import { ChatMessage } from "@/features/chat-session/types/chat.types";
 
 interface Props {
   initialConversationId: string;

@@ -1,5 +1,5 @@
 import React from "react";
-import { ChatMessage } from "../types/chat.types";
+import { ChatMessage } from "@/features/chat-session/types/chat.types";
 
 interface Props {
   message: ChatMessage;

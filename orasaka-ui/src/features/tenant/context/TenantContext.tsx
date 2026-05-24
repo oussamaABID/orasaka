@@ -10,8 +10,8 @@
  */
 
 import * as React from "react";
-import { useSettings } from "../../settings/hooks/useSettings";
-import { TenantConfig } from "../types/tenant.types";
+import { useSettings } from "@/features/settings/hooks/useSettings";
+import { TenantConfig } from "@/features/tenant/types/tenant.types";
 
 /**
  * Interface mapping available visual utility classes for Tailwind css components.
