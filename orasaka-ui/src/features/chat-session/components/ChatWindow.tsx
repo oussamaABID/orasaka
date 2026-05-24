@@ -141,7 +141,7 @@ export const ChatWindow: React.FC<Props> = ({ initialConversationId }) => {
     ) || [];
 
   return (
-    <div className="flex h-full w-full bg-zinc-50/30 dark:bg-zinc-950/20 overflow-hidden relative">
+    <main className="flex h-full w-full bg-zinc-50/30 dark:bg-zinc-950/20 overflow-hidden relative">
       <ChatDrawer
         isOpen={isThreadDrawerOpen}
         onClose={() => setIsThreadDrawerOpen(false)}
@@ -156,7 +156,7 @@ export const ChatWindow: React.FC<Props> = ({ initialConversationId }) => {
         t={t}
       />
 
-      <div className="w-72 flex-shrink-0 hidden md:block">
+      <aside className="w-72 flex-shrink-0 hidden md:block">
         <ThreadList
           threads={threads ?? []}
           activeId={activeConversationId}
@@ -167,16 +167,16 @@ export const ChatWindow: React.FC<Props> = ({ initialConversationId }) => {
             setActiveConversationId(newThread.conversationId);
           }}
         />
-      </div>
+      </aside>
 
-      <div className="flex-1 flex flex-col h-full min-w-0 bg-white/40 dark:bg-zinc-900/10">
+      <section className="flex-1 flex flex-col h-full min-w-0 bg-white/40 dark:bg-zinc-900/10">
         <ChatHeader
           activeConversationId={activeConversationId}
           onOpenDrawer={() => setIsThreadDrawerOpen(true)}
           t={t}
         />
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-zinc-50/10 dark:bg-zinc-900/5 relative">
+        <article className="flex-1 overflow-y-auto p-6 space-y-5 bg-zinc-50/10 dark:bg-zinc-900/5 relative">
           <ChatTimeline
             messages={messages ?? []}
             isLoadingMessages={isLoadingMessages}
@@ -192,7 +192,7 @@ export const ChatWindow: React.FC<Props> = ({ initialConversationId }) => {
             onExecuteNode={handleExecuteNode}
             nodes={plusNodes}
           />
-        </div>
+        </article>
 
         <form
           onSubmit={handleSend}
@@ -237,7 +237,7 @@ export const ChatWindow: React.FC<Props> = ({ initialConversationId }) => {
                 : t.chat.send}
           </Button>
         </form>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };
