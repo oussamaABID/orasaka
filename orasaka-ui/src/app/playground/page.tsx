@@ -10,6 +10,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { OperationNode } from "./types";
 import { PlaygroundNodeCard } from "./components/PlaygroundNodeCard";
 import { RagSearchCard } from "./components/RagSearchCard";
+import { VideoAnalysisCard } from "./components/VideoAnalysisCard";
 
 const fetchOperationGraph = async (): Promise<OperationNode[]> => {
   const query = `
@@ -129,6 +130,7 @@ export default function PlaygroundPage() {
                   ))}
 
                 <RagSearchCard />
+                <VideoAnalysisCard />
               </div>
             )}
           </div>
