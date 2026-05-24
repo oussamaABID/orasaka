@@ -1,26 +1,39 @@
-# Orasaka Architecture Overview
+# Architecture Reference
 
-This document provides the technical overview of the Orasaka monorepo architecture, describing its component modules, security boundaries, and runtime execution models.
+> A visual guide to Orasaka's system topology, module boundaries, and runtime execution flows.
 
 ---
 
-## 🏛️ Component Hierarchy
+## Overview
 
-Orasaka is structured as a decoupled monorepo, keeping business features, infrastructure layers, and AI engines completely isolated.
+Orasaka follows a **Ports & Adapters** (Hexagonal) architecture, enforced by ArchUnit at compile time. The system is structured as a decoupled monorepo where every module has a clear, isolated responsibility and dependencies flow strictly top-down.
+
+**Key invariants:**
+- `orasaka-core` is 100% web-agnostic — no HTTP, no sessions, no Spring Boot auto-configuration
+- Spring AI types never leak outside `orasaka-core` boundaries (Bridge Pattern 2.0)
+- `orasaka-gateway` is the only module allowed to cross-reference identity and core
+- All blocking I/O runs on Java 21 Virtual Threads
+
+---
+
+## 🏛️ Module Topology
 
 ```mermaid
 graph TD
     UI[orasaka-ui BFF/Next.js] <--> Gateway[orasaka-gateway orchestrator]
     CLI[orasaka-cli terminal tool] <--> Gateway
-    
-    Gateway --> CoreClient[OrasakaAiClient facade]
+
+    Gateway --> CoreClient[AiClient facade]
     Gateway --> Identity[orasaka-identity service]
-    
+    Gateway -.->|adapter wiring| Tools[orasaka-tools adapters]
+
     subgraph Core Engine Layer
         CoreClient --> Core[orasaka-core library]
-        Core --> Tools[orasaka-tools configurations]
+        Core -.-|defines ports| Ports([Pipeline Interfaces])
     end
-    
+
+    Tools -.->|implements ports| Ports
+
     Identity --> Postgres[(PostgreSQL)]
     Tools --> Postgres
 
@@ -28,36 +41,35 @@ graph TD
     classDef bff fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px,color:#6d28d9;
     classDef core fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#047857;
     classDef infra fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#b45309;
-    
+    classDef port fill:#fff7ed,stroke:#ea580c,stroke-width:2px,color:#c2410c;
+
     class UI,CLI client;
     class Gateway,CoreClient,Identity bff;
-    class Core,Tools core;
+    class Core core;
+    class Tools core;
+    class Ports port;
     class Postgres infra;
 ```
 
-### Module Breakdown
+### Module Responsibilities
 
-- **[orasaka-core](./orasaka-core)**: The stateless, agnostic core library. It holds pure abstractions (RAG interfaces, Model Context Protocol declarations, engine interfaces) and strictly locks down Spring AI to version `1.1.6`. It is completely decoupled from Spring Boot auto-configuration.
-- **[orasaka-tools](./orasaka-tools)**: The concrete tool execution and multi-tier cache module. Contains memory/persistent caffeine-to-postgres decorators and concrete MCP integrations.
-- **[orasaka-identity](./orasaka-identity)**: Manages authentication credentials, user profiles, BCrypt hashing, and the data-driven Interception & Feedback engine.
-- **[orasaka-gateway](./orasaka-gateway)**: The backend entry orchestrator. Handles secure stateless sessions, virtual threads executing parallel requests, and exposes GraphQL & Server-Sent Events stream interfaces.
-- **[orasaka-ui](./orasaka-ui)**: Next.js 14 Web UI. Houses standard pages and features (e.g. Chat, Dynamic Remote UI Renderer), and acts as a BFF (Backend-For-Frontend) proxy layer.
-- **[orasaka-cli](./orasaka-cli)**: Node-based terminal client allowing chat automation, profile queries, and streaming chat completions.
+| Module | What it does | Key packages |
+|:---|:---|:---|
+| **orasaka-core** | Stateless AI engine library. Holds pure abstractions and strictly locks Spring AI to `1.1.6`. Zero web dependencies. | `client/` — `AiClient` facade · `engine/` — `AbstractEngine`, `CoreProperties`, `GraphEngine` · `pipeline/` — interceptors, tool/knowledge/MCP abstractions · `ingest/` — media pre-processor ports · `support/` — public data records |
+| **orasaka-tools** | Concrete tool execution, multi-tier cache (Caffeine → PostgreSQL), and MCP integrations. Implements interfaces defined in core. | `functions/` — `DefaultToolRegistry`, `CachingToolCallback` · `mcp/` — `DefaultMcpOrchestrator` · `config/` — `ToolsProperties` |
+| **orasaka-identity** | User authentication, BCrypt hashing, sealed-interface RBAC, email verification, and the interception/feedback engine. | `domain/` — `User`, `Role` sealed interface · `service/` — `IdentityService` · `repository/` — JPA repositories |
+| **orasaka-gateway** | Backend-for-Frontend orchestrator. Handles GraphQL, REST, SSE streaming, virtual threads, and security context assembly. | `endpoint/` — `AiController`, `AuthController`, `ChatStreamController` · `config/` — security filters, CORS |
+| **orasaka-ui** | Next.js 16 web frontend. Chat canvas, operation graph renderer, BFF proxy layer. | `app/` — pages · `api/` — BFF proxy routes · `components/` — React UI |
+| **orasaka-cli** | TypeScript terminal client. JWT auth, GraphQL mutations, SSE streams, multi-modal output. | `src/` — command handlers, SSE client |
 
 ---
 
 ## 🌐 BFF (Backend-for-Frontend) Topology
 
-To prevent security context leakage, browser-side CORS failures, and open-port exposures on the client, the UI follows a strict BFF topology pattern.
-
-**Key Rule**: The browser client NEVER connects directly to `orasaka-gateway` (port `8080`) or local AI execution environments (e.g., Ollama port `11434`). All asynchronous interactions must go through server-side API Routes in Next.js (`/api/graphql` or `/api/chat/stream/[conversationId]`).
-
-### BFF Topology Flow
-
-Below is the request flow from the browser to the backend database, mediated by Next.js API Routes.
+The browser **never** connects directly to `orasaka-gateway` (port `8080`) or local AI services (Ollama `11434`, SD `8085`/`8086`). All traffic flows through Next.js server-side API routes.
 
 > [!NOTE]
-> Environment parameters (like `GATEWAY_URL`) are read exclusively on the Next.js server side. The client code is unaware of the actual backend network topology.
+> Environment parameters like `GATEWAY_URL` are read exclusively on the Next.js server side. The browser is unaware of the actual backend network topology.
 
 ```mermaid
 graph TD
@@ -77,17 +89,14 @@ graph TD
         Postgres[(PostgreSQL database)]
     end
 
-    %% Browser requests are sent only to the BFF API routes
     UI -- "GET (text/event-stream)" --> ChatStream
     UI -- "POST (graphql operation)" --> GraphQL
     UI -- "POST (login credentials)" --> NextAuth
 
-    %% BFF API routes authenticate user session and proxy requests to backend
     ChatStream -- "GET with Bearer userId (Token injection)" --> Gateway
     GraphQL -- "POST with Bearer userId (Token injection)" --> Gateway
     NextAuth -- "POST /api/v1/auth/login (Credential delegation)" --> Gateway
 
-    %% Backend fetches user profiles and saves conversations
     Gateway -- "Virtual Threads Auth / Profile fetch" --> Identity
     Identity -- "SQL persist/verify" --> Postgres
 
@@ -102,32 +111,33 @@ graph TD
     class Postgres infra;
 ```
 
+**Why BFF?**
+- **Security** — User tokens are injected server-side, never exposed to the browser
+- **CORS** — No cross-origin issues since the browser only talks to its own Next.js server
+- **Topology isolation** — Backend ports and URLs can change without touching client code
+
 ---
 
-## 🧠 Cognitive Engine Execution Flow
+## 🧠 Cognitive Engine Flow
 
-The `OrasakaEngine` orchestrates the lifecycle of AI requests, RAG context enrichment, tool matching, and streaming token delivery. It executes on the Gateway tier via Virtual Threads.
-
-### Engine Flow Diagram
-
-Below is the internal flow of client calls through the engine abstractions:
+When a developer calls `AiClient.chat()`, the request flows through a sequential pipeline of context interceptors before reaching the LLM:
 
 ```mermaid
 graph TD
-    User([Developer]) --> Client[OrasakaAiClient Facade]
-    Client --> Engine[OrasakaEngine]
+    User([Developer]) --> Client[AiClient Facade]
+    Client --> Engine[AbstractEngine]
     
     subgraph Cognitive Pipeline
-        Engine --> Interceptors[OrasakaContextInterceptor Pipeline]
-        Interceptors --> ToolInterceptor[OrasakaToolInterceptor]
-        Interceptors --> RagInterceptor[OrasakaRagInterceptor]
-        Interceptors --> McpInterceptor[OrasakaMcpInterceptor]
-        Interceptors --> MemoryInterceptor[OrasakaMemoryInterceptor]
+        Engine --> Interceptors[ContextInterceptor Pipeline]
+        Interceptors --> ToolInterceptor[ToolInterceptor]
+        Interceptors --> RagInterceptor[RagInterceptor]
+        Interceptors --> McpInterceptor[McpInterceptor]
+        Interceptors --> MemoryInterceptor[MemoryInterceptor]
     end
     
     subgraph Services & Registry
-        ToolInterceptor --> ToolRegistry[OrasakaToolRegistry]
-        RagInterceptor --> KnowledgeService[OrasakaKnowledgeService]
+        ToolInterceptor --> ToolRegistry[ToolRegistry]
+        RagInterceptor --> KnowledgeService[KnowledgeService]
         McpInterceptor --> McpOrchestrator[McpOrchestrator]
     end
     
@@ -157,41 +167,62 @@ graph TD
     class Ollama,OpenAI,VectorStore,McpServer,JavaMethods infra;
 ```
 
+### Context-Matrix Pipeline (4 Stages)
+
+Every request passes through an ordered chain of `PromptInterceptor` beans:
+
+| Order | Interceptor | Responsibility |
+|:---:|:---|:---|
+| 1 | **UserContextResolver** | Extracts user profile, RBAC roles, and rate-limit tier from session context |
+| 2 | **SystemContextInjector** | Feeds real-time environment signals, active tools, and system variables |
+| 3 | **RefinerInterceptor** | Rewrites fuzzy queries against conversation history into clear instructions |
+| 4 | **RouterInterceptor** | Evaluates intent at `temperature: 0.0` and routes to the optimal model provider |
+
+> [!TIP]
+> The pipeline can be disabled entirely via `orasaka.core.orchestration.pipeline.enabled=false` for zero-allocation bypass.
+
 ---
 
-## 🔏 Generic Interception & Feedback Engine
+## 🔏 Interception & Feedback Engine
 
-The `orasaka-identity` module implements an "Intercept & Resume" Session Engine. Downstream business verticals can dynamically prompt users to perform feedback loops or complete surveys using abstract JSON configurations.
+The `orasaka-identity` module implements an "Intercept & Resume" session engine. Downstream business features can dynamically prompt users to complete surveys, feedback loops, or onboarding flows using abstract JSON configurations.
 
-### Key Characteristics
-
-1. **Zero-Polling Profile Injection**: Checked during initial Gateway token verification and cached in JWT payloads, preventing unnecessary runtime API queries.
-2. **Generic Database Tracking**: Registered in `orasaka_user_interceptions` (mapping a `user_id` to an active `interception_type` and `schema_id`).
-3. **Opt-in Passive Activation**: Controlled dynamically by feature flags inside backend configurations.
+**How it works:**
+1. **Zero-Polling** — Interceptions are checked during initial Gateway token verification and cached in JWT payloads
+2. **Database Tracking** — Stored in `orasaka_user_interceptions` (maps `user_id` → `interception_type` + `schema_id`)
+3. **Opt-in Activation** — Controlled by feature flags in `application.yml`
 
 ---
 
-## 📹 Video Generation Architecture & Rendering
+## 📹 Video Generation Pipeline
 
-### 🏛️ Pipeline Topology
+The text-to-video pipeline runs on a dedicated port to isolate heavy GPU workloads:
 
-The Text-to-Video pipeline relies on a local GGUF/Safetensors quantized model loader running on a dedicated port. This decouples video generation traffic from other media execution services:
-
-- **Core Gateway**: Runs on port `8080`.
-- **Text-to-Image (Stable Diffusion) Service**: Runs on port `8085`.
-- **Text-to-Video (LTX-Video) Service**: Runs on port `8086`.
+| Service | Port | Technology |
+|:---|:---:|:---|
+| Gateway | `8080` | Spring Boot + GraphQL |
+| Text-to-Image | `8085` | stable-diffusion.cpp (Apple Metal) |
+| Text-to-Video | `8086` | LTX-Video GGUF (Apple Metal) |
 
 ```mermaid
 graph TD
     UI[orasaka-ui React Canvas] -->|POST /api/v1/ai/video| GW[orasaka-gateway]
-    GW -->|Inject context| SV[OrasakaVideoService]
+    GW -->|Inject context| SV[VideoService]
     SV -->|REST Post| LTR[Local Video Runner Port 8086]
     LTR -->|LTX-Video Checkpoint| GPU[Apple Silicon Metal / GPU]
+
+    classDef client fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#0369a1;
+    classDef bff fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px,color:#6d28d9;
+    classDef core fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#047857;
+    classDef infra fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#b45309;
+
+    class UI client;
+    class GW bff;
+    class SV core;
+    class LTR,GPU infra;
 ```
 
-### 🎨 Frontend Rendering
-
-The client-side canvas checks for `payload.format === 'mp4'` or `payload.url.startsWith('data:video/')`. It then mounts a standard HTML5 video tag with autoplays, controls, and loops:
+The client-side canvas renders video via standard HTML5 `<video>` tags with RFC 2397 Data URLs:
 
 ```tsx
 <video 
@@ -205,56 +236,66 @@ The client-side canvas checks for `payload.format === 'mp4'` or `payload.url.sta
 
 ---
 
+## 🌊 Pipeline Orchestration Patterns
 
-## 🌊 5. High-Density Pipeline Orchestration & Interceptor Lego Pattern
+### Pattern A: Declarative Configuration
 
-### 5.1 The Architecture Principle
-
-Orasaka pipelines are stateless, sequential orchestration layers executing safely over Java 21 Virtual Threads. Instead of mutating or fragmenting core logic into different hardcoded service layers, the framework treats the pipeline as an anemic processing sequence driven by a chain of package-private interceptors (`List<OrasakaContextInterceptor>`).
-
-### ⚙️ 5.2 Pattern A: Dynamic Declarative Routing via Configuration
-
-New, isolated execution pipelines can be instantiated purely through metadata declaration within application configuration boundaries (`application.yml`). This prevents code duplication and keeps internal interceptor strategies strictly sealed.
+New pipelines can be declared purely in `application.yml` — no code changes required:
 
 ```yaml
 orasaka:
   pipelines:
-    fast-chat: # Lightweight profile (No RAG, No heavy security validation)
+    fast-chat:                         # Lightweight — no RAG, no heavy validation
       interceptors:
         - routerInterceptor
         - promptInterceptor
-    secure-enterprise-rag: # Fully enriched contextual enterprise profile
+    secure-enterprise-rag:             # Full enterprise context enrichment
       interceptors:
         - securityContextInterceptor
-        - orasakaRagInterceptor
-        - orasakaMemoryInterceptor
+        - ragInterceptor
+        - memoryInterceptor
         - promptInterceptor
 ```
 
-### 🛠️ 5.3 Pattern B: Programmable Fluent Construction (The Pipeline Builder)
+### Pattern B: Fluent Builder (Runtime)
 
-For contextual testing or runtime isolation, the framework exposes a strict, type-safe Builder pattern to assemble internal implementation blocks:
+For testing or runtime isolation, use the type-safe builder:
 
 ```java
-// Instantiating a specialized high-density pipeline at runtime
-OrasakaOrchestrationPipeline customCodingPipeline = OrasakaPipelineBuilder.create()
+OrchestrationPipeline customPipeline = PipelineBuilder.create()
     .addInterceptor(routerInterceptor)
     .addInterceptor(codeSandboxInterceptor)
     .addInterceptor(promptInterceptor)
     .build();
 ```
 
-### 🔒 5.4 Encapsulation & Concurrency Invariance
+### Encapsulation Rules
 
-- **Absolute Package Privacy**: All individual concrete interceptor definitions must remain package-private within `com.orasaka.core.pipeline`. Only the Orchestrator and the Builder are allowed to be public.
-- **Virtual Thread Purity**: Because interceptors rely entirely on linear functional reduction (`Stream.reduce`), adding or removing nodes into a pipeline layout introduces zero race conditions or thread-local storage leaks.
+- All concrete interceptors are **package-private** within `com.orasaka.core.pipeline`
+- Only `OrchestrationPipeline` and `PipelineBuilder` are public API
+- Pipeline execution uses `Stream.reduce` — zero race conditions, zero thread-local leaks
 
-### 🗂️ 5.5 Externalized Prompt Templates & Resource Templates
+---
 
-To satisfy the strict master craftsmanship rules, all prompt textual matrices, system instructions, and routing guidelines are externalized from Java source code files. They are stored as `.st` (StringTemplate) files in the classpath:
-- `orasaka-core/src/main/resources/prompts/system-refinement.st`: Template for user query refinement and context enrichment.
-- `orasaka-core/src/main/resources/prompts/context-envelope.st`: Structured container format holding user and system metadata matrices.
-- `orasaka-core/src/main/resources/prompts/system-router.st`: Template for intent classification and model routing decisions.
+## 📝 Externalized Prompt Templates
 
-These template resources are loaded dynamically using Spring's `ResourceLoader` and resolved at runtime during cognitive execution loops, preventing hardcoded instructions inside functional classes.
+All prompt text is externalized from Java source code into `.st` (StringTemplate) files:
 
+| Template | Purpose |
+|:---|:---|
+| `prompts/system-refinement.st` | User query refinement and context enrichment |
+| `prompts/context-envelope.st` | Structured container for user and system metadata |
+| `prompts/system-router.st` | Intent classification and model routing decisions |
+
+Templates are loaded via Spring's `ResourceLoader` and resolved at runtime during cognitive execution loops.
+
+---
+
+## 📎 Related Documentation
+
+| Document | Description |
+|:---|:---|
+| [API Reference](API_REFERENCE.md) | Public types, facades, endpoints, and data models |
+| [Glossary](GLOSSARY.md) | Ecosystem terms, patterns, and environment variables |
+| [ADR Log](CONTEXT.md) | 22 Architectural Decision Records |
+| [Business Guide](BUSINESS_IMPLEMENTATION.md) | Step-by-step feature implementation blueprint |

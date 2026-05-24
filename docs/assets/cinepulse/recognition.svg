@@ -1,0 +1,163 @@
+<svg width="750" height="420" viewBox="0 0 750 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="100%" stop-color="#0ea5e9" />
+    </linearGradient>
+    <linearGradient id="eq-grad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+
+    <!-- Clean Shadow -->
+    <filter id="soft-shadow" x="-8%" y="-8%" width="116%" height="116%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0f172a" flood-opacity="0.04" />
+    </filter>
+
+    <!-- Viewport Clip Paths (Strict boundary containment) -->
+    <clipPath id="left-viewport-clip">
+      <rect x="18" y="42" width="300" height="170" rx="10" />
+    </clipPath>
+    <clipPath id="right-viewport-clip">
+      <rect x="18" y="42" width="300" height="170" rx="10" />
+    </clipPath>
+
+    <style><![CDATA[
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+      .ui-font { font-family: 'Inter', sans-serif; }
+      
+      /* Breathing scan box */
+      @keyframes box-breath {
+        0%, 100% { stroke-opacity: 0.3; }
+        50% { stroke-opacity: 0.8; stroke-width: 1.5; }
+      }
+      .scan-box { animation: box-breath 2s infinite ease-in-out; }
+    ]]></style>
+  </defs>
+
+  <!-- Frame Background -->
+  <rect width="750" height="420" rx="16" fill="#f8fafc" />
+  <rect x="0.5" y="0.5" width="749" height="419" rx="15.5" stroke="#e2e8f0" stroke-width="1" />
+
+  <!-- Window Header -->
+  <rect x="0" y="0" width="750" height="44" rx="16" fill="#f1f5f9" />
+  <rect x="0" y="24" width="750" height="20" fill="#f1f5f9" />
+  <line x1="0" y1="44" x2="750" y2="44" stroke="#e2e8f0" stroke-width="1" />
+
+  <!-- Window Controls -->
+  <circle cx="20" cy="22" r="5" fill="#ff5f56" />
+  <circle cx="36" cy="22" r="5" fill="#ffbd2e" />
+  <circle cx="52" cy="22" r="5" fill="#27c93f" />
+
+  <!-- Title Text -->
+  <text x="375" y="27" class="ui-font" font-size="12" font-weight="600" fill="#475569" text-anchor="middle">Media Recognition Panel</text>
+
+  <!-- Split Panel Headers -->
+  <text x="24" y="86" class="ui-font" font-size="17" font-weight="700" fill="#0f172a">Media Recognition Panel</text>
+  <text x="24" y="102" class="ui-font" font-size="11" fill="#64748b">Analyze active screens or capture audio clips to query streaming networks</text>
+
+  <!-- Left Panel: Visual Scan Viewfinder (x: 24 to 360) -->
+  <g transform="translate(24, 120)" class="ui-font">
+    <rect width="336" height="276" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" filter="url(#soft-shadow)" />
+    
+    <!-- Camera Icon path -->
+    <path d="M 18,22 H 21 L 23,19 H 29 L 31,22 H 34 V 30 H 18 Z" stroke="#4f46e5" stroke-width="1.5" stroke-linejoin="round" fill="none" />
+    <circle cx="26" cy="26" r="2.5" stroke="#4f46e5" stroke-width="1.5" fill="none" />
+    <text x="42" y="27" font-size="13" font-weight="700" fill="#4f46e5">Visual Screen Scan</text>
+
+    <!-- Viewport Background -->
+    <rect x="18" y="42" width="300" height="170" rx="10" fill="#09090f" />
+
+    <!-- Clipped Viewport Content to prevent laser line spilling -->
+    <g clip-path="url(#left-viewport-clip)">
+      <!-- Mockup Movie Capture (Interstellar Black Hole) -->
+      <circle cx="168" cy="127" r="40" fill="#050505" stroke="#eab308" stroke-width="2" opacity="0.8" />
+      <ellipse cx="168" cy="127" rx="66" ry="10" fill="none" stroke="#eab308" stroke-dasharray="30 10" stroke-width="2" />
+      <rect class="scan-box" x="90" y="77" width="156" height="100" rx="4" fill="none" stroke="#7c3aed" stroke-width="1.5" />
+      <text x="96" y="93" font-size="9" font-weight="700" fill="#7c3aed">MATCH: INTERSTELLAR (98.4%)</text>
+
+      <!-- Sweeping Laser Scan Line (using native XML animation to avoid CSS translate bugs) -->
+      <rect x="18" y="42" width="300" height="2.5" fill="#0ea5e9">
+        <animate attributeName="y" values="42;208;42" dur="3s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.2;0.95;0.2" dur="3s" repeatCount="indefinite" />
+      </rect>
+    </g>
+
+    <!-- Details Box -->
+    <g transform="translate(18, 222)">
+      <rect width="300" height="42" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+      <text x="12" y="18" font-size="10.5" font-weight="600" fill="#0f172a">Identified: Interstellar (2014) • Paramount</text>
+      <text x="12" y="32" font-size="9" fill="#059669">✓ Available to stream on Prime Video (US)</text>
+    </g>
+  </g>
+
+  <!-- Right Panel: Audio Match Soundwave (x: 390 to 726) -->
+  <g transform="translate(390, 120)" class="ui-font">
+    <rect width="336" height="276" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" filter="url(#soft-shadow)" />
+    
+    <!-- Audio Wave/Mic Icon path -->
+    <rect x="20" y="20" width="6" height="10" rx="3" stroke="#4f46e5" stroke-width="1.5" fill="none" />
+    <path d="M 17,25 A 8,8 0 0,0 29,25 M 23,30 V 33" stroke="#4f46e5" stroke-width="1.5" stroke-linecap="round" />
+    <text x="42" y="27" font-size="13" font-weight="700" fill="#4f46e5">Audio Sound Match</text>
+
+    <!-- Viewport Background -->
+    <rect x="18" y="42" width="300" height="170" rx="10" fill="#09090f" />
+
+    <!-- Clipped Viewport Content to contain equalizer bars -->
+    <g clip-path="url(#right-viewport-clip)">
+      <text x="168" y="70" font-size="10.5" font-weight="700" fill="#0ea5e9" text-anchor="middle">LISTENING &amp; RESOLVING SIGNALS...</text>
+
+      <!-- Equalizer bars group (base anchors at y=200, inverted y-axis to grow upwards without coordinate collapse) -->
+      <g transform="translate(56, 200) scale(1, -1)">
+        <!-- Bar 1 -->
+        <rect x="0" y="0" width="12" height="24" rx="4" fill="url(#eq-grad)">
+          <animate attributeName="height" values="24;110;24" dur="1.2s" begin="0.1s" repeatCount="indefinite" />
+        </rect>
+        <!-- Bar 2 -->
+        <rect x="24" y="0" width="12" height="18" rx="4" fill="url(#eq-grad)">
+          <animate attributeName="height" values="18;90;18" dur="1.0s" begin="0.4s" repeatCount="indefinite" />
+        </rect>
+        <!-- Bar 3 -->
+        <rect x="48" y="0" width="12" height="30" rx="4" fill="url(#eq-grad)">
+          <animate attributeName="height" values="30;120;30" dur="1.4s" begin="0.2s" repeatCount="indefinite" />
+        </rect>
+        <!-- Bar 4 -->
+        <rect x="72" y="0" width="12" height="20" rx="4" fill="url(#eq-grad)">
+          <animate attributeName="height" values="20;80;20" dur="1.1s" begin="0.6s" repeatCount="indefinite" />
+        </rect>
+        <!-- Bar 5 -->
+        <rect x="96" y="0" width="12" height="32" rx="4" fill="url(#eq-grad)">
+          <animate attributeName="height" values="32;130;32" dur="1.3s" begin="0.3s" repeatCount="indefinite" />
+        </rect>
+        <!-- Bar 6 -->
+        <rect x="120" y="0" width="12" height="15" rx="4" fill="url(#eq-grad)">
+          <animate attributeName="height" values="15;95;15" dur="0.9s" begin="0.7s" repeatCount="indefinite" />
+        </rect>
+        <!-- Bar 7 -->
+        <rect x="144" y="0" width="12" height="28" rx="4" fill="url(#eq-grad)">
+          <animate attributeName="height" values="28;115;28" dur="1.5s" begin="0.5s" repeatCount="indefinite" />
+        </rect>
+        <!-- Bar 8 -->
+        <rect x="168" y="0" width="12" height="22" rx="4" fill="url(#eq-grad)">
+          <animate attributeName="height" values="22;100;22" dur="1.2s" begin="0.2s" repeatCount="indefinite" />
+        </rect>
+        <!-- Bar 9 -->
+        <rect x="192" y="0" width="12" height="18" rx="4" fill="url(#eq-grad)">
+          <animate attributeName="height" values="18;125;18" dur="1.1s" begin="0.1s" repeatCount="indefinite" />
+        </rect>
+        <!-- Bar 10 -->
+        <rect x="216" y="0" width="12" height="24" rx="4" fill="url(#eq-grad)">
+          <animate attributeName="height" values="24;105;24" dur="1.3s" begin="0.5s" repeatCount="indefinite" />
+        </rect>
+      </g>
+    </g>
+
+    <!-- Details Box -->
+    <g transform="translate(18, 222)">
+      <rect width="300" height="42" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+      <text x="12" y="18" font-size="10.5" font-weight="600" fill="#0f172a">Audio Track: Hans Zimmer - Cornfield Chase</text>
+      <text x="12" y="32" font-size="9" fill="#059669">✓ Match verified with Interstellar soundtrack sequence</text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,310 @@
+<svg width="800" height="560" viewBox="0 0 800 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Premium Fonts -->
+    <style><![CDATA[
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+      .ui-font { font-family: 'Inter', -apple-system, sans-serif; }
+      
+      /* Subtle breathing animation for active tags */
+      @keyframes soft-pulse {
+        0%, 100% { opacity: 0.8; }
+        50% { opacity: 1; filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.2)); }
+      }
+      .pulse-active { animation: soft-pulse 3s infinite ease-in-out; }
+
+      /* Blinking cursor */
+      @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+      }
+      .cursor { animation: blink 1s infinite steps(2, start); }
+    ]]></style>
+
+    <!-- Gradients -->
+    <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="50%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+    <linearGradient id="cyberpunk-art" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff007f" />
+      <stop offset="100%" stop-color="#7928ca" />
+    </linearGradient>
+    <linearGradient id="space-art" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b132b" />
+      <stop offset="100%" stop-color="#1c2541" />
+    </linearGradient>
+    <linearGradient id="racing-art" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff4b2b" />
+      <stop offset="100%" stop-color="#ff416c" />
+    </linearGradient>
+
+    <!-- Shadows -->
+    <filter id="card-shadow" x="-8%" y="-8%" width="116%" height="116%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0f172a" flood-opacity="0.04" />
+    </filter>
+  </defs>
+
+  <!-- Base Canvas -->
+  <rect width="800" height="560" rx="16" fill="#f8fafc" />
+  <rect x="0.5" y="0.5" width="799" height="559" rx="15.5" stroke="#e2e8f0" stroke-width="1" />
+
+  <!-- Browser Header Bar -->
+  <rect x="0" y="0" width="800" height="44" rx="16" fill="#ffffff" />
+  <rect x="0" y="24" width="800" height="20" fill="#ffffff" />
+  <line x1="0" y1="44" x2="800" y2="44" stroke="#e2e8f0" stroke-width="1" />
+
+  <!-- Window controls -->
+  <circle cx="20" cy="22" r="5" fill="#ff5f56" />
+  <circle cx="36" cy="22" r="5" fill="#ffbd2e" />
+  <circle cx="52" cy="22" r="5" fill="#27c93f" />
+
+  <!-- URL Bar -->
+  <rect x="200" y="8" width="400" height="28" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1" />
+  <text x="400" y="26" class="ui-font" font-size="11" fill="#64748b" text-anchor="middle">https://cinepulse.orasaka.ai/trends</text>
+
+  <!-- SIDEBAR (Width: 200) -->
+  <rect x="0" y="44" width="200" height="516" fill="#ffffff" />
+  <line x1="200" y1="44" x2="200" y2="560" stroke="#e2e8f0" stroke-width="1" />
+
+  <!-- Brand Title -->
+  <g transform="translate(24, 76)">
+    <!-- Custom Vector Logo Mark (2 overlapping triangles) -->
+    <path d="M 0,-14 L 14,0 L 0,14 Z" fill="url(#brand-grad)" />
+    <path d="M 8,-10 L 18,0 L 8,10 Z" fill="#6366f1" opacity="0.6" />
+    <text x="28" y="6" class="ui-font" font-size="18" font-weight="800" fill="#0f172a" letter-spacing="-0.5">CinePulse</text>
+  </g>
+  <text x="24" y="106" class="ui-font" font-size="8" font-weight="700" fill="#94a3b8" letter-spacing="1.5">BY ORASAKA CORE</text>
+
+  <!-- Sidebar Nav items -->
+  <g transform="translate(16, 134)" class="ui-font">
+    <!-- Active Item: Dashboard -->
+    <rect width="168" height="36" rx="8" fill="#f5f3ff" />
+    <rect width="4" height="36" rx="2" fill="#6366f1" />
+    <!-- Grid Icon -->
+    <path d="M 18,12 H 24 V 18 H 18 Z M 28,12 H 34 V 18 H 28 Z M 18,22 H 24 V 28 H 18 Z M 28,22 H 34 V 28 H 28 Z" stroke="#6366f1" stroke-width="1.8" stroke-linejoin="round" />
+    <text x="44" y="23" font-size="13" font-weight="600" fill="#6366f1">Dashboard</text>
+
+    <!-- Item 2: Media Recognition -->
+    <g transform="translate(0, 44)">
+      <!-- Search / Scan Icon -->
+      <path d="M 23,23 A 5,5 0 1,1 28,18 M 31.5,26.5 L 27.5,22.5" stroke="#475569" stroke-width="1.8" stroke-linecap="round" fill="none" />
+      <text x="44" y="23" font-size="13" font-weight="500" fill="#475569">Media Match</text>
+    </g>
+
+    <!-- Item 3: Watchlist -->
+    <g transform="translate(0, 88)">
+      <!-- Bookmark Icon -->
+      <path d="M 19,12 V 28 L 26,23 L 33,28 V 12 Z" stroke="#475569" stroke-width="1.8" stroke-linejoin="round" fill="none" />
+      <text x="44" y="23" font-size="13" font-weight="500" fill="#475569">Watchlist</text>
+    </g>
+
+    <!-- Item 4: Scene Insertion -->
+    <g transform="translate(0, 132)">
+      <!-- Film Camera Icon -->
+      <path d="M 18,14 H 28 V 26 H 18 Z M 28,17 L 34,14 V 26 L 28,23 Z" stroke="#475569" stroke-width="1.8" stroke-linejoin="round" fill="none" />
+      <text x="44" y="23" font-size="13" font-weight="500" fill="#475569">Scene Insertion</text>
+    </g>
+
+    <!-- Item 5: Preferences -->
+    <g transform="translate(0, 176)">
+      <!-- Gear Icon -->
+      <circle cx="26" cy="20" r="4" stroke="#475569" stroke-width="1.8" fill="none" />
+      <path d="M 26,12 V 14 M 26,26 V 28 M 18,20 H 20 M 32,20 H 34" stroke="#475569" stroke-width="1.8" stroke-linecap="round" />
+      <text x="44" y="23" font-size="13" font-weight="500" fill="#475569">Preferences</text>
+    </g>
+  </g>
+
+  <!-- Sidebar User Profile (Bottom) -->
+  <g transform="translate(16, 492)" class="ui-font">
+    <rect width="168" height="52" rx="12" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+    <circle cx="28" cy="26" r="14" fill="url(#brand-grad)" />
+    <text x="28" y="30" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle">JD</text>
+    <text x="52" y="22" font-size="12" font-weight="600" fill="#0f172a">John Doe</text>
+    <text x="52" y="35" font-size="9" fill="#64748b">Premium • EN</text>
+  </g>
+
+
+  <!-- MAIN WORKSPACE -->
+
+  <!-- Top bar header elements -->
+  <g transform="translate(224, 60)" class="ui-font">
+    <text x="0" y="22" font-size="20" font-weight="700" fill="#0f172a">Cognitive Trends</text>
+    <text x="0" y="38" font-size="12" fill="#475569">AI-compiled SVOD charts based on preferences and scan history</text>
+  </g>
+
+  <!-- Main Multi-modal Action Triggers -->
+  <g transform="translate(540, 68)" class="ui-font">
+    <!-- Visual Scan Trigger -->
+    <g class="pulse-active">
+      <rect x="0" y="0" width="112" height="32" rx="8" fill="#ffffff" stroke="#6366f1" stroke-width="1.2" />
+      <!-- Camera Path Icon -->
+      <path d="M 18,17 H 22 L 24,14 H 30 L 32,17 H 36 V 26 H 18 Z" stroke="#6366f1" stroke-width="1.2" fill="none" />
+      <circle cx="27" cy="21" r="2.5" stroke="#6366f1" stroke-width="1.2" fill="none" />
+      <text x="44" y="20" font-size="10.5" font-weight="600" fill="#6366f1">Visual Scan</text>
+    </g>
+
+    <!-- Sound Match Trigger -->
+    <g transform="translate(122, 0)">
+      <rect x="0" y="0" width="112" height="32" rx="8" fill="#ffffff" stroke="#0ea5e9" stroke-width="1.2" />
+      <!-- Microphone Path Icon -->
+      <rect x="22" y="14" width="6" height="10" rx="3" stroke="#0ea5e9" stroke-width="1.2" fill="none" />
+      <path d="M 19,19 A 8,8 0 0,0 31,19 M 25,24 V 27" stroke="#0ea5e9" stroke-width="1.2" stroke-linecap="round" />
+      <text x="38" y="20" font-size="10.5" font-weight="600" fill="#0ea5e9">Sound Match</text>
+    </g>
+  </g>
+
+  <!-- User Wish Input Bar (French romantic cozy evening query) -->
+  <g transform="translate(224, 110)">
+    <rect width="554" height="52" rx="12" fill="#ffffff" stroke="#6366f1" stroke-width="1.5" />
+    <!-- Magnifying Glass Icon -->
+    <path d="M 18,19 A 5,5 0 1,1 23,14 M 26.5,22.5 L 22.5,18.5" stroke="#6366f1" stroke-width="1.8" stroke-linecap="round" fill="none" transform="translate(6, 12)" />
+    <!-- User Input Wish Text on 2 lines -->
+    <text x="38" y="22" class="ui-font" font-size="11" font-weight="500" fill="#0f172a">I want a movie for tonight with my girlfriend for a relaxing evening</text>
+    <text x="38" y="38" class="ui-font" font-size="11" font-weight="500" fill="#0f172a">together for after dinner. What do you recommend?</text>
+    <!-- Blinking Input Cursor at the end of the text on second line -->
+    <rect class="cursor" x="346" y="27" width="1.5" height="13" fill="#6366f1" />
+    <!-- Beautiful Submit/Send Button on the right -->
+    <g transform="translate(506, 8)" cursor="pointer">
+      <rect width="40" height="36" rx="8" fill="url(#brand-grad)" />
+      <!-- White Arrow pointing to the right/send icon -->
+      <path d="M 16,18 H 25 M 21,13 L 26,18 L 21,23" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+  </g>
+
+  <!-- Content recommendations grid (Row of 3 cards wrapped in translation groups, pushed down by search bar) -->
+
+  <g transform="translate(224, 178)">
+    <g class="ui-font">
+      <animateTransform attributeName="transform" type="translate" values="0,0; 0,-4; 0,0" dur="6s" repeatCount="indefinite" />
+      <rect width="174" height="240" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" filter="url(#soft-shadow)" />
+      <!-- Vector Skyline Artwork -->
+      <path d="M 0,12 A 12,12 0 0,1 12,0 L 162,0 A 12,12 0 0,1 174,12 L 174,104 L 0,104 Z" fill="url(#cyberpunk-art)" />
+      <path d="M 20,104 L 20,40 L 40,30 L 60,50 L 60,104 Z" fill="#4d127a" opacity="0.4" />
+      <path d="M 50,104 L 50,20 L 70,10 L 90,30 L 90,104 Z" fill="#4d127a" opacity="0.6" />
+      <path d="M 80,104 L 80,50 L 110,35 L 140,60 L 140,104 Z" fill="#310d54" opacity="0.8" />
+      <circle cx="130" cy="36" r="14" fill="#ffdd67" opacity="0.9" />
+      
+      <!-- Badges -->
+      <rect x="10" y="10" width="42" height="18" rx="4" fill="#e50914" />
+      <text x="31" y="22" font-size="7.5" font-weight="800" fill="#ffffff" text-anchor="middle">NETFLIX</text>
+      
+      <rect x="56" y="10" width="68" height="18" rx="4" fill="#1da1f2" />
+      <text x="90" y="22" font-size="7.5" font-weight="800" fill="#ffffff" text-anchor="middle">🐦 BUZZ X</text>
+      
+      <rect x="128" y="10" width="36" height="18" rx="4" fill="#f0fdf4" stroke="#10b981" stroke-width="1" />
+      <text x="146" y="22" font-size="8.5" font-weight="800" fill="#10b981" text-anchor="middle">97%</text>
+
+      <!-- Details -->
+      <text x="12" y="126" font-size="12.5" font-weight="700" fill="#0f172a">Cyberpunk: Edgerunners</text>
+      <text x="12" y="142" font-size="9.5" font-weight="600" fill="#4f46e5">Sci-Fi / Anime / Action</text>
+      <text x="12" y="160" font-size="9.5" fill="#475569">A street kid attempts to</text>
+      <text x="12" y="173" font-size="9.5" fill="#475569">survive in a technology-</text>
+      <text x="12" y="186" font-size="9.5" fill="#475569">obsessed city of future...</text>
+
+      <!-- Rating -->
+      <text x="12" y="218" font-size="11" fill="#ca8a04">★★★★★</text>
+      <text x="80" y="218" font-size="10" font-weight="600" fill="#64748b">8.6 (IMDb)</text>
+    </g>
+  </g>
+
+  <!-- Card 2: Anatomy of a Fall -->
+  <g transform="translate(414, 178)">
+    <g class="ui-font">
+      <animateTransform attributeName="transform" type="translate" values="0,0; 0,-4; 0,0" dur="6s" begin="1.5s" repeatCount="indefinite" />
+      <rect width="174" height="240" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" filter="url(#soft-shadow)" />
+      <!-- Space Vector Artwork -->
+      <path d="M 0,12 A 12,12 0 0,1 12,0 L 162,0 A 12,12 0 0,1 174,12 L 174,104 L 0,104 Z" fill="url(#space-art)" />
+      <circle cx="87" cy="52" r="22" fill="#0ea5e9" opacity="0.8" />
+      <ellipse cx="87" cy="52" rx="36" ry="6" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.6" transform="rotate(-15 87 52)" />
+      <path d="M 120,40 L 132,38 L 126,45 Z" fill="#ffffff" opacity="0.9" />
+      <circle cx="50" cy="30" r="1" fill="#ffffff" />
+      <circle cx="140" cy="70" r="1" fill="#ffffff" />
+
+      <!-- Badges -->
+      <rect x="10" y="10" width="42" height="18" rx="4" fill="#00a8e1" />
+      <text x="31" y="22" font-size="7.5" font-weight="800" fill="#ffffff" text-anchor="middle">PRIME</text>
+      
+      <rect x="56" y="10" width="68" height="18" rx="4" fill="#d97706" />
+      <text x="90" y="22" font-size="7.5" font-weight="800" fill="#ffffff" text-anchor="middle">🏆 PRIX</text>
+      
+      <rect x="128" y="10" width="36" height="18" rx="4" fill="#f0fdf4" stroke="#10b981" stroke-width="1" />
+      <text x="146" y="22" font-size="8.5" font-weight="800" fill="#10b981" text-anchor="middle">91%</text>
+
+      <!-- Details -->
+      <text x="12" y="126" font-size="12.5" font-weight="700" fill="#0f172a">Anatomy of a Fall</text>
+      <text x="12" y="142" font-size="9.5" font-weight="600" fill="#0284c7">Drama / Crime / Mystery</text>
+      <text x="12" y="160" font-size="9.5" fill="#475569">A woman is suspected of</text>
+      <text x="12" y="173" font-size="9.5" fill="#475569">murder, and her blind son</text>
+      <text x="12" y="186" font-size="9.5" fill="#475569">is the sole witness...</text>
+
+      <text x="12" y="218" font-size="11" fill="#ca8a04">★★★★★</text>
+      <text x="80" y="218" font-size="10" font-weight="600" fill="#64748b">7.8 (IMDb)</text>
+    </g>
+  </g>
+
+  <!-- Card 3: Past Lives -->
+  <g transform="translate(604, 178)">
+    <g class="ui-font">
+      <animateTransform attributeName="transform" type="translate" values="0,0; 0,-4; 0,0" dur="6s" begin="3s" repeatCount="indefinite" />
+      <rect width="174" height="240" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" filter="url(#soft-shadow)" />
+      <!-- Vector Formula 1 Track Artwork -->
+      <path d="M 0,12 A 12,12 0 0,1 12,0 L 162,0 A 12,12 0 0,1 174,12 L 174,104 L 0,104 Z" fill="url(#racing-art)" />
+      <path d="M 20,80 L 70,30 L 110,65 L 160,20" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" fill="none" stroke-opacity="0.8" />
+      <circle cx="160" cy="20" r="4" fill="#ffffff" />
+      <path d="M 36,80 H 136 L 116,96 H 56 Z" fill="#ffffff" opacity="0.3" />
+
+      <!-- Badges -->
+      <rect x="10" y="10" width="42" height="18" rx="4" fill="#1f2937" />
+      <text x="31" y="22" font-size="7.5" font-weight="800" fill="#ffffff" text-anchor="middle">MUBI</text>
+      
+      <rect x="56" y="10" width="68" height="18" rx="4" fill="#7c3aed" />
+      <text x="90" y="22" font-size="7.5" font-weight="800" fill="#ffffff" text-anchor="middle">✨ GEM</text>
+      
+      <rect x="128" y="10" width="36" height="18" rx="4" fill="#f0fdf4" stroke="#10b981" stroke-width="1" />
+      <text x="146" y="22" font-size="8.5" font-weight="800" fill="#10b981" text-anchor="middle">89%</text>
+
+      <!-- Details -->
+      <text x="12" y="126" font-size="12.5" font-weight="700" fill="#0f172a">Past Lives</text>
+      <text x="12" y="142" font-size="9.5" font-weight="600" fill="#b45309">Romance / Drama</text>
+      <text x="12" y="160" font-size="9.5" fill="#475569">Two childhood friends are</text>
+      <text x="12" y="173" font-size="9.5" fill="#475569">reunited in New York,</text>
+      <text x="12" y="186" font-size="9.5" fill="#475569">confronting destiny...</text>
+
+      <text x="12" y="218" font-size="11" fill="#ca8a04">★★★★★</text>
+      <text x="80" y="218" font-size="10" font-weight="600" fill="#64748b">8.4 (IMDb)</text>
+    </g>
+  </g>
+
+
+  <!-- COGNITIVE PANEL -->
+  <g transform="translate(224, 434)">
+    <rect width="554" height="106" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" filter="url(#soft-shadow)" />
+    <rect x="0" y="0" width="4" height="106" rx="2" fill="url(#brand-grad)" />
+
+    <text x="18" y="22" class="ui-font" font-size="12.5" font-weight="700" fill="#4f46e5">Cognitive Pipeline Interception Analysis</text>
+    
+    <g class="anim-pulse">
+      <rect x="496" y="10" width="44" height="16" rx="4" fill="#dcfce7" stroke="#10b981" stroke-width="1" />
+      <text x="518" y="21" class="ui-font" font-size="8" font-weight="800" fill="#15803d" text-anchor="middle">ACTIVE</text>
+    </g>
+
+    <text x="18" y="42" class="ui-font" font-size="10.5" font-weight="600" fill="#1e293b">User context resolved successfully (EN language, Tech/Sci-Fi affinities, zero exclusions).</text>
+    <text x="18" y="58" class="ui-font" font-size="10.5" fill="#475569">The system compiled your matrix dynamically, matching 3 streams. Cyberpunk: Edgerunners scored</text>
+    <text x="18" y="72" class="ui-font" font-size="10.5" fill="#475569">highest due to high correlation with anime/tech affinity. Sound &amp; screen search history resolved.</text>
+
+    <g transform="translate(18, 82)" class="ui-font">
+      <rect x="0" y="0" width="70" height="16" rx="4" fill="#f1f5f9" />
+      <text x="35" y="11" font-size="8" font-weight="600" fill="#475569" text-anchor="middle">model: llama3</text>
+
+      <rect x="76" y="0" width="90" height="16" rx="4" fill="#ecfeff" />
+      <text x="121" y="11" font-size="8" font-weight="600" fill="#0891b2" text-anchor="middle">interceptor: 4-stage</text>
+
+      <rect x="172" y="0" width="96" height="16" rx="4" fill="#f0fdf4" />
+      <text x="220" y="11" font-size="8" font-weight="600" fill="#16803d" text-anchor="middle">Cache State: PASSIVE</text>
+
+      <rect x="274" y="0" width="80" height="16" rx="4" fill="#fdf2f8" />
+      <text x="314" y="11" font-size="8" font-weight="600" fill="#db2777" text-anchor="middle">latency: 42ms</text>
+    </g>
+  </g>
+</svg>

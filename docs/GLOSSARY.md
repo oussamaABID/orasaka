@@ -1,79 +1,165 @@
-# Orasaka Glossary
+# Glossary
 
-| Term | Definition | Role in Ecosystem |
-| :--- | :--- | :--- |
-| **CORE** | Cognitive Orchestration & Retrieval Engine (`orasaka-core`). | The AI Orchestration brain of the Orasaka ecosystem. |
-| **BFF** | Backend-for-Frontend (`orasaka-gateway`). | The GraphQL gateway layer mediating between Core and UI. |
-| **BFF Router Proxy** | Next.js API Routes (`/api/graphql` and `/api/chat/stream/[conversationId]`). | Proxies browser requests, handles token injection, and resolves CORS on the server side. |
-| **RBAC** | Role-Based Access Control (`orasaka-identity`). | Identity management using Java 21 Sealed Interfaces. |
-| **Engine** | The `AbstractOrasakaEngine` and its implementations. | Bridges Spring AI models with high-level agentic logic. |
-| **Facade** | The `OrasakaAiClient`. | Unified developer entry point for all AI interactions. |
-| **Bridge** | Architectural pattern (Bridge Pattern 2.0). | Decouples Orasaka from external AI frameworks. |
-| **ToolRegistry** | Registry for local Java methods. | Enables LLMs to invoke native Java logic as "tools". |
-| **KnowledgeService** | RAG abstraction for Orasaka. | Orchestrates vector retrieval without direct storage binding. |
-| **MCP** | Model Context Protocol. | Standard for integrating external context and tools. |
-| **Tools Module** | The `orasaka-tools` module. | Holds concrete implementations of MCP orchestrators and tool registries. |
-| **OrasakaContext** | Immutable request-level contextual envelope (`OrasakaContext`). | Transfers thread-safe user preferences and session authorities to the Core. |
-| **Virtual Thread Executor** | dedicated virtual-thread executor (`newVirtualThreadPerTaskExecutor()`). | Runs heavy non-blocking I/O operations and AI calls with near-zero memory footprint. |
-| **Role** | Sealed interface hierarchical roles. | Enforces type-safe User, Admin, and Guest roles with dynamic authority resolution. |
-| **Passive Multi-Tier Caching** | Configuration-driven cache wrapping. | Intercepts tool execution to resolve cached results via fast local memory (Caffeine) or cross-node persistent storage (PostgreSQL). |
-| **Background RAG Ingestion** | Asynchronous pipeline. | Scans and indexes RAG source records into the vector database dynamically via context interceptor executions. |
-| **OrasakaChunker / Strategies** | Text-splitting algorithm registry. | Slices raw content strings into clean vector documents via plain text paragraph, markdown headers, or JSON array chunkers. |
-| **Ops Consolidation** | Core infrastructure directory isolation (`/ops`). | Separates docker layouts, postgres schemas, scripts, and HTTP tests from application code boundaries. |
-| **Verification Token** | Hash-based registration validation (`orasaka_verification_tokens`). | Enforces secure, passive double opt-in account enablement. |
-| **Interception Registry** | Contextual interception mapping (`orasaka_user_interceptions`). | Stores active session interruption events (onboarding, reviews) resolved dynamically during login context queries. |
-| **Video Engine** | Local sovereign Text-to-Video engine powered by quantized LTX-Video. | Decoupled generation node running on port 8086. |
-| **StringTemplate (.st)** | Externalized template format for prompt definitions and instructions. | Separates prompt instructions from Java functional source code. |
-| **Context-Matrix Orchestration Pipeline** | Chain of ordered context enrichment and refiner interceptor beans. | Sequential flow resolving user, system, refiner, and router contexts. |
+> Quick reference for Orasaka ecosystem terminology, architectural patterns, and environment variables.
+
+---
+
+## Core Concepts
+
+| Term | Definition | Module |
+|:---|:---|:---|
+| **CORE** | Cognitive Orchestration & Retrieval Engine | `orasaka-core` |
+| **BFF** | Backend-for-Frontend gateway layer | `orasaka-gateway` |
+| **BFF Router Proxy** | Next.js API Routes (`/api/graphql`, `/api/chat/stream/[conversationId]`) that proxy browser requests, inject tokens, and resolve CORS | `orasaka-ui` |
+| **RBAC** | Role-Based Access Control using Java 21 Sealed Interfaces | `orasaka-identity` |
+
+---
+
+## Architecture Patterns
+
+| Term | What it is | Why it matters |
+|:---|:---|:---|
+| **Bridge Pattern 2.0** | Wraps all Spring AI framework models inside Orasaka-native abstractions | Prevents vendor lock-in; external modules only see `AiClient` |
+| **Ports & Adapters** | Core defines interfaces (ports); tools provides implementations (adapters) | Keeps `orasaka-core` 100% stateless and web-agnostic |
+| **Context-Matrix Pipeline** | 4-stage ordered interceptor chain processing every request | Enables modular prompt enrichment without engine modification |
+| **Passive Multi-Tier Caching** | Configuration-driven cache wrapping (Caffeine → PostgreSQL) | Reduces LLM costs, cuts response latency, enables cross-node sharing |
+| **Server-Driven UI (SDUI)** | `OperationGraph` compiled by `GraphEngine` with polymorphic `NodeState` | Backend controls exactly what the frontend renders |
+
+---
+
+## Key Classes & Records
+
+| Term | Class | Role |
+|:---|:---|:---|
+| **Engine** | `AbstractEngine` | Bridges Spring AI models with high-level agentic logic |
+| **Facade** | `AiClient` | Unified developer entry point for all AI interactions |
+| **Context** | `Context` record | Immutable request envelope carrying user preferences and security privileges |
+| **Authority** | `Authority` record | Single security role name (e.g., `"ROLE_USER"`) used for thread-safe authority checks |
+| **Role** | `Role` sealed interface | Type-safe User, Admin, Guest hierarchy in `orasaka-identity` |
+| **ToolRegistry** | `ToolRegistry` interface | Registry for mapping local Java methods as LLM-callable tools |
+| **KnowledgeService** | `KnowledgeService` | RAG abstraction — orchestrates vector retrieval without direct storage binding |
+| **MCP** | Model Context Protocol | Standard for integrating external context and tools |
+| **Chunker / Strategies** | `Chunker`, `ChunkingStrategies` | Text-splitting algorithm registry (plain text, markdown, JSON array) |
+| **Virtual Thread Executor** | `newVirtualThreadPerTaskExecutor()` | Runs heavy I/O and AI calls with near-zero memory footprint |
+| **StringTemplate (.st)** | Externalized template format | Separates prompt instructions from Java source code |
+| **Media Pre-Processor Ports** | `AudioPreProcessor`, `ImagePreProcessor`, `VideoPreProcessor` | Port interfaces defining media ingestion contracts |
+
+---
+
+## Infrastructure Terms
+
+| Term | What it is |
+|:---|:---|
+| **Ops Consolidation** | Infrastructure directory (`/ops`) isolating Docker, Postgres schemas, scripts, and HTTP tests from application code |
+| **Verification Token** | SHA-256 hashed registration token in `orasaka_verification_tokens` for secure double opt-in |
+| **Interception Registry** | `orasaka_user_interceptions` table storing active session interruption events (onboarding, reviews) |
+| **Video Engine** | Local sovereign text-to-video engine powered by quantized LTX-Video on port `8086` |
+| **Background RAG Ingestion** | `BackgroundScheduler` — async pipeline that indexes RAG sources into the vector database |
+
+---
 
 ## Environment Variables
 
-| Variable | Description | Default Value | Security Level |
-| :--- | :--- | :--- | :--- |
-| **PORT** | Port on which the Spring Boot Gateway server listens. | `8080` | Low |
-| **ORASAKA_GATEWAY_CORS_ALLOWED_ORIGINS** | Comma-separated list of allowed origins for Gateway CORS configuration. | `http://localhost:3000` | Medium |
-| **SPRING_DATASOURCE_URL** | JDBC database URL connecting Gateway to PostgreSQL database. | `jdbc:postgresql://localhost:5432/orasaka_db` | Medium |
-| **SPRING_DATASOURCE_USERNAME** | Username for PostgreSQL database login credentials. | `orasaka_admin` | Medium |
-| **SPRING_DATASOURCE_PASSWORD** | Password for PostgreSQL database login credentials. | `orasaka_secure_pass` | High (Secret) |
-| **SPRING_SQL_INIT_MODE** | DB initialization mode control. | `never` | Low |
-| **SPRING_GRAPHQL_GRAPHIQL_ENABLED** | Enables GraphiQL query console playground. | `true` | Low |
-| **SPRING_AI_OLLAMA_BASE_URL** | Base URL for Spring AI auto-configured Ollama client. | `http://localhost:11434` | Low |
-| **SPRING_AI_OLLAMA_CHAT_MODEL** | Model version used for default chat generation. | `phi3:mini` | Low |
-| **SPRING_AI_OLLAMA_IMAGE_MODEL** | Model version used for default image generation. | `stable-diffusion-xe` | Low |
-| **ORASAKA_DEFAULT_PROVIDER** | Default AI model provider (e.g. `ollama`, `openai`). | `ollama` | Low |
-| **ORASAKA_OLLAMA_BASE_URL** | Target base endpoint for running local Ollama model instance. | `http://localhost:11434` | Low |
-| **ORASAKA_OLLAMA_MODEL** | Running local Ollama model identifier. | `llama3:8b` | Low |
-| **ORASAKA_OLLAMA_EMBEDDING_MODEL** | Embedding model identifier used inside local Ollama instance. | `nomic-embed-text:latest` | Low |
-| **ORASAKA_OLLAMA_TEMPERATURE** | Default temperature for Ollama model inference. | `0.7` | Low |
-| **OPENAI_API_KEY** | Credentials token for accessing upstream OpenAI models. | `your_openai_api_key_placeholder` | High (Secret) |
-| **ORASAKA_OPENAI_BASE_URL** | Base URL for OpenAI API (or custom proxies). | `https://api.openai.com/v1` | Low |
-| **ORASAKA_OPENAI_MODEL** | OpenAI model identifier used for core queries. | `gpt-4o` | Low |
-| **ORASAKA_OPENAI_TEMPERATURE** | Temperature parameter for OpenAI model inference. | `0.7` | Low |
-| **ORASAKA_ORCHESTRATION_ENABLED** | Enables Context Enrichment & Prompt Refinement pipeline. | `true` | Low |
-| **ORASAKA_USER_CONTEXT_ENABLED** | Enriches prompts with user-tenant preferences/RBAC attributes. | `true` | Low |
-| **ORASAKA_SYSTEM_CONTEXT_ENABLED** | Enriches prompts with active system metrics and environment parameters. | `true` | Low |
-| **ORASAKA_REFINER_ENABLED** | Resolves fuzzy queries against conversation history. | `true` | Low |
-| **ORASAKA_REFINER_PROVIDER** | Model provider targeting refiner execution (e.g., `openai`). | `openai` | Low |
-| **ORASAKA_REFINER_MODEL** | Specific model variant executing prompt refiner. | `gpt-4-turbo` | Low |
-| **ORASAKA_REFINER_TEMPERATURE** | Temperature parameter for Refiner model inference. | `0.2` | Low |
-| **ORASAKA_ROUTER_PROVIDER** | Model provider evaluating user intents (e.g., `ollama`). | `ollama` | Low |
-| **ORASAKA_ROUTER_MODEL** | Model executing query router intent analysis. | `llama3` | Low |
-| **ORASAKA_ROUTER_TEMPERATURE** | Temperature parameter for Router model inference. | `0.0` | Low |
-| **ORASAKA_EMAIL_VERIFICATION_ENABLED** | Requires email confirmation code validation before enabling user account logins. | `true` | Low |
-| **ORASAKA_INTERCEPTIONS_ENABLED** | Triggers validation flow intercepts (onboarding, reviews) on session start. | `true` | Low |
-| **ORASAKA_RATE_LIMIT_ENABLED** | Enforces rate limiting tier checks on active sessions. | `false` | Low |
-| **ORASAKA_REDIS_URL** | Target connection URL for distributed rate limiting memory. | `redis://localhost:6379` | Medium |
-| **ORASAKA_RATE_LIMIT_DEFAULT_TIER** | Default fallback tier assigned to newly registered users. | `free` | Low |
-| **LOGGING_LEVEL_ROOT** | Global root logger stdout filter level. | `INFO` | Low |
-| **LOGGING_LEVEL_ORASAKA** | Specific logging filter level targeting com.orasaka packages. | `DEBUG` | Low |
-| **LOGGING_LEVEL_SECURITY** | Logging level for Spring Security packages. | `DEBUG` | Low |
-| **NEXTAUTH_SECRET** | NextAuth signature key for securing server-side session JWTs. | `a_very_secure_secret_key_for_testing` | High (Secret) |
-| **NEXTAUTH_URL** | Base callback canonical URL for the UI application server. | `http://localhost:3000` | Low |
-| **GATEWAY_URL** | Target BFF address connecting Next.js API routes with spring-gateway. | `http://localhost:8080` | Low |
-| **GITHUB_ID** / **GITHUB_SECRET** | Third-party GitHub OAuth credentials. | *(Empty)* | High (Secret) |
-| **GOOGLE_CLIENT_ID** / **GOOGLE_CLIENT_SECRET** | Third-party Google OAuth credentials. | *(Empty)* | High (Secret) |
-| **ORASAKA_SECURITY_DEV_BYPASS_ID** | Mock user ID used to bypass authentication during local development. | `user-mock` | Medium |
-| **ORASAKA_SECURITY_DEV_BYPASS_ENABLED** | Toggle to enable mock user authentication bypass in development. | `true` | Medium |
-| **ORASAKA_VIDEO_BASE_URL** | Target base endpoint for running local LTX-Video instance. | `http://localhost:8086` | Low |
-| **ORASAKA_VIDEO_MODEL** | Running local video model identifier. | `ltx-video` | Low |
+### Gateway & Server
 
+| Variable | Default | Description |
+|:---|:---|:---|
+| `PORT` | `8080` | Spring Boot Gateway listen port |
+| `ORASAKA_GATEWAY_CORS_ALLOWED_ORIGINS` | `http://localhost:3000` | CORS allowed origins (comma-separated) |
+
+### Database
+
+| Variable | Default | Security |
+|:---|:---|:---|
+| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/orasaka_db` | Medium |
+| `SPRING_DATASOURCE_USERNAME` | `orasaka_admin` | Medium |
+| `SPRING_DATASOURCE_PASSWORD` | `orasaka_secure_pass` | 🔴 Secret |
+| `SPRING_SQL_INIT_MODE` | `never` | Low |
+| `SPRING_GRAPHQL_GRAPHIQL_ENABLED` | `true` | Low |
+
+### AI Models (Ollama)
+
+| Variable | Default | Description |
+|:---|:---|:---|
+| `ORASAKA_DEFAULT_PROVIDER` | `ollama` | Global active AI provider |
+| `SPRING_AI_OLLAMA_BASE_URL` | `http://localhost:11434` | Spring AI auto-configured Ollama URL |
+| `SPRING_AI_OLLAMA_CHAT_MODEL` | `phi3:mini` | Default chat model |
+| `ORASAKA_OLLAMA_BASE_URL` | `http://localhost:11434` | Orasaka Ollama endpoint |
+| `ORASAKA_OLLAMA_MODEL` | `llama3:8b` | Running local model identifier |
+| `ORASAKA_OLLAMA_EMBEDDING_MODEL` | `nomic-embed-text:latest` | Embedding model |
+| `ORASAKA_OLLAMA_TEMPERATURE` | `0.7` | Default inference temperature |
+
+### AI Models (OpenAI)
+
+| Variable | Default | Security |
+|:---|:---|:---|
+| `OPENAI_API_KEY` | — | 🔴 Secret |
+| `ORASAKA_OPENAI_BASE_URL` | `https://api.openai.com/v1` | Low |
+| `ORASAKA_OPENAI_MODEL` | `gpt-4o` | Low |
+| `ORASAKA_OPENAI_TEMPERATURE` | `0.7` | Low |
+
+### Pipeline Orchestration
+
+| Variable | Default | Description |
+|:---|:---|:---|
+| `ORASAKA_ORCHESTRATION_ENABLED` | `true` | Context enrichment pipeline |
+| `ORASAKA_USER_CONTEXT_ENABLED` | `true` | User preferences injection |
+| `ORASAKA_SYSTEM_CONTEXT_ENABLED` | `true` | System metrics injection |
+| `ORASAKA_REFINER_ENABLED` | `false` | Query refinement against history |
+| `ORASAKA_REFINER_PROVIDER` | `openai` | Refiner model provider |
+| `ORASAKA_REFINER_MODEL` | `gpt-4-turbo` | Refiner model variant |
+| `ORASAKA_REFINER_TEMPERATURE` | `0.2` | Refiner temperature |
+| `ORASAKA_ROUTER_PROVIDER` | `ollama` | Router model provider |
+| `ORASAKA_ROUTER_MODEL` | `llama3.1:8b` | Router intent model |
+| `ORASAKA_ROUTER_TEMPERATURE` | `0.0` | Router temperature (deterministic) |
+
+### Identity & Security
+
+| Variable | Default | Security |
+|:---|:---|:---|
+| `ORASAKA_EMAIL_VERIFICATION_ENABLED` | `true` | Low |
+| `ORASAKA_INTERCEPTIONS_ENABLED` | `true` | Low |
+| `ORASAKA_RATE_LIMIT_ENABLED` | `false` | Low |
+| `ORASAKA_REDIS_URL` | `redis://localhost:6379` | Medium |
+| `ORASAKA_RATE_LIMIT_DEFAULT_TIER` | `free` | Low |
+| `ORASAKA_SECURITY_DEV_BYPASS_ENABLED` | `true` | Medium |
+| `ORASAKA_SECURITY_DEV_BYPASS_ID` | `user-mock` | Medium |
+
+### Media Generation
+
+| Variable | Default | Description |
+|:---|:---|:---|
+| `ORASAKA_VIDEO_BASE_URL` | `http://localhost:8086` | LTX-Video runner endpoint |
+| `ORASAKA_VIDEO_MODEL` | `ltx-video` | Video model identifier |
+| `ORASAKA_LOCALAI_BASE_URL` | `http://localhost:8085` | stable-diffusion.cpp endpoint |
+| `ORASAKA_LOCALAI_API_KEY` | `not-required` | Not required for local mode |
+| `SPRING_AI_OLLAMA_IMAGE_MODEL` | `stable-diffusion-xe` | Default image model |
+
+### Frontend (Next.js)
+
+| Variable | Default | Security |
+|:---|:---|:---|
+| `NEXTAUTH_SECRET` | — | 🔴 Secret |
+| `NEXTAUTH_URL` | `http://localhost:3000` | Low |
+| `GATEWAY_URL` | `http://localhost:8080` | Low |
+| `GITHUB_ID` / `GITHUB_SECRET` | — | 🔴 Secret |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | — | 🔴 Secret |
+
+### Logging
+
+| Variable | Default | Description |
+|:---|:---|:---|
+| `LOGGING_LEVEL_ROOT` | `INFO` | Global root log level |
+| `LOGGING_LEVEL_ORASAKA` | `DEBUG` | Orasaka package log level |
+| `LOGGING_LEVEL_SECURITY` | `DEBUG` | Spring Security log level |
+
+---
+
+## 📎 Related Documentation
+
+| Document | Description |
+|:---|:---|
+| [Architecture Reference](ARCHITECTURE.md) | System topology, module boundaries, execution flows |
+| [API Reference](API_REFERENCE.md) | Public types, facades, endpoints, data models |
+| [ADR Log](CONTEXT.md) | 22 Architectural Decision Records |
+| [Business Guide](BUSINESS_IMPLEMENTATION.md) | Step-by-step feature implementation blueprint |

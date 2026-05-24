@@ -1,276 +1,359 @@
-# Orasaka API Reference
+# API Reference
 
-This document specifies the public API interfaces, configuration properties, gateway endpoints, and core data models of the Orasaka platform.
+> Complete specification of Orasaka's public interfaces, configuration properties, gateway endpoints, and data models.
 
 ---
 
 ## 🧠 Core Facade
 
-### [OrasakaAiClient](../orasaka-core/src/main/java/com/orasaka/core/engine/OrasakaAiClient.java)
+### [AiClient](../orasaka-core/src/main/java/com/orasaka/core/client/AiClient.java)
 
-- **Role**: Primary entry point for developers consuming Orasaka AI capabilities.
-- **Methods**:
-  - `chat(OrasakaChatRequest)`: Executes agentic chat interactions under isolated session memory.
-  - `stream(OrasakaChatRequest)`: Streams reactive tokens as a `Flux<OrasakaChatResponse>`.
-  - `generateImage(OrasakaImageRequest)`: Triggers image generation flows.
-  - `getToolRegistry()`: Access the local tool management system.
-  - `getKnowledgeService()`: Access RAG configuration.
+The primary entry point for all AI capabilities. Every interaction with the Orasaka engine goes through this facade.
+
+| Method | Returns | Description |
+|:---|:---|:---|
+| `chat(request)` | `InternalChatResponse` | Synchronous agentic chat with session memory |
+| `stream(request)` | `Flux<InternalChatResponse>` | Reactive token-by-token streaming |
+| `generateImage(request)` | `InternalImageResponse` | Text-to-image generation |
+| `generateSpeech(request)` | `byte[]` | Text-to-speech audio data |
+| `getToolRegistry()` | `ToolRegistry` | Access the local tool management system |
+| `getKnowledgeService()` | `KnowledgeService` | Access RAG configuration and vector search |
 
 ---
 
-## ⚙️ Configuration Properties
+## ⚙️ Configuration
 
 ### [CoreProperties](../orasaka-core/src/main/java/com/orasaka/core/engine/CoreProperties.java)
 
-- **Role**: Type-safe configuration for the `orasaka-core` module.
-- **Components**:
-  - `defaultProvider`: Sets the global active AI provider (e.g., Ollama, OpenAI).
-  - `overrides`: Map of provider-specific options.
-  - `rag`: RAG enablement status and search parameter overrides.
-  - `mcp`: Configured external Model Context Protocol (MCP) server endpoints.
+Type-safe configuration for `orasaka-core`. Prefix: `orasaka.core`
 
-### [OrasakaToolsProperties](../orasaka-tools/src/main/java/com/orasaka/tools/config/OrasakaToolsProperties.java)
+| Property | Type | Description |
+|:---|:---|:---|
+| `defaultProvider` | `String` | Active AI provider (e.g., `ollama`, `openai`) |
+| `overrides` | `Map` | Provider-specific option overrides |
+| `rag.enabled` | `boolean` | Toggle RAG context enrichment |
+| `rag.topK` | `int` | Number of vector search results to inject |
+| `mcp.servers` | `List` | External MCP server endpoints |
 
-- **Role**: Type-safe configuration properties mapping tool IDs to cache and RAG policies.
-- **Prefix**: `orasaka.tools`
-- **Components**:
-  - `configs`: Map of tool ID to `ToolConfig` blocks:
-    - `cache`: `CacheConfig` specifying whether caching is active (`enabled`) and the entry Time-To-Live (`ttlSeconds`).
-    - `rag`: `RagConfig` specifying RAG database status (`enabled`), `chunkerType` (e.g. `PLAIN_TEXT`, `MARKDOWN_CHUNKERS`, `JSON_ARRAY`), and the `sourceTable` name.
+### [ToolsProperties](../orasaka-tools/src/main/java/com/orasaka/tools/config/ToolsProperties.java)
+
+Type-safe configuration for `orasaka-tools`. Prefix: `orasaka.tools`
+
+| Property | Type | Description |
+|:---|:---|:---|
+| `configs[toolId].cache.enabled` | `boolean` | Enable multi-tier caching for this tool |
+| `configs[toolId].cache.ttlSeconds` | `int` | Cache entry time-to-live |
+| `configs[toolId].rag.enabled` | `boolean` | Enable RAG ingestion for this tool |
+| `configs[toolId].rag.chunkerType` | `enum` | `PLAIN_TEXT` · `MARKDOWN_CHUNKERS` · `JSON_ARRAY` |
+| `configs[toolId].rag.sourceTable` | `String` | Database table name for RAG sources |
 
 ---
 
 ## 🏛️ Engine Abstractions
 
-### [AbstractOrasakaEngine](../orasaka-core/src/main/java/com/orasaka/core/engine/AbstractOrasakaEngine.java)
+### [AbstractEngine](../orasaka-core/src/main/java/com/orasaka/core/engine/AbstractEngine.java)
 
-- **Role**: Abstract bridge implementation (Bridge Pattern 2.0).
-- **Responsibility**: Orchestrates RAG context injection, Tool attachment, and Virtual Thread execution based purely on interfaces.
-- **Methods**:
-  - `chat(OrasakaChatRequest)`: Executes a synchronous context-augmented LLM prompt.
-  - `stream(OrasakaChatRequest)`: Executes a reactive token-augmented stream using `resolveChatModel().stream(prompt)`.
+Abstract bridge implementation (Bridge Pattern 2.0). Orchestrates RAG injection, tool attachment, and virtual thread execution through pure interfaces.
 
-### [McpOrchestrator](../orasaka-core/src/main/java/com/orasaka/core/pipeline/McpOrchestrator.java) & [OrasakaToolRegistry](../orasaka-core/src/main/java/com/orasaka/core/pipeline/OrasakaToolRegistry.java)
+| Method | Description |
+|:---|:---|
+| `chat(request)` | Synchronous context-augmented LLM prompt |
+| `stream(request)` | Reactive token stream via `resolveChatModel().stream(prompt)` |
 
-- **Role**: Pure interfaces defined in `orasaka-core` to decouple tool and context resolution logic from engine orchestration.
+### [McpOrchestrator](../orasaka-core/src/main/java/com/orasaka/core/pipeline/McpOrchestrator.java) & [ToolRegistry](../orasaka-core/src/main/java/com/orasaka/core/pipeline/ToolRegistry.java)
 
-### [OrasakaChunker](../orasaka-core/src/main/java/com/orasaka/core/pipeline/OrasakaChunker.java) & [OrasakaChunkingStrategies](../orasaka-core/src/main/java/com/orasaka/core/pipeline/OrasakaChunkingStrategies.java)
+Pure interfaces in `orasaka-core` that decouple tool and context resolution from engine orchestration. Concrete implementations live in `orasaka-tools`.
 
-- **Role**: Core text-splitting abstractions for RAG vectorization.
-- **Strategies**:
-  - `PLAIN_TEXT`: Splits raw content strings into paragraphs (separated by double newlines).
-  - `MARKDOWN_CHUNKERS`: Identifies and splits sections using Markdown headers (`#`, `##`, etc.).
-  - `JSON_ARRAY`: Parses array elements into independent documents, appending structured fields to metadata mappings.
+### [Chunker](../orasaka-core/src/main/java/com/orasaka/core/pipeline/Chunker.java) & [ChunkingStrategies](../orasaka-core/src/main/java/com/orasaka/core/pipeline/ChunkingStrategies.java)
 
-### [OrasakaContextInterceptor](../orasaka-core/src/main/java/com/orasaka/core/pipeline/OrasakaContextInterceptor.java)
+Text-splitting abstractions for RAG vectorization:
 
-- **Role**: Interface defining pre-processing and post-processing context hooks for LLM operations.
-- **Ordered Implementations** (Context-Matrix Orchestration Pipeline):
-  - `UserContextResolver` (Order 1): Resolves and enriches request context with user attributes, tenant preferences, and security clearances.
-  - `SystemContextInjector` (Order 2): Injects system-level signals, environment states, and tools array configurations.
-  - `RefinerInterceptor` (Order 3): Refines user inputs using classpath resource template `system-refinement.st` and conversation history.
-  - `RouterInterceptor` (Order 4): Routes requests dynamically using model intent analysis (`system-router.st`) at 0.0 temperature.
+| Strategy | Behavior |
+|:---|:---|
+| `PLAIN_TEXT` | Splits by paragraph (double newlines) |
+| `MARKDOWN_CHUNKERS` | Splits by markdown headers (`#`, `##`, etc.) |
+| `JSON_ARRAY` | Parses array elements into independent documents with metadata |
 
+### [ContextInterceptor](../orasaka-core/src/main/java/com/orasaka/core/pipeline/ContextInterceptor.java)
+
+Interface defining pre/post-processing hooks for LLM operations. Ordered implementations form the context-matrix pipeline:
+
+| Order | Interceptor | What it does |
+|:---:|:---|:---|
+| 1 | `UserContextResolver` | Enriches context with user attributes, preferences, security clearances |
+| 2 | `SystemContextInjector` | Injects system signals, environment states, tool configurations |
+| 3 | `RefinerInterceptor` | Refines inputs via `system-refinement.st` template + conversation history |
+| 4 | `RouterInterceptor` | Routes requests using `system-router.st` at `temperature: 0.0` |
 
 ---
 
-## 🛠️ Tools Implementation (`orasaka-tools`)
+## 🛠️ Tools Implementation
 
 ### [DefaultMcpOrchestrator](../orasaka-tools/src/main/java/com/orasaka/tools/mcp/DefaultMcpOrchestrator.java)
 
-- **Role**: Concrete implementation of `McpOrchestrator`.
-- **Responsibility**: Fetches contexts from external MCP servers via parallel Virtual Threads execution using Java 21 `HttpClient`.
+Concrete `McpOrchestrator` implementation. Fetches context from external MCP servers via parallel virtual threads using Java 21 `HttpClient`.
 
-### [DefaultOrasakaToolRegistry](../orasaka-tools/src/main/java/com/orasaka/tools/functions/DefaultOrasakaToolRegistry.java)
+### [DefaultToolRegistry](../orasaka-tools/src/main/java/com/orasaka/tools/functions/DefaultToolRegistry.java)
 
-- **Role**: Concrete implementation of `OrasakaToolRegistry`.
-- **Responsibility**: Maps native Java methods to LLM tools, decorates cached tools on retrieval, and drives database RAG source scanning (`orasaka_tools_rag_source` table) and chunking.
-- **Methods**:
-  - `registerTool(name, description, inputType, function)`: Adds a local Java method to the tools cache.
-  - `getRegisteredTools()`: Resolves active tools, automatically wrapping them inside `CachingToolCallback` if a caching policy is enabled.
-  - `triggerIngestion()`: Scans non-ingested source database rows and maps them to vector stores via chunker engines.
+Concrete `ToolRegistry` implementation. Maps Java methods to LLM tools, applies caching decorators, and drives RAG ingestion.
+
+| Method | Description |
+|:---|:---|
+| `registerTool(name, description, inputType, function)` | Registers a Java method as an LLM-callable tool |
+| `getRegisteredTools()` | Returns active tools, auto-wrapped in `CachingToolCallback` if caching is enabled |
+| `triggerIngestion()` | Scans un-ingested database rows and maps them to vector stores |
 
 ### [ToolCacheService](../orasaka-tools/src/main/java/com/orasaka/tools/functions/ToolCacheService.java)
 
-- **Role**: Multi-tier cache orchestrator managing tool outputs.
-- **Tiers**:
-  - *Tier 1 (Memory)*: Fast local Caffeine cache instance limited to 5000 entries.
-  - *Tier 2 (Database)*: Persistent PostgreSQL storage table (`orasaka_tools_cache`) ensuring cross-server synchronization and persistence.
-- **Methods**:
-  - `get(toolId, key)`: Resolves active cache values, returning null if expired or missing.
-  - `put(toolId, key, value, ttlSeconds)`: Writes entries concurrently to Caffeine and PostgreSQL tiers.
+Multi-tier cache orchestrator for tool outputs:
+
+| Tier | Backend | Details |
+|:---|:---|:---|
+| **Tier 1 (Memory)** | Caffeine | Fast local cache, max 5000 entries |
+| **Tier 2 (Database)** | PostgreSQL (`orasaka_tools_cache`) | Persistent, cross-server synchronization |
 
 ### [CachingToolCallback](../orasaka-tools/src/main/java/com/orasaka/tools/functions/CachingToolCallback.java)
 
-- **Role**: Caching decorator pattern implementation for Spring AI `ToolCallback`.
-- **Behavior**: Intercepts LLM tool invocations, returns hit targets from `ToolCacheService` immediately to save execution overhead, and caches execution results upon cache misses.
+Decorator pattern for Spring AI `ToolCallback`. Intercepts tool invocations, returns cached results on hit, and stores new results on miss.
 
 ---
 
-## 📹 Video Generation Service & Models
+## 📹 Video Generation
 
-### [OrasakaVideoService](../orasaka-core/src/main/java/com/orasaka/core/engine/video/OrasakaVideoService.java)
+### [VideoService](../orasaka-core/src/main/java/com/orasaka/core/infrastructure/video/VideoService.java)
 
-- **Role**: Concrete service executing Text-to-Video generation using local `sd-server` runner.
-- **Methods**:
-  - `generateVideo(OrasakaVideoRequest)`: Delegates prompt and duration configurations to local runner on port `8086`.
+Executes text-to-video generation using the local `sd-server` runner on port `8086`.
 
-### [OrasakaVideoRequest](../orasaka-core/src/main/java/com/orasaka/core/engine/video/OrasakaVideoRequest.java)
+### [VideoRequest](../orasaka-core/src/main/java/com/orasaka/core/ingest/video/VideoRequest.java)
 
-- **Role**: Immutable record representing a client request for video generation.
-- **Fields**:
-  - `prompt`: String parameter carrying video description prompt.
-  - `durationSeconds`: Optional integer specifying target video duration.
-  - `settings`: Map containing secondary properties (fps, aspect ratios).
-  - `context`: Active request-level contextual profile coordinates.
+Immutable record for video generation requests:
 
-### [OrasakaVideoResponse](../orasaka-core/src/main/java/com/orasaka/core/engine/video/OrasakaVideoResponse.java)
+| Field | Type | Default | Validation |
+|:---|:---|:---|:---|
+| `prompt` | `String` | — | Non-null, non-blank (compact constructor) |
+| `durationSeconds` | `Integer` | `4` | Null-safe default |
+| `settings` | `Map<String, Object>` | `{}` | Defensive copy |
+| `context` | `Context` | — | Active request context |
 
-- **Role**: Compact record wrapper encapsulating the generated binary video data.
-- **Fields**:
-  - `videoData`: Byte array payload containing the raw generated MP4 data.
-  - `format`: Format description string, default fallback is `"mp4"`.
+### [VideoResponse](../orasaka-core/src/main/java/com/orasaka/core/ingest/video/VideoResponse.java)
+
+| Field | Type | Default | Validation |
+|:---|:---|:---|:---|
+| `videoData` | `byte[]` | — | Non-null, non-empty |
+| `format` | `String` | `"mp4"` | Blank-safe default |
 
 ---
 
 ## 🛡️ Context & Security Models
 
-### [OrasakaContext](../orasaka-core/src/main/java/com/orasaka/core/support/OrasakaContext.java)
+### [Context](../orasaka-core/src/main/java/com/orasaka/core/support/Context.java)
 
-- **Role**: Immutable request envelope carrying user preferences and security privileges.
-- **Fields**:
-  - `userId`: Unique identifier of the authenticated user.
-  - `conversationId`: Active session thread identifier.
-  - `preferences`: Map of user overrides (e.g., specific voices, model names, aspects).
-  - `roles`: Set of resolved security roles tied to the user session.
+Immutable request envelope carrying user preferences and security privileges:
+
+| Field | Type | Description |
+|:---|:---|:---|
+| `userId` | `String` | Authenticated user identifier |
+| `conversationId` | `String` | Active session thread ID |
+| `preferences` | `Map<String, Object>` | Unmodifiable user overrides |
+| `authorities` | `Set<Authority>` | Unmodifiable security roles |
+
+**Method:** `hasAuthority(String)` — Thread-safe, case-insensitive authority lookup.
+
+### [Authority](../orasaka-core/src/main/java/com/orasaka/core/support/Authority.java)
+
+Immutable record representing a single security role (e.g., `"ROLE_USER"`). Non-null, non-blank name enforced by compact constructor.
+
+### [SpeechRequest](../orasaka-core/src/main/java/com/orasaka/core/support/SpeechRequest.java)
+
+| Field | Type | Description |
+|:---|:---|:---|
+| `text` | `String` | Text content to convert to speech |
+| `options` | `Object` | Provider-specific TTS configuration |
+| `context` | `Context` | User preferences (voice model, speed) |
 
 ### [Role](../orasaka-identity/src/main/java/com/orasaka/identity/domain/Role.java)
 
-- **Role**: Domain-driven Role-Based Access Control hierarchy implemented using Java 21 **Sealed Interfaces**.
-- **Permitted Records**:
-  - `Role.Admin`: Full access rights (resolves to `"ADMIN"`).
-  - `Role.User`: Standard execution privileges (resolves to `"USER"`).
-  - `Role.Guest`: Read-only, sandboxed access (resolves to `"GUEST"`).
+Sealed interface RBAC hierarchy (Java 21):
+
+| Record | Authority | Access Level |
+|:---|:---|:---|
+| `Role.Admin` | `"ADMIN"` | Full access |
+| `Role.User` | `"USER"` | Standard execution |
+| `Role.Guest` | `"GUEST"` | Read-only, sandboxed |
+
+> [!NOTE]
+> Within `orasaka-core`, roles are represented as `Authority` records (plain `name` strings). The `Role` sealed interface lives in `orasaka-identity` exclusively.
 
 ### [IdentityService](../orasaka-identity/src/main/java/com/orasaka/identity/service/IdentityService.java)
 
-- **Role**: Backend Service managing user authentication, profile resolution, passive registration verification, and user interceptions.
-- **Methods**:
-  - `authenticate(email, password)`: Parameterized verification of active user credentials.
-  - `register(username, email, password, language)`: Self-service registration. Optionally emits verification tokens and/or triggers dynamic onboarding blocks depending on properties configurations.
-  - `verifyToken(token)`: Parameterized lookup and verification of active user registration hashes in the `orasaka_verification_tokens` table.
-  - `triggerInterception(userId, interceptionType, schemaId)`: Registers active interceptions (e.g. feedback, onboarding blocks) in `orasaka_user_interceptions`.
-  - `resolveInterception(userId, interceptionType, schemaId, responses)`: Merges interception response payloads into user preferences and clears the interception block.
+| Method | Description |
+|:---|:---|
+| `authenticate(email, password)` | Verifies credentials, returns user profile |
+| `register(username, email, password, language)` | Self-service registration with optional verification tokens |
+| `updatePreferences(userId, preferences)` | Merges preferences, returns updated `User` from in-memory mapping |
+| `verifyToken(token)` | Validates email verification hashes |
+| `triggerInterception(userId, type, schemaId)` | Registers active interceptions (onboarding, feedback) |
+| `resolveInterception(userId, type, schemaId, responses)` | Merges responses into preferences, clears the interception |
 
 ---
 
-## 🚀 Gateway API (BFF Layer)
+## 🚀 Gateway API
 
-All frontend clients communicate solely through the BFF layer. Direct communication with the backend core engine or Ollama ports is prohibited.
+All frontend clients communicate through the BFF layer. Direct access to `orasaka-core` or Ollama ports is prohibited.
 
-### 1. GraphQL Gateway: [AiController](../orasaka-gateway/src/main/java/com/orasaka/gateway/endpoint/AiController.java)
+### GraphQL — [AiController](../orasaka-gateway/src/main/java/com/orasaka/gateway/endpoint/AiController.java)
 
-- **GraphQL Schema**: [schema.graphqls](../orasaka-gateway/src/main/resources/graphql/schema.graphqls)
-- **Queries**:
-  - `me: User`: Resolves the profile and preferences of the currently authenticated user.
-  - `interceptionSchema(schemaId: String!): String`: Fetches the dynamic JSON schema string for onboarding or feedback blocks.
-- **Mutations**:
-  - `chat(prompt: String!, conversationId: String): ChatResponse`: Executes a single-turn agentic chat.
-  - `updatePreferences(preferences: Map!): User`: Merges and saves user preference overrides.
-  - `register(username: String!, email: String!, password: String!, language: String): RegisterResult!`: Triggers registration flow.
-  - `resolveInterception(interceptionType: String!, schemaId: String!, responses: Map!): Boolean!`: Validates and resolves active user interception preferences.
-- **Subscriptions**:
-  - `chatStream(prompt: String!, conversationId: String): ChatResponse`: Reactive subscription streaming word-by-word responses.
+**Schema:** [schema.graphqls](../orasaka-gateway/src/main/resources/graphql/schema.graphqls)
 
-### 2. REST API Gateway: [ChatStreamController](../orasaka-gateway/src/main/java/com/orasaka/gateway/endpoint/ChatStreamController.java) & [AuthController](../orasaka-gateway/src/main/java/com/orasaka/gateway/endpoint/AuthController.java)
+#### Queries
 
-- **Authentication & Verification Endpoints (AuthController)**:
-  - `POST /api/v1/auth/login`: Authenticates the user and returns their UUID session token.
-    - *Payload*: `{"email": "<email>", "password": "<pass>"}`
-    - *Response*: `{"token": "<user-uuid>", "username": "<name>", "active_interceptions": []}`
-  - `POST /api/v1/auth/oauth`: Authenticates or provisions an OAuth2 user and returns their UUID session token.
-    - *Payload*: `{"email": "<email>", "username": "<name>"}`
-    - *Response*: `{"token": "<user-uuid>", "username": "<name>", "active_interceptions": []}`
-  - `POST /api/v1/auth/register`: Self-service user account registration.
-    - *Payload*: `{"username": "<name>", "email": "<email>", "password": "<pass>", "language": "<lang>"}`
-  - `POST /api/v1/auth/verify`: Private machine-to-machine validation endpoint to activate user accounts using email tokens.
-    - *Payload*: `{"token": "<verification-token>"}`
-- **Server-Sent Events (SSE) Streaming (ChatStreamController)**:
-  - `GET /api/v1/chat/stream/{conversationId}?prompt=...`
-    - *Headers*: `Authorization: Bearer <userId>`
-    - *Response Type*: `text/event-stream`
-    - *Payload*: Event chunks of serialized JSON `OrasakaChatResponse` records.
-- **Text-to-Video Generation (ChatStreamController)**:
-  - `POST /api/v1/ai/video`
-    - *Payload* (`OrasakaVideoRequest`):
-      ```json
-      {
-        "prompt": "A cinematic shot of cyberpunk streets in Neo-Tokyo, neon lighting, heavy rain, 4k",
-        "durationSeconds": 4,
-        "settings": {
-          "fps": 24,
-          "width": 512,
-          "height": 512
-        }
-      }
-      ```
-    - *Response* (RFC 2397 Data URL string):
-      ```json
-      {
-        "format": "mp4",
-        "url": "data:video/mp4;base64,AAAAIGZ0eXBtcDQyAAAAAG1wNDJpc29tYXZjMQ..."
-      }
-      ```
-    - *Core Loop RestClient Request* (delegates request payload to local runner on `http://localhost:8086/v1/videos/generations`):
-      ```json
-      {
-        "prompt": "A cinematic shot of cyberpunk streets in Neo-Tokyo, neon lighting, heavy rain, 4k",
-        "video_length": 4
-      }
-      ```
-    - *Runner Base64 Response Ingestion* (OpenAI-compatible JSON structure):
-      ```json
-      {
-        "created": 1716508800,
-        "data": [
-          {
-            "b64_json": "AAAAIGZ0eXBtcDQyAAAAAG1wNDJpc29tYXZjMQ...[base64 bytes]"
-          }
-        ]
-      }
-      ```
+| Query | Returns | Description |
+|:---|:---|:---|
+| `me` | `User` | Current authenticated user profile |
+| `interceptionSchema(schemaId)` | `String` | Dynamic JSON schema for onboarding/feedback |
+| `operationGraph` | `OperationGraph` | Server-driven UI capability graph |
 
-### 3. BFF GraphQL Server-Side Extensions (Next.js BFF)
+#### Mutations
 
-To maintain security boundaries, public validation endpoints are proxied as BFF mutations:
+| Mutation | Returns | Description |
+|:---|:---|:---|
+| `chat(prompt, conversationId?)` | `ChatResponse` | Single-turn agentic chat |
+| `image(prompt)` | `ChatResponse` | Text-to-image via stable-diffusion.cpp (port `8085`) |
+| `speech(prompt)` | `ChatResponse` | Text-to-speech via OpenAI TTS |
+| `updatePreferences(preferences)` | `User` | Merge and save user preference overrides |
+| `register(username, email, password, language?)` | `RegisterResult` | Self-service registration |
+| `resolveInterception(type, schemaId, responses)` | `Boolean` | Resolve active user interception |
 
-- **Mutations**:
+#### Subscriptions
 
-  - `VerifyEmail(token: String!)`: Executed on the Next.js server, making an internal private M2M REST call to `orasaka-gateway` at `/api/v1/auth/verify`.
+| Subscription | Returns | Description |
+|:---|:---|:---|
+| `chatStream(prompt, conversationId?)` | `ChatResponse` | Real-time word-by-word streaming |
+
+### REST — [AuthController](../orasaka-gateway/src/main/java/com/orasaka/gateway/endpoint/AuthController.java) & [ChatStreamController](../orasaka-gateway/src/main/java/com/orasaka/gateway/endpoint/ChatStreamController.java)
+
+#### Authentication
+
+| Endpoint | Method | Payload | Response |
+|:---|:---|:---|:---|
+| `/api/v1/auth/login` | `POST` | `{"email": "...", "password": "..."}` | `{"token": "<uuid>", "username": "..."}` |
+| `/api/v1/auth/oauth` | `POST` | `{"email": "...", "username": "..."}` | `{"token": "<uuid>", "username": "..."}` |
+| `/api/v1/auth/register` | `POST` | `{"username", "email", "password", "language"}` | Registration result |
+| `/api/v1/auth/verify` | `POST` | `{"token": "<verification-token>"}` | Activation result |
+
+#### Streaming & Video
+
+| Endpoint | Method | Content-Type | Description |
+|:---|:---|:---|:---|
+| `/api/v1/chat/stream/{conversationId}` | `GET` | `text/event-stream` | SSE token streaming |
+| `/api/v1/ai/video` | `POST` | `application/json` | Text-to-video generation |
+
+**Video Request:**
+```json
+{
+  "prompt": "A cinematic shot of cyberpunk streets, neon lighting, heavy rain, 4k",
+  "durationSeconds": 4,
+  "settings": { "fps": 24, "width": 512, "height": 512 }
+}
+```
+
+**Video Response (RFC 2397 Data URL):**
+```json
+{
+  "format": "mp4",
+  "url": "data:video/mp4;base64,AAAAIGZ0eXBtcDQy..."
+}
+```
+
+### BFF Extensions (Next.js Server-Side)
+
+| Mutation | Description |
+|:---|:---|
+| `VerifyEmail(token)` | Server-side M2M REST call to `/api/v1/auth/verify` |
 
 ---
 
-## 🔧 Build & DevOps
+## 🎬 Media Pre-Processor Contracts
 
-### Javadoc Aggregation
+Port/adapter contracts in `orasaka-core/ingest/` for preprocessing media before AI inference:
 
-The root [pom.xml](../pom.xml) configures `maven-javadoc-plugin` **3.6.3** in aggregate mode so that a single lifecycle command generates a unified API reference spanning all sub-modules (`orasaka-core`, `orasaka-identity`, `orasaka-gateway`, `orasaka-tools`).
+| Interface | Output Record | Key Fields |
+|:---|:---|:---|
+| [ImagePreProcessor](../orasaka-core/src/main/java/com/orasaka/core/ingest/image/ImagePreProcessor.java) | `ProcessedImagePayload` | `base64Image`, `width`, `height` (non-negative) |
+| [AudioPreProcessor](../orasaka-core/src/main/java/com/orasaka/core/ingest/audio/AudioPreProcessor.java) | `ProcessedAudioPayload` | `transcript` (defaults to empty string) |
+| [VideoPreProcessor](../orasaka-core/src/main/java/com/orasaka/core/ingest/video/VideoPreProcessor.java) | `ProcessedVideoPayload` | Extracted frames + audio data |
 
-| Property | Value | Notes |
-| --- | --- | --- |
-| `source` | `21` | Records, sealed types, virtual threads |
-| `doclint` | `none` | Prevents formatting noise from breaking CI |
-| `reportOutputDirectory` | `${project.basedir}/docs` | Plugin appends `/apidocs` → final path is `docs/apidocs/` |
-| Lifecycle phase | `package` | Docs stay in sync with every packaged build |
+> [!NOTE]
+> All pre-processor implementations must be **package-private** per ADR-019. Only the interfaces and payload records are public.
 
-**Generate / refresh the unified API site:**
+---
+
+## 🖥️ CLI Client (v2.0.0)
+
+### Commands
+
+| Command | Description | Protocol |
+|:---|:---|:---|
+| `login [email] [password]` | Authenticate and cache JWT | `POST /api/v1/auth/login` |
+| `register [user] [email]` | Self-service registration | `POST /api/v1/auth/register` |
+| `verify <token>` | Email verification | `POST /api/v1/auth/verify` |
+| `chat [prompt]` | Interactive or single-shot chat | SSE streaming |
+| `chat --gen-image <prompt>` | Generate image from text | GraphQL `mutation { image }` |
+| `chat --speech <text>` | Text-to-speech synthesis | GraphQL `mutation { speech }` |
+| `chat --image <filepath>` | Vision analysis of local image | Operation Graph |
+| `chat --audio <filepath>` | Audio analysis of local file | Operation Graph |
+| `chat --save <path>` | Save generated media to file | — |
+| `video <prompt>` | Text-to-video generation | `POST /api/v1/ai/video` |
+| `profile` | Display user profile | GraphQL `query { me }` |
+| `settings get` | Show current preferences | GraphQL `query { me }` |
+| `settings set <key> <val>` | Update single preference | GraphQL mutation |
+| `graph` | Display operation graph | GraphQL query |
+
+### Interactive Meta-Commands
+
+| Command | Description |
+|:---|:---|
+| `/thread new` | Create and switch to a new conversation |
+| `/thread list` | List all stored threads |
+| `/thread switch <id>` | Switch active thread (prefix match) |
+
+### Local Persistence
+
+| File | Content |
+|:---|:---|
+| `~/.orasaka-cli.json` | JWT token, username, active thread, thread list |
+| `~/.orasaka-threads/<uuid>.json` | Per-thread message history |
+
+---
+
+## 📖 Javadoc Generation
+
+The root `pom.xml` configures `maven-javadoc-plugin` **3.6.3** in aggregate mode:
+
+| Property | Value |
+|:---|:---|
+| Java source level | `21` (records, sealed types, virtual threads) |
+| Doclint | `none` (prevents CI noise) |
+| Output | `docs/apidocs/` |
+| Lifecycle phase | `package` |
 
 ```bash
-# Via lifecycle (runs compile + test + package + javadoc aggregate)
+# Generate via lifecycle
 mvn package -DskipTests
 
-# Via direct plugin goal (faster, no compile/test cycle)
+# Direct generation (faster)
 mvn javadoc:aggregate
 ```
 
-**Output location:** `docs/apidocs/index.html` — the entry point for the full cross-module Javadoc site.
+**Output:** [docs/apidocs/index.html](apidocs/index.html)
+
+---
+
+## 📎 Related Documentation
+
+| Document | Description |
+|:---|:---|
+| [Architecture Reference](ARCHITECTURE.md) | System topology, module boundaries, execution flows |
+| [Glossary](GLOSSARY.md) | Ecosystem terms, patterns, environment variables |
+| [ADR Log](CONTEXT.md) | 22 Architectural Decision Records |
+| [Business Guide](BUSINESS_IMPLEMENTATION.md) | Step-by-step feature implementation blueprint |

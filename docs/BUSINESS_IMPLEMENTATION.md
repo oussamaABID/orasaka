@@ -1,102 +1,232 @@
-# Orasaka Business Implementation Blueprint
+# Business Implementation Blueprint
 
-This reference document outlines how to design, scaffold, and implement a commercial business feature vertical inside the Orasaka monorepo architecture.
-
-To demonstrate the decoupled power of the framework, we will build a real-world startup use case: **CinePulse AI — A Hyper-Personalized, Cross-Platform SVOD Recommendation & Trend Engine**.
+> A hands-on guide to building a real-world product feature using the Orasaka framework.
+> This document walks through designing, scaffolding, and shipping a complete AI-powered vertical —
+> from tool registration to cache optimization — using CinePulse AI as a reference implementation.
 
 ---
 
-## 🎯 The Business Use Case: "CinePulse AI"
+## 🎯 The Business Case: CinePulse AI
 
 ### The Problem
 
-Users are experiencing "subscription fatigue" and choice paralysis. Content is fragmented across Netflix, Amazon Prime TV, Apple TV, Disney+, and others. No centralized system knows what is trending right now across all platforms while filtering those trends based on a user's unique psychological profile, mood, and historical tastes.
+Users are drowning in **subscription fatigue** and **content fragmentation** across platforms like Netflix, Prime Video, Apple TV+, and Disney+. Furthermore, search processes are outdated: users often remember a visual scene, a musical sequence, or a brief audio snippet, but have no way to identify the title. Finally, fans want more interactive experiences: they want to be part of the action, whether it's inserting themselves into movie scenes or placing themselves on a sports podium.
 
-### The Solution with Orasaka
+There is no centralized platform that:
+1. Aggregates and filters trends in real-time.
+2. Identifies content on-the-spot from screens or audio tracks.
+3. Maintains personalized watchlists and generates dynamic AI-curated recommendations.
+4. Allows fans to interactively insert their likeness into films, series, or sports matches.
 
-An AI agent infrastructure that:
+### The Solution
 
-1. Retrieves active global streaming trends and deep metadata via autonomous MCP (Model Context Protocol) Servers or specialized web-scraping tools.
-2. Normalizes & Filters the raw, chaotic payload into structured data.
-3. Cross-References the trends against an immutable, secure `OrasakaContext` profile representing the active customer's preferences.
-4. Outputs tailored recommendations, categorical micro-trends, and cross-platform dashboards via GraphQL Subscriptions to the frontend UI/CLI.
+**CinePulse AI** is a multi-modal, hyper-personalized entertainment hub built on the Orasaka framework. It leverages advanced cognitive pipelines, local GPU execution, and multi-modal processors to provide visual identification, audio matching, watchlists, and generative scene insertion.
 
-## 🏛️ Architecture Blueprint & Execution Pipeline
+| Capability | Orasaka Feature Used |
+|:---|:---|
+| **Visual Screen Scan** | `ImagePreProcessor` + Vision LLM routing |
+| **Audio Sound Match** | `AudioPreProcessor` + Audio feature vector comparison |
+| **Scene & Sports Video Insertion** | `VideoService` (LTX-Video on port `8086` / Metal GPU) |
+| **Live Trend Aggregation** | Tool Registry + MCP Servers |
+| **User Profile Alignment** | Context-Matrix Pipeline (4-stage interceptor chain) |
+| **Personalized Recommendations** | `AiClient.chat()` + Passive cache database |
+| **Structured Query Feedbacks** | SSE streaming via `ChatStreamController` |
+| **AI Watchlist Management** | `IdentityService` user metadata sync |
 
-The execution flow complies entirely with Orasaka’s unidirectional dependency and decoupling design principles. The data flows sequentially from the presentation layer down to the core engine, which pulls live external data via the tools layout before resolving context against the identity records.
+### What You'll Build
+
+By the end of this guide, CinePulse AI will:
+*   Identify movies from visual screenshots (`ImagePreProcessor` pipeline).
+*   Identify movies from short audio clips (`AudioPreProcessor` pipeline).
+*   Add identified titles to a persistent user "Watch Later" watchlist.
+*   Generate personalized AI movie and sports recommendations.
+*   Insert the user's face/video into movie scenes or sports podium finishes using the local GPU video engine.
+*   Log every cognitive pipeline stage, cache hit, and execution stream to both the CLI and web client.
+
+---
+
+## 🖥️ Screen Previews
+
+### 1. Dashboard — Personalized Trending
+
+The main CinePulse dashboard aggregates trending films, series, and sports events. It showcases quick-action buttons for multi-modal searches and displays custom AI Match Scores.
+
+<div align="center">
+  <img src="assets/cinepulse/dashboard.svg" alt="CinePulse AI Dashboard — personalized trending recommendations across Netflix, Prime, and sports feeds" width="750" style="border-radius: 12px; margin: 1.5rem 0; box-shadow: 0 10px 30px rgba(0,0,0,0.05);" />
+</div>
+
+### 2. Media Recognition — Multimodal Scan
+
+The Media Recognition screen allows users to upload a screen capture or record a sound snippet. The system processes visual cues (like black holes, characters, and spaceships) or tracks audio sequences to find exact streaming matches.
+
+<div align="center">
+  <img src="assets/cinepulse/recognition.svg" alt="Media Recognition — Screen capture laser scan and audio wave equalizer" width="750" style="border-radius: 12px; margin: 1.5rem 0; box-shadow: 0 10px 30px rgba(0,0,0,0.05);" />
+</div>
+
+### 3. Watchlist — AI Recommendations
+
+User watchlists hold items identified through media scans or added manually. It lists personalized recommendations based on profile affinities, including sports feeds when enabled.
+
+<div align="center">
+  <img src="assets/cinepulse/watchlist.svg" alt="CinePulse AI Watchlist — Saved movies, theater releases, and sports feeds categorized with match scores" width="750" style="border-radius: 12px; margin: 1.5rem 0; box-shadow: 0 10px 30px rgba(0,0,0,0.05);" />
+</div>
+
+### 4. CLI — Pipeline Execution
+
+The same multi-modal pipeline runs from the command line. The terminal output traces the 4-stage pipeline execution, tool cache hits, and the streamed cognitive response.
+
+<div align="center">
+  <img src="assets/cinepulse/cli-output.svg" alt="orasaka-cli terminal output showing the 4-stage pipeline execution, cache hit, and streaming response" width="750" style="border-radius: 12px; margin: 1.5rem 0; box-shadow: 0 10px 30px rgba(0,0,0,0.05);" />
+</div>
+
+### 5. User Profile — AI Preferences
+
+User preferences and capabilities (such as enabling audio matching, scene video generation, and temperature levels) are stored via `IdentityService` and injected into every AI query.
+
+<div align="center">
+  <img src="assets/cinepulse/settings.svg" alt="User profile settings screen showing AI preferences (language, exclusions, toggles, cognitive temperature)" width="750" style="border-radius: 12px; margin: 1.5rem 0; box-shadow: 0 10px 30px rgba(0,0,0,0.05);" />
+</div>
+
+### 6. Video Studio — Scene & Sports Insertion
+
+Generate custom video trailers or photos placing your face/body directly into cinema clips or sports matches (e.g. Formula 1 podium celebrating under the rain).
+
+<div align="center">
+  <img src="assets/cinepulse/video-studio.svg" alt="CinePulse AI Video & Sports Studio with scene configurations, render settings, timeline, and progress logs" width="750" style="border-radius: 12px; margin: 1.5rem 0; box-shadow: 0 10px 30px rgba(0,0,0,0.05);" />
+</div>
+
+---
+
+## 🏛️ Architecture Flow
+
+The execution flow follows Orasaka's strict unidirectional dependency model. Data flows from the client through the gateway, which assembles context from the identity layer before delegating to the stateless core engine.
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User as 💻 UI / CLI Client
-    participant GW as 🚀 orasaka-gateway (BFF)
+    participant GW as 🚀 orasaka-gateway
     participant ID as 🛡️ orasaka-identity
-    participant DB as 💾 PostgreSQL (Seeded DB)
-    participant CR as 🧠 orasaka-core (Stateless AI)
-    participant TL as 🛠️ orasaka-tools (MCP Registry)
-    participant OLL as 🦙 Local Ollama (llama3)
+    participant DB as 💾 PostgreSQL
+    participant CR as 🧠 orasaka-core
+    participant TL as 🛠️ orasaka-tools
+    participant OLL as 🦙 Ollama (llama3)
 
-    User->>GW: 1. GraphQL Query: getPersonalizedTrends(threadId)
-    note over GW: Executed via Java 21 Virtual Threads
-    
-    GW->>ID: 2. Fetch User Session Profile
-    ID->>DB: 3. SELECT languages, platforms, exclusions
-    DB-->>ID: 4. Raw Profile Data
-    ID-->>GW: 5. Return Domain Profile
+    User->>GW: GraphQL: getPersonalizedTrends(threadId)
+    note over GW: Runs on Java 21 Virtual Thread
 
-    note over GW: Builds IMMUTABLE<br/>OrasakaContext Object
-    
-    GW->>CR: 6. chat(OrasakaChatRequest)
-    
-    note over CR: Analyzes Context Profile<br/>Triggers Function Tools
-    
-    CR->>TL: 7. Invoke Registered Tool: fetchLiveSvodTrends()
-    note over TL: Connected via Model Context Protocol (MCP)
-    TL-->>CR: 8. Return Normalized Content (Netflix, Prime, Apple)
-    
-    CR->>OLL: 9. Dispatch final Context + Prompt + Tool Data
-    OLL-->>CR: 10. Generate Structured Inference Response
-    
-    CR-->>GW: 11. Return Strict AI JSON Payload
-    note over GW: Automatic mapping to GraphQL Schemas
-    GW-->>User: 12. Streaming JSON Response
+    GW->>ID: Fetch user session profile
+    ID->>DB: SELECT preferences, authorities, tier
+    DB-->>ID: Raw profile data
+    ID-->>GW: Domain User record
+
+    note over GW: Builds IMMUTABLE<br/>Context snapshot
+
+    GW->>CR: chat(InternalChatRequest)
+
+    note over CR: Context-Matrix Pipeline<br/>4-stage interceptor chain
+
+    CR->>TL: Tool call: fetchLiveSvodTrends()
+    note over TL: Cache check → MCP fetch
+    TL-->>CR: Normalized catalog (Netflix, Prime, Apple)
+
+    CR->>OLL: Final prompt + context + tool data
+    OLL-->>CR: Structured inference response
+
+    CR-->>GW: InternalChatResponse
+    note over GW: Maps to GraphQL schema
+    GW-->>User: Streaming JSON response
 ```
 
-## 💡 Core Concepts & Best Practices
+---
 
-### 1. Context-Injection Decoupling Mandate
+## 💡 Core Design Principles
 
-The core architectural directive of Orasaka is that `orasaka-core` must remain **completely stateless and domain-agnostic**.
+Before diving into the code, understand these three principles that govern every Orasaka feature:
 
-* **The Anti-Pattern**: Injecting database entities, transaction managers, or user schemas directly into the AI module.
-* **The Orasaka Pattern**: The Core is an isolated processing box. It only knows how to process raw text prompts, register arbitrary function callbacks, and accept an immutable `OrasakaContext`. The Gateway is solely responsible for pulling user preferences from `orasaka-identity` and packing them into the context envelope before hitting the core.
+### 1. Context-Injection Decoupling
 
-### 2. High-Concurrency Execution via Virtual Threads
+The core engine (`orasaka-core`) must remain **completely stateless**. It has zero knowledge of users, databases, or HTTP sessions.
 
-All network orchestration tasks (querying the identity database, invoking independent MCP scraping tools, and waiting for slow downstream AI token inferences) are heavily I/O-bound.
+| ❌ Anti-Pattern | ✅ Orasaka Pattern |
+|:---|:---|
+| Inject database entities into the AI module | Gateway fetches profile, builds immutable `Context`, passes it to core |
+| Service queries DB inside the engine | Core receives pre-compiled context snapshot |
+| Core imports `orasaka-identity` classes | Core consumes plain `String userId`, `Map preferences` |
 
-* Always execute gateway controllers using Java 21's `Executors.newVirtualThreadPerTaskExecutor()`. This allows your service vertical to handle thousands of concurrent client interactions without crashing local dev machine memory pools.
+### 2. Virtual Thread Execution
 
-### 3. Strict Tool Payload Invariance
+All I/O operations run on Java 21 Virtual Threads automatically:
 
-Every function tool mapped within `orasaka-tools` to retrieve real-world data must exclusively accept and return Java 21 Records. This enforces strict serialization schemas that the LLM engine can parse during the *Tool Calling* phase without runtime data corruption.
+```java
+// The platform scheduler handles yielding — no manual executor needed
+private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+```
 
-## 🛠️ Step-by-Step Implementation Guide
+> [!IMPORTANT]
+> Never wrap blocking operations in nested `.submit().get()` blocks. Virtual Threads handle yielding automatically. Creating additional executors inside service methods risks carrier thread pinning.
 
-### Step 1: Tool Definition in orasaka-tools (The Knowledge Aggregators)
+### 3. Tool Payload Invariance
 
-We avoid hardcoding third-party scraping logic inside our core processing unit. We declare a custom execution tool leveraging Spring AI's tool call mechanics or an external MCP server connection block to fetch live catalogs.
+Every tool registered in `orasaka-tools` must use Java 21 Records for input/output. This enforces strict serialization schemas that the LLM can parse without data corruption.
 
-Create a Java Record to model the raw target payload:
+---
+
+## 🛠️ Implementation Guide
+
+### Step 1: Define Tool Records
+
+Create immutable data carriers for the tool's input and output. Each record must live in its own file per [ERR-103].
+
+**`SvodTrendRequest.java`** — What to fetch:
 
 ```java
 package com.orasaka.tools.media;
 
-public record SvodTrendRequest(String platform, int topN) {}
-public record MediaCatalogPayload(String title, String platform, String genre, double rating, String synopsis) {}
+/**
+ * Request payload for live SVOD trend aggregation.
+ * @param platform Target streaming platform identifier (e.g., "netflix", "prime")
+ * @param topN     Maximum number of trending items to return
+ */
+public record SvodTrendRequest(String platform, int topN) {
+    public SvodTrendRequest {
+        if (platform == null || platform.isBlank()) {
+            throw new IllegalArgumentException("Platform must not be blank");
+        }
+        if (topN <= 0) topN = 5; // safe default
+    }
+}
 ```
 
-Register the tool configuration bean inside orasaka-tools:
+**`MediaCatalogPayload.java`** — What comes back:
+
+```java
+package com.orasaka.tools.media;
+
+/**
+ * Normalized content item from a streaming platform.
+ */
+public record MediaCatalogPayload(
+    String title,
+    String platform,
+    String genre,
+    double rating,
+    String synopsis
+) {
+    public MediaCatalogPayload {
+        title = (title == null || title.isBlank()) ? "Untitled" : title;
+        platform = (platform == null || platform.isBlank()) ? "Unknown" : platform;
+        genre = (genre == null) ? "" : genre;
+        synopsis = (synopsis == null) ? "" : synopsis;
+    }
+}
+```
+
+### Step 2: Register the Tool Bean
+
+Register the function as a Spring bean in `orasaka-tools`. The `@Description` annotation tells the LLM when and how to invoke this tool.
+
+**`SvodMediaToolsConfiguration.java`**:
 
 ```java
 package com.orasaka.tools.media;
@@ -108,20 +238,28 @@ import java.util.List;
 import java.util.function.Function;
 
 @Configuration
-public class SvodMediaToolsConfiguration {
+class SvodMediaToolsConfiguration {
 
     @Bean
-    @Description("Fetch live trending charts and content data from streaming giants like Netflix, Amazon Prime, and Apple TV")
+    @Description("Fetch live trending charts from streaming platforms (Netflix, Prime, Apple TV)")
     public Function<SvodTrendRequest, List<MediaCatalogPayload>> fetchLiveSvodTrends() {
         return request -> {
+            // In production: call external MCP server or scraping API
             if ("netflix".equalsIgnoreCase(request.platform())) {
                 return List.of(
                     new MediaCatalogPayload(
-                        "Cyberpunk 2077: Edgerunners", 
-                        "Netflix", 
-                        "Sci-Fi/Anime", 
-                        8.6, 
-                        "A street kid trying to survive in a technology and body modification-obsessed city of the future."
+                        "Cyberpunk: Edgerunners",
+                        "Netflix",
+                        "Sci-Fi/Anime",
+                        8.6,
+                        "A street kid surviving in a technology-obsessed city of the future."
+                    ),
+                    new MediaCatalogPayload(
+                        "Black Mirror S7",
+                        "Netflix",
+                        "Thriller/Sci-Fi",
+                        8.2,
+                        "Technology's dark impact on modern society explored through standalone stories."
                     )
                 );
             }
@@ -131,28 +269,36 @@ public class SvodMediaToolsConfiguration {
 }
 ```
 
-### Step 2: Prompt Layout & Context Injectors in orasaka-core
+> [!TIP]
+> For real-world data, replace the hardcoded list with an MCP server call. Register the MCP endpoint in `application.yml` under `orasaka.core.mcp.servers` and the engine will invoke it automatically.
 
-The core engine remains completely stateless. It accepts the user prompt along with an immutable OrasakaContext populated by the gateway.
+### Step 3: Write the System Prompt Template
 
-System Prompt Template layout:
+Create an externalized StringTemplate file in `orasaka-core/src/main/resources/prompts/`:
+
+**`cinepulse-system.st`**:
 
 ```text
-You are the CinePulse AI Engine, an elite platform media consultant. 
-Your customer is authenticated under the following strict profile boundaries:
-- Active Language: {CONTEXT_LANGUAGE}
-- Excluded Genres/Triggers: {CONTEXT_EXCLUSIONS}
-- Preferred Platforms: {CONTEXT_PLATFORMS}
+You are the CinePulse AI Engine, an elite streaming media consultant.
 
-You must use your streaming analysis tools to query Netflix, Amazon Prime, and Apple TV. 
-Extract real-world trending data, discard platform-biased promotions, filter the list according to the user's explicit profile boundaries, and map the final recommendations into the requested JSON structural layout.
+Your customer's profile boundaries:
+- Active Language: {CONTEXT_LANGUAGE}
+- Excluded Genres: {CONTEXT_EXCLUSIONS}
+- Preferred Platforms: {CONTEXT_PLATFORMS}
+- Temperature: {CONTEXT_TEMPERATURE}
+
+Instructions:
+1. Use the fetchLiveSvodTrends tool to query each preferred platform
+2. Discard platform-biased promotions and exclude forbidden genres
+3. Rank results by relevance to the user's viewing history
+4. Return a structured JSON array with title, platform, genre, matchScore, and reasoning
 ```
 
-### Step 3: Gateway Integration & Schema Stitching (orasaka-gateway)
+### Step 4: Extend the GraphQL Schema
 
-The GraphQL layer acts as the orchestrator. It queries the identity database to fetch the active session profile, packages it into an immutable record, and hands it over to the Core execution client.
+Add CinePulse types and queries to the gateway's schema:
 
-Define the GraphQL Schema Extension (schema.graphqls):
+**`schema.graphqls`** (extension):
 
 ```graphql
 type MediaRecommendation {
@@ -168,83 +314,76 @@ extend type Query {
 }
 ```
 
-Implement the Resolver (Virtual Threads Mandate):
+### Step 5: Build the Gateway Controller
+
+The gateway fetches the user profile, builds the immutable `Context`, and delegates to the core engine:
+
+**`CinePulseController.java`**:
 
 ```java
 package com.orasaka.gateway.media;
 
-import com.orasaka.core.engine.OrasakaAiClient;
-import com.orasaka.core.support.OrasakaContext;
-import com.orasaka.core.support.OrasakaChatRequest;
-import com.orasaka.core.support.OrasakaChatResponse;
-import com.orasaka.gateway.config.OrasakaSecurityFilter;
+import com.orasaka.core.client.AiClient;
+import com.orasaka.core.support.Context;
 import com.orasaka.identity.service.IdentityService;
-import com.orasaka.identity.domain.User;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Controller
-public class CinePulseGraphQLController {
+class CinePulseController {
 
     private final IdentityService identityService;
-    private final OrasakaAiClient aiClient;
-    private final ExecutorService virtualThreadExecutor;
+    private final AiClient aiClient;
 
-    public CinePulseGraphQLController(IdentityService identityService, OrasakaAiClient aiClient) {
+    CinePulseController(IdentityService identityService, AiClient aiClient) {
         this.identityService = identityService;
         this.aiClient = aiClient;
-        this.virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
-    }
-
-    private User getCurrentUser() {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof User user) {
-            return user;
-        }
-        return identityService.getUser(OrasakaSecurityFilter.DEV_ADMIN_USER_ID);
     }
 
     @QueryMapping
-    public CompletableFuture<List<MediaRecommendation>> getPersonalizedTrends(@Argument String threadId) {
-        User userProfile = getCurrentUser();
-        
+    public CompletableFuture<List<MediaRecommendation>> getPersonalizedTrends(
+            @Argument String threadId) {
+
+        // 1. Resolve user from security context
+        var user = SecurityContextResolver.currentUser(identityService);
+
         return CompletableFuture.supplyAsync(() -> {
-            // Build thread-safe context populated from identity profile
-            OrasakaContext context = new OrasakaContext(
-                userProfile.id().toString(),
+
+            // 2. Build immutable context from identity profile
+            var context = new Context(
+                user.id().toString(),
                 threadId,
-                userProfile.preferences(),
-                userProfile.authorities()
+                user.preferences(),
+                user.authorities()
             );
 
-            // Package as unified Chat Request
-            OrasakaChatRequest request = new OrasakaChatRequest(
-                "Analyze global matrix trends and cross-reference with my subscription preferences.",
-                null,
-                null,
-                context
-            );
+            // 3. Build chat request with context
+            var request = InternalChatRequest.builder()
+                .prompt("Analyze global streaming trends for my profile.")
+                .context(context)
+                .build();
 
-            // Execute via Core Engine
-            OrasakaChatResponse response = aiClient.chat(request);
+            // 4. Execute via core engine
+            var response = aiClient.chat(request);
 
+            // 5. Parse structured response
             return MediaParser.parseStructuredPayload(response.content());
-        }, virtualThreadExecutor);
+
+        }, Executors.newVirtualThreadPerTaskExecutor());
     }
 }
 ```
 
-### Step 4: Activating Passive Caching & RAG Ingestion
+> [!NOTE]
+> Notice the gateway **never** imports Spring AI types. It only uses `AiClient` (the facade) and `Context` (the data record). This satisfies Bridge Pattern 2.0.
 
-Since CinePulse calls upstream streaming API catalogs which change infrequently throughout the day, we can avoid redundant network traffic and reduce latency by activating Orasaka's generic passive caching and RAG ingestion directly in the configuration.
+### Step 6: Activate Caching & RAG Ingestion
 
-Add the following configuration to your `application.yml`:
+Add configuration in `application.yml` to enable passive caching and background RAG:
 
 ```yaml
 orasaka:
@@ -253,338 +392,116 @@ orasaka:
       fetchLiveSvodTrends:
         cache:
           enabled: true
-          ttlSeconds: 3600 # Cache results in Caffeine + Postgres for 1 hour
+          ttlSeconds: 3600          # Cache for 1 hour
         rag:
           enabled: true
-          chunkerType: JSON_ARRAY # Use the custom JSON chunker strategy
+          chunkerType: JSON_ARRAY   # Parse array items as individual chunks
           sourceTable: orasaka_tools_rag_source
 ```
 
-By declaring these configurations:
+**What this enables:**
 
-1. **Dynamic Caching**: When `fetchLiveSvodTrends` is invoked, the AI engine's `CachingToolCallback` decorator intercepts the request, checks the cache key (the input parameters JSON string), and if present, returns the cached result without executing the underlying function.
-2. **Background Ingestion**: The `OrasakaBackgroundScheduler` will automatically pick up this tool for ingestion, scanning the `orasaka_tools_rag_source` database table for non-ingested items matching `tool_id = 'fetchLiveSvodTrends'` and parsing them using the JSON array chunker strategy.
+| Feature | Behavior |
+|:---|:---|
+| **Tier 1 Cache (Caffeine)** | In-memory, max 5000 entries, instant lookup |
+| **Tier 2 Cache (PostgreSQL)** | Persistent, survives restarts, cross-node sync |
+| **CachingToolCallback** | Intercepts tool calls, returns cached data on hit |
+| **Background RAG** | Daily ingestion of `orasaka_tools_rag_source` rows via `BackgroundScheduler` |
 
----
+### Step 7: Add Video Trailer & Scene Generation
 
-## 🚀 Key Takeaways for your Next Startup Feature
-
-1. **Keep orasaka-core Pure**: Never pollute the core logic with your business database tables. The core only needs to know how to map raw prompt strings, handle tool outputs, and enforce session memory boundaries.
-2. **Leverage MCP Servers**: If you need to add a new data provider (like an Apple TV catalog scraper), build it as a separate mini-node/python script implementing the Model Context Protocol (MCP), register it inside `orasaka-tools`, and the AI will pick it up automatically without rewriting your Java code.
-3. **Profile Isolation**: If the user modifies their settings on the frontend (`orasaka-ui`), those updates go straight to `orasaka-identity`. The very next query to the Gateway will automatically pull the updated `OrasakaContext` and alter the AI behavior instantly.
-
----
-
-## 🎙️ Modern Java 21 Core Engineering Standards
-
-Orasaka enforces strict Java 21 standards to maximize throughput under heavy Virtual Thread workloads while maintaining codebase cleanliness.
-
-### 1. Zero Virtual Thread Over-Orchestration
-
-* **The Rule**: Never wrap blocking operations or I/O calls in nested `.submit().get()` blocks or custom thread executor barriers inside service classes.
-* **The Rationale**: The Spring Boot/Gateway server (under virtual thread configuration) mounts each request thread directly onto a Virtual Thread. Creating additional internal executors introduces unnecessary synchronization barriers and context-switching overhead, risking carrier thread pinning if synchronized blocks are traversed.
-* **The Design**: Run blocking operations synchronously on the caller thread. Let the platform's Virtual Thread scheduler automatically yield execution when entering blockages.
-
-### 2. Functional Stream Reductions
-
-For interceptor and middleware orchestration pipelines, replace procedural `for` loops with functional stream reductions (`Stream.reduce`) to aggregate context matrices in a thread-safe, immutable chain:
+Extend the CinePulse feature to generate custom videos or place users in scenes (like movie trailers or sports events):
 
 ```java
-// Immutable interceptor pipeline execution using functional reduction
-PromptContext enrichedContext = interceptors.stream()
-    .reduce(
-        initialContext,
-        (currentCtx, interceptor) -> interceptor.enrich(currentCtx),
-        (ctx1, ctx2) -> ctx1 // Combiner for parallel streams
+// In CinePulseController — add a video generation mutation
+@MutationMapping
+public CompletableFuture<VideoResponse> generateSceneInsertion(
+        @Argument String prompt,
+        @Argument Integer durationSeconds,
+        @Argument String selectedSceneId) {
+
+    // Scene id can represent movie sequences or sports matches
+    var request = new VideoRequest(prompt, durationSeconds, Map.of("sceneId", selectedSceneId), null);
+    return CompletableFuture.supplyAsync(
+        () -> videoService.generateVideo(request),
+        Executors.newVirtualThreadPerTaskExecutor()
     );
+}
 ```
 
-### 3. Sequenced Collections
+The response contains an RFC 2397 Data URL representing the rendered MP4 with the face swap/scene swap applied:
 
-Leverage Java 21's Sequenced Collections (`List`, `LinkedHashSet`) to query, manipulate, and order elements without manual index-based calculations:
-
-```java
-// Accessing sequenced collection ends elegantly
-var firstMsg = messages.getFirst();
-var lastMsg = messages.getLast();
+```tsx
+<video
+  src={payload.url}
+  controls
+  autoPlay
+  loop
+  className="max-h-[512px] w-full max-w-[512px] rounded-md bg-black shadow-md"
+/>
 ```
 
 ---
 
-## 💎 Rich Java 21 Domain Record Design Reference
+## 🎬 Multi-Modal Ingestion
 
-To satisfy Guardrail `[ERR-103]`, application services must remain purely anemic orchestration layers. All validation rules, safety defaults, and payload transformations must reside inside the target Java Records.
+CinePulse processes movie screenshots (visual scan), audio clips (sound match), and custom scene inserts. Each media type uses dedicated ports in `orasaka-core/ingest/`:
 
-### 1. Defensive Compact Constructors
+| Media | Interface | Output Record | Key Fields |
+|:---|:---|:---|:---|
+| 🖼️ Posters / Screenshots | [ImagePreProcessor](../orasaka-core/src/main/java/com/orasaka/core/ingest/image/ImagePreProcessor.java) | `ProcessedImagePayload` | `base64Image`, `width`, `height` |
+| 🎵 Audio Clips / Snippets | [AudioPreProcessor](../orasaka-core/src/main/java/com/orasaka/core/ingest/audio/AudioPreProcessor.java) | `ProcessedAudioPayload` | `transcript`, `sampleRate`, `bitRate` |
+| 🎬 Renders / Video clips | [VideoPreProcessor](../orasaka-core/src/main/java/com/orasaka/core/ingest/video/VideoPreProcessor.java) | `ProcessedVideoPayload` | Extracted frames + audio details |
 
-Enforce structural invariants and collection immutability at construction time:
-
-```java
-public record User(
-    UUID id,
-    String username,
-    Set<String> authorities,
-    Map<String, Object> preferences
-) {
-  // Compact constructor enforces invariants and returns safe copies
-  public User {
-    Objects.requireNonNull(id, "User ID cannot be null");
-    if (username == null || username.isBlank()) {
-      throw new IllegalArgumentException("Username cannot be blank");
-    }
-    
-    // Enforce defensive collection copies
-    authorities = (authorities == null) ? Set.of() : Set.copyOf(authorities);
-    
-    // Resolve safety default parameters in-line
-    Map<String, Object> temp = (preferences == null) ? new HashMap<>() : new HashMap<>(preferences);
-    temp.putIfAbsent("language", "en");
-    preferences = Map.copyOf(temp);
-  }
-}
-```
-
-### 2. Rich Domain Methods
-
-Offload payload compilation and format mapping from the processing services into rich domain methods on the records themselves:
-
-```java
-public record OrasakaChatRequest(
-    String prompt,
-    List<ChatMessage> messages,
-    OrasakaOptions options
-) {
-  public OrasakaChatRequest {
-    messages = (messages == null) ? List.of() : List.copyOf(messages);
-  }
-
-  // Compile payload using mapping functions to isolate Spring AI types from services
-  public List<Message> compileMessages(String refinedPrompt, Function<ChatMessage, Message> mapper) {
-    List<Message> container = new ArrayList<>();
-    messages.stream().map(mapper).forEach(container::add);
-    if (refinedPrompt != null && !refinedPrompt.isBlank()) {
-      container.add(new UserMessage(refinedPrompt));
-    }
-    return List.copyOf(container);
-  }
-}
-```
----
-
-## 🎙️ Functional Purity vs Legacy Procedural Code
-
-To satisfy Guardrail `[ERR-104]`, Orasaka enforces the eradication of local variable null mutations, empty catch blocks, and imperative loop structures. Below is a side-by-side comparative analysis of the gateway's security context filter implementation, serving as our gold standard for context building.
-
-### Legacy Procedural Code (Banned)
-In the legacy implementation, variables were initialized to null and mutated procedurally inside nested conditional branches. Exceptions were silently swallowed, making troubleshooting difficult and leaking mutability into concurrent contexts.
-
-```java
-// BANNED: Procedural style with null mutations and swallowed exceptions
-@Override
-protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-    throws ServletException, IOException {
-  String authHeader = request.getHeader("Authorization");
-  String userId = null; // Smelly: Null assignment with intent to mutate
-
-  if (authHeader != null && authHeader.startsWith("Bearer ")) {
-    userId = authHeader.substring(7).trim(); // Smelly: mutation
-  } else {
-    String tokenParam = request.getParameter("token");
-    if (tokenParam != null && !tokenParam.isBlank()) {
-      userId = tokenParam.trim(); // Smelly: mutation
-    }
-  }
-
-  User user = null; // Smelly: Null assignment
-  if (userId != null) {
-    try {
-      user = identityService.getUser(userId); // Smelly: mutation
-    } catch (Exception e) {
-      // Smelly: Swallowed exception
-    }
-  }
-
-  if (user != null && user.enabled()) {
-    var authorities = user.authorities().stream()
-        .map(auth -> new SimpleGrantedAuthority(auth))
-        .collect(Collectors.toList());
-    var authToken = new UsernamePasswordAuthenticationToken(user, null, authorities);
-    SecurityContextHolder.getContext().setAuthentication(authToken);
-  }
-
-  filterChain.doFilter(request, response);
-}
-```
-
-### Modern Functional Purity (Gold Standard)
-
-The refactored `OrasakaSecurityFilter` maps incoming context dynamically via an immutable, functional `Optional` pipeline. No variables are declared as null or mutated, connectivity issues are logged properly at the `ERROR` level, and the security attachment executes atomically in a single `.ifPresent()` terminal block:
-
-```java
-// GOLD STANDARD: Pure, immutable, and thread-safe Optional pipeline
-@Override
-protected void doFilterInternal(
-    HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-    throws ServletException, IOException {
-
-  extractUserId(request)
-      .flatMap(this::safeGetUser)
-      .filter(User::enabled)
-      .ifPresent(user -> {
-        var authorities = user.authorities().stream()
-            .map(SimpleGrantedAuthority::new)
-            .toList();
-        var authToken = new UsernamePasswordAuthenticationToken(user, null, authorities);
-        SecurityContextHolder.getContext().setAuthentication(authToken);
-      });
-
-  filterChain.doFilter(request, response);
-}
-
-private Optional<String> extractUserId(HttpServletRequest request) {
-  return Optional.ofNullable(request.getHeader("Authorization"))
-      .filter(header -> header.startsWith("Bearer "))
-      .map(header -> header.substring(7).trim())
-      .filter(token -> !token.isEmpty())
-      .or(() -> Optional.ofNullable(request.getParameter("token"))
-          .map(String::trim)
-          .filter(token -> !token.isEmpty()));
-}
-
-private Optional<User> safeGetUser(String userId) {
-  try {
-    return Optional.ofNullable(identityService.getUser(userId));
-  } catch (Exception e) {
-    logger.error("Failed to resolve user context from identity layer for userId: {}", userId, e);
-    return Optional.empty();
-  }
-}
-```
+> [NOTE]
+> All pre-processor implementations must be **package-private** per ADR-019. Only the interfaces and payload records are public API surface.
 
 ---
 
-## 🌐 Server-Driven UX via the Orasaka Operation Graph
+## 🌐 Server-Driven UI (Operation Graph)
 
-To satisfy Guardrail `[ERR-106]` and `[ERR-107]`, Orasaka structures its interactive capabilities into an Operation Graph matrix compiled dynamically. 
+The gateway dynamically compiles an Operation Graph that tells the frontend exactly what capabilities are available. This enables server-driven UI rendering without hardcoding feature flags in client code.
 
-### 1. Sealed Interface NodeState Hierarchy
+### How It Works
 
-Nodes in the operation graph are assigned polymorphic status values modeled via sealed record interfaces to enable compile-time exhaustiveness:
+1. `GraphEngine` evaluates YAML configuration + database state
+2. Each capability node gets a polymorphic `NodeState` (Active / Locked / Invisible)
+3. If a capability is disabled in config, it short-circuits to `Invisible` immediately
+4. The compiled graph is served via `query { operationGraph }` and rendered by `orasaka-ui`
 
-```java
-public sealed interface NodeState permits Active, Locked, Invisible {}
-public final record Active() implements NodeState {}
-public final record Locked(String reason, LocalDateTime lockedAt) implements NodeState {}
-public final record Invisible() implements NodeState {}
-```
-
-### 2. Switch-Expression Pattern-Matching Reduction Loop
-
-When verifying capability states, services and mappers utilize switch expressions with pattern matching over `NodeState` subclasses to enforce safety dynamically and reject legacy `instanceof` blocks:
+### Short-Circuit Example
 
 ```java
-boolean allowed = switch (node.state()) {
-  case Active active -> true;
-  case Locked locked -> false;
-  case Invisible invisible -> false;
-};
-```
-
-### 3. Stateless Short-Circuit Graph Compilation
-The `OrasakaGraphEngine` evaluates configurations with short-circuit boolean checking: if a capability's blueprint is disabled in the static YAML configuration, data access locks checking is bypassed entirely, immediately evaluating to `Invisible` to optimize connection lease times under heavy Virtual Thread workloads:
-
-```java
+// If feature is disabled, skip all database checks — zero allocation
 if (!config.enabled()) {
-  nodes.add(new OperationNode(id, ..., new Invisible(), ...));
-  return; // Short-circuited bypass
+    nodes.add(new OperationNode(id, ..., new Invisible(), ...));
+    return;
 }
 ```
 
 ---
 
-## 🎨 Functional Purity & Stream Reduction Rules
+## 🚀 Quick Checklist for New Features
 
-### 1. Universal Record Invariant Validation (`[ERR-103]`)
-All domain records must be self-validating and immutable at construction time.
+Use this checklist every time you build a new vertical on Orasaka:
 
-* **Incorrect (Procedural Leakage inside Service)**:
-```java
-public class IdentityService {
-    public User registerUser(String username, String email, String language) {
-        String finalLanguage = (language == null || language.isBlank()) ? "en" : language;
-        // procedural checks...
-        return new User(UUID.randomUUID(), username, email, true, Set.of("ROLE_USER"), Map.of(), List.of());
-    }
-}
-```
-
-* **Correct (Self-Validating Domain Record)**:
-```java
-public record User(
-    UUID id,
-    String username,
-    String email,
-    boolean active,
-    Set<String> authorities,
-    Map<String, Object> preferences,
-    List<InterceptionEntity> activeInterceptions
-) {
-    public User {
-        Objects.requireNonNull(id, "ID must not be null");
-        Objects.requireNonNull(username, "Username must not be null");
-        Objects.requireNonNull(email, "Email must not be null");
-        authorities = Set.copyOf(authorities != null ? authorities : Set.of());
-        preferences = Map.copyOf(preferences != null ? preferences : Map.of());
-        activeInterceptions = List.copyOf(activeInterceptions != null ? activeInterceptions : List.of());
-    }
-}
-```
-
-### 2. Functional Pipeline Reduction (`[ERR-104]`)
-Procedural loops (`for`, `while`) and local variable null mutations (initializing a variable to `null` to mutate it later inside a conditional block) are strictly banned.
-
-* **Incorrect (Procedural Mutation)**:
-```java
-String promptText = request.prompt();
-for (OrasakaContextInterceptor interceptor : interceptors) {
-    promptText = interceptor.preProcess(request, promptText, messages, options);
-}
-```
-
-* **Correct (Functional Stream Reduction)**:
-```java
-String refinedPrompt = interceptors.stream()
-    .reduce(
-        request.prompt(),
-        (text, interceptor) -> interceptor.preProcess(request, text, messages, options),
-        (t1, t2) -> t1
-    );
-```
+- [ ] **Tool Records** — Define request/response records in `orasaka-tools` with compact constructors
+- [ ] **Tool Bean** — Register as `@Bean` + `@Description` in a `@Configuration` class
+- [ ] **Prompt Template** — Create `.st` file in `orasaka-core/src/main/resources/prompts/`
+- [ ] **GraphQL Schema** — Extend `schema.graphqls` in `orasaka-gateway`
+- [ ] **Gateway Controller** — Fetch profile from identity, build `Context`, call `AiClient`
+- [ ] **Caching Config** — Enable in `application.yml` under `orasaka.tools.configs`
+- [ ] **RAG Config** — Enable background ingestion if tool outputs need vector search
+- [ ] **Test** — Unit test each record, integration test the full pipeline
+- [ ] **Verify** — Run `mvn clean compile -pl orasaka-gateway -am` to validate the full chain
 
 ---
 
-## 🚀 Quality & Formatting Verification
+## 📎 Related Documentation
 
-To guarantee adherence to the functional purity standard, all modifications must satisfy the static checking rules:
-* **`[ERR-109]`**: Strict Data Component Naming & Record Conventions (carriers must be `record` types).
-* **`[ERR-110]`**: Collapse Package Architecture & Encapsulation Boundary (utility beans and orchestrator implementations must remain package-private).
-
----
-
-## 🎙️ CinePulse AI Multi-Modal Ingestion Guidelines
-
-To handle film assets within the ingestion pipeline, tools exposing vision or audio extraction processing must conform to standard contract structures.
-
-### A. Vision Poster Ingestion (`AnalyzePosterRequest`)
-All movie poster classification and vision-based analyses must accept a payload containing a base64 encoded image string alongside structured contextual prompts:
-* **Contract Schema**:
-  - `posterBase64`: The raw string of the image file encoded in Base64 format. Must be validated non-null and non-blank.
-  - `prompt`: Direct context instructions for the vision execution model. Falls back to a generic analysis description if empty.
-
-### B. Audio Extract Compliance (`AnalyzeAudioExtractRequest`)
-All film audio tracking, clip inspections, and sound-based verification filters must process local media references:
-* **Contract Schema**:
-  - `clipPath`: Absolute or relative path to the source audio file. Must be validated non-null and non-blank.
-  - `checkType`: Target compliance verification or content checks category (e.g. compliance, loudness checking).
-
-
+| Document | Description |
+|:---|:---|
+| [Architecture Reference](ARCHITECTURE.md) | System topology, module boundaries, execution flows |
+| [API Reference](API_REFERENCE.md) | Public types, facades, endpoints, data models |
+| [Glossary](GLOSSARY.md) | Ecosystem terms, patterns, environment variables |
+| [ADR Log](CONTEXT.md) | 22 Architectural Decision Records |

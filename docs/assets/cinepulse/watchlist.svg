@@ -1,0 +1,153 @@
+<svg width="650" height="420" viewBox="0 0 650 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="50%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+    <linearGradient id="card-inner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f8fafc" />
+    </linearGradient>
+
+    <!-- Clean Shadow -->
+    <filter id="soft-shadow" x="-8%" y="-8%" width="116%" height="116%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0f172a" flood-opacity="0.04" />
+    </filter>
+
+    <!-- CSS Keyframe Animations -->
+    <style><![CDATA[
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+      .ui-font { font-family: 'Inter', sans-serif; }
+
+      /* Glowing match badge */
+      @keyframes match-pulse {
+        0%, 100% { stroke-opacity: 0.3; }
+        50% { stroke-opacity: 0.8; stroke-width: 1.5; }
+      }
+      .badge-glow { animation: match-pulse 2s infinite ease-in-out; }
+    ]]></style>
+  </defs>
+
+  <!-- Frame Background -->
+  <rect width="650" height="420" rx="16" fill="#f8fafc" />
+  <rect x="0.5" y="0.5" width="649" height="419" rx="15.5" stroke="#e2e8f0" stroke-width="1" />
+
+  <!-- Window Header -->
+  <rect x="0" y="0" width="650" height="44" rx="16" fill="#f1f5f9" />
+  <rect x="0" y="24" width="650" height="20" fill="#f1f5f9" />
+  <line x1="0" y1="44" x2="650" y2="44" stroke="#e2e8f0" stroke-width="1" />
+
+  <!-- Window Controls -->
+  <circle cx="20" cy="22" r="5" fill="#ff5f56" />
+  <circle cx="36" cy="22" r="5" fill="#ffbd2e" />
+  <circle cx="52" cy="22" r="5" fill="#27c93f" />
+
+  <!-- Title Text -->
+  <text x="325" y="27" class="ui-font" font-size="12" font-weight="600" fill="#475569" text-anchor="middle">Watchlist &amp; Personalized Reels</text>
+
+  <!-- Section Title (Aligned to content grid at x=168 to prevent sidebar overlap) -->
+  <text x="168" y="86" class="ui-font" font-size="18" font-weight="700" fill="#0f172a">My Watchlist</text>
+  <text x="168" y="102" class="ui-font" font-size="11" fill="#64748b">Titles saved from media queries and tailored AI recommendation tracks</text>
+
+  <!-- Left Filters Sidebar Pane (x: 24 to 154) -->
+  <g transform="translate(24, 120)" class="ui-font">
+    <rect width="130" height="276" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" filter="url(#soft-shadow)" />
+    
+    <!-- Filter tabs -->
+    <rect x="8" y="14" width="114" height="28" rx="6" fill="url(#brand-grad)" opacity="0.1" />
+    <rect x="8" y="14" width="3" height="28" rx="1.5" fill="#4f46e5" />
+    <text x="24" y="32" font-size="11.5" font-weight="700" fill="#4f46e5">All Saved (12)</text>
+
+    <g fill="#475569">
+      <text x="24" y="68" font-size="11.5" font-weight="500">AI Curated (4)</text>
+      <text x="24" y="104" font-size="11.5" font-weight="500">Sports (3)</text>
+      <text x="24" y="140" font-size="11.5" font-weight="500">Completed (32)</text>
+    </g>
+  </g>
+
+  <!-- Right Grid Content (x: 168 to 626) -->
+  
+  <!-- Row of 3 Movie Cards wrapped in layout groups to prevent translation collapse -->
+
+  <!-- Card 1: Dune 2 -->
+  <g transform="translate(168, 120)">
+    <g class="ui-font">
+      <animateTransform attributeName="transform" type="translate" values="0,0; 0,-4; 0,0" dur="4s" repeatCount="indefinite" />
+      <rect width="144" height="170" rx="12" fill="url(#card-inner)" stroke="#e2e8f0" stroke-width="1" filter="url(#soft-shadow)" />
+      <rect x="8" y="8" width="128" height="74" rx="8" fill="#faf5ff" />
+      <path d="M 12,74 C 40,60 60,80 100,60 C 120,50 130,70 140,55 L 140,82 L 12,82 Z" fill="#7c3aed" opacity="0.15" />
+      <path d="M 20,78 C 50,68 70,82 110,72 L 132,82 L 20,82 Z" fill="#7c3aed" opacity="0.3" />
+      <circle cx="110" cy="26" r="3.5" fill="#7c3aed" opacity="0.6" />
+
+      <!-- Match score -->
+      <rect class="badge-glow" x="98" y="14" width="30" height="14" rx="4" fill="#f0fdf4" stroke="#10b981" stroke-width="1" />
+      <text x="113" y="24" font-size="8" font-weight="800" fill="#10b981" text-anchor="middle">95%</text>
+
+      <!-- Details -->
+      <text x="12" y="102" font-size="11.5" font-weight="700" fill="#0f172a">Dune: Part Two</text>
+      <text x="12" y="116" font-size="9" fill="#7c3aed" font-weight="600">Prime • Watch Later</text>
+      <text x="12" y="132" font-size="8.5" fill="#475569">Saved via visual match on 05/23.</text>
+      <text x="12" y="144" font-size="8.5" fill="#475569">Genre match: Sci-Fi.</text>
+    </g>
+  </g>
+
+  <!-- Card 2: Gladiator II -->
+  <g transform="translate(322, 120)">
+    <g class="ui-font">
+      <animateTransform attributeName="transform" type="translate" values="0,0; 0,-4; 0,0" dur="4s" begin="1.2s" repeatCount="indefinite" />
+      <rect width="144" height="170" rx="12" fill="url(#card-inner)" stroke="#e2e8f0" stroke-width="1" filter="url(#soft-shadow)" />
+      
+      <!-- Abstract Roman columns illustration -->
+      <rect x="8" y="8" width="128" height="74" rx="8" fill="#fff5f5" />
+      <rect x="28" y="26" width="6" height="46" rx="1" fill="#ef4444" opacity="0.2" />
+      <rect x="48" y="26" width="6" height="46" rx="1" fill="#ef4444" opacity="0.2" />
+      <rect x="68" y="26" width="6" height="46" rx="1" fill="#ef4444" opacity="0.2" />
+      <rect x="88" y="26" width="6" height="46" rx="1" fill="#ef4444" opacity="0.2" />
+      <line x1="20" y1="24" x2="108" y2="24" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-opacity="0.5" />
+      <line x1="20" y1="72" x2="108" y2="72" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-opacity="0.5" />
+
+      <rect class="badge-glow" x="98" y="14" width="30" height="14" rx="4" fill="#f0fdf4" stroke="#10b981" stroke-width="1" />
+      <text x="113" y="24" font-size="8" font-weight="800" fill="#10b981" text-anchor="middle">92%</text>
+
+      <text x="12" y="102" font-size="11.5" font-weight="700" fill="#0f172a">Gladiator II</text>
+      <text x="12" y="116" font-size="9" fill="#d97706" font-weight="600">Theater • AI Suggest</text>
+      <text x="12" y="132" font-size="8.5" fill="#475569">Tailored recommendation for</text>
+      <text x="12" y="144" font-size="8.5" fill="#475569">your Roman Empire interest.</text>
+    </g>
+  </g>
+
+  <!-- Card 3: Champions League -->
+  <g transform="translate(476, 120)">
+    <g class="ui-font">
+      <animateTransform attributeName="transform" type="translate" values="0,0; 0,-4; 0,0" dur="4s" begin="2.4s" repeatCount="indefinite" />
+      <rect width="144" height="170" rx="12" fill="url(#card-inner)" stroke="#e2e8f0" stroke-width="1" filter="url(#soft-shadow)" />
+      
+      <!-- Abstract Football/Stadium pitch lines -->
+      <rect x="8" y="8" width="128" height="74" rx="8" fill="#f0fdf4" />
+      <rect x="22" y="22" width="100" height="46" rx="4" fill="none" stroke="#10b981" stroke-opacity="0.4" stroke-width="1.5" />
+      <line x1="72" y1="22" x2="72" y2="68" stroke="#10b981" stroke-opacity="0.4" stroke-width="1.5" />
+      <circle cx="72" cy="45" r="14" fill="none" stroke="#10b981" stroke-opacity="0.4" stroke-width="1.5" />
+
+      <rect class="badge-glow" x="98" y="14" width="30" height="14" rx="4" fill="#f0fdf4" stroke="#10b981" stroke-width="1" />
+      <text x="113" y="24" font-size="8" font-weight="800" fill="#10b981" text-anchor="middle">88%</text>
+
+      <text x="12" y="102" font-size="11.5" font-weight="700" fill="#0f172a">Champions League</text>
+      <text x="12" y="116" font-size="9" fill="#059669" font-weight="600">YouTube • Sports Feed</text>
+      <text x="12" y="132" font-size="8.5" fill="#475569">Injected via Sports preference</text>
+      <text x="12" y="144" font-size="8.5" fill="#475569">active in your identity profile.</text>
+    </g>
+  </g>
+
+  <!-- Watchlist bottom helper info panel -->
+  <g transform="translate(168, 304)" class="ui-font">
+    <rect width="452" height="92" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" filter="url(#soft-shadow)" />
+    <rect x="0" y="0" width="4" height="92" rx="2" fill="url(#brand-grad)" />
+
+    <text x="16" y="20" font-size="10.5" font-weight="700" fill="#4f46e5">Watchlist Auto-Curation Log</text>
+    <text x="16" y="38" font-size="9.5" fill="#475569">CinePulse aggregated 12 saved titles from multi-modal inputs. Discarded 2 duplicates automatically.</text>
+    <text x="16" y="52" font-size="9.5" fill="#475569">The UserContextResolver resolved a high affinity for Sci-Fi (Dune II) and sports (Champions League).</text>
+    <text x="16" y="70" font-size="9.5" fill="#059669">✓ All preferences parsed correctly • Cache sync completes in 12 min.</text>
+  </g>
+</svg>

@@ -1,0 +1,156 @@
+<svg width="650" height="440" viewBox="0 0 650 440" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="50%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+    <linearGradient id="slider-track" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0ea5e9" />
+      <stop offset="70%" stop-color="#4f46e5" />
+      <stop offset="100%" stop-color="#fee2e2" />
+    </linearGradient>
+
+    <!-- Clean Shadow -->
+    <filter id="soft-shadow" x="-8%" y="-8%" width="116%" height="116%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0f172a" flood-opacity="0.04" />
+    </filter>
+
+    <style><![CDATA[
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+      .ui-font { font-family: 'Inter', sans-serif; }
+      
+      /* Breathing animation for active toggles */
+      @keyframes breathe-cyan {
+        0%, 100% { filter: drop-shadow(0 0 1px rgba(14, 165, 233, 0.2)); }
+        50% { filter: drop-shadow(0 0 6px rgba(14, 165, 233, 0.4)); }
+      }
+      .active-cyan { animation: breathe-cyan 3s infinite ease-in-out; }
+      
+      @keyframes breathe-violet {
+        0%, 100% { filter: drop-shadow(0 0 1px rgba(79, 70, 229, 0.2)); }
+        50% { filter: drop-shadow(0 0 6px rgba(79, 70, 229, 0.4)); }
+      }
+      .active-violet { animation: breathe-violet 3s infinite ease-in-out 1s; }
+    ]]></style>
+  </defs>
+
+  <!-- Frame Background -->
+  <rect width="650" height="440" rx="16" fill="#f8fafc" />
+  <rect x="0.5" y="0.5" width="649" height="439" rx="15.5" stroke="#e2e8f0" stroke-width="1" />
+
+  <!-- Window Header -->
+  <rect x="0" y="0" width="650" height="44" rx="16" fill="#f1f5f9" />
+  <rect x="0" y="24" width="650" height="20" fill="#f1f5f9" />
+  <line x1="0" y1="44" x2="650" y2="44" stroke="#e2e8f0" stroke-width="1" />
+
+  <!-- Mac Dots -->
+  <circle cx="20" cy="22" r="5" fill="#ff5f56" />
+  <circle cx="36" cy="22" r="5" fill="#ffbd2e" />
+  <circle cx="52" cy="22" r="5" fill="#27c93f" />
+
+  <!-- Header Title -->
+  <text x="325" y="27" class="ui-font" font-size="12" font-weight="600" fill="#475569" text-anchor="middle">Preferences Configuration</text>
+
+  <!-- Title section with vector gear icon instead of emoji -->
+  <g>
+    <!-- Clean Gear Path -->
+    <path d="M 32,74 L 34,70 M 32,90 L 30,86 M 22,82 L 26,82 M 42,82 L 38,82 M 25,75 L 28,78 M 39,89 L 36,86 M 25,89 L 28,86 M 39,75 L 36,78" stroke="#0f172a" stroke-width="2" stroke-linecap="round" />
+    <circle cx="32" cy="82" r="5" stroke="#0f172a" stroke-width="2" fill="#f8fafc" />
+    <animateTransform attributeName="transform" type="rotate" from="0 32 82" to="360 32 82" dur="25s" repeatCount="indefinite" />
+  </g>
+  <text x="56" y="86" class="ui-font" font-size="17" font-weight="700" fill="#0f172a">Preference &amp; Modality Controls</text>
+  <text x="56" y="102" class="ui-font" font-size="11" fill="#64748b">Manage context variables injected into the 4-stage pipeline</text>
+
+  <!-- Form Layout Panel -->
+  <g transform="translate(24, 120)" class="ui-font">
+    
+    <!-- Left Column: Core Fields -->
+    <g transform="translate(0, 0)">
+      <rect width="280" height="284" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" filter="url(#soft-shadow)" />
+      
+      <!-- Vector Profile Icon -->
+      <path d="M 18,22 C 18,20 20,18 22,18 H 30 C 32,18 34,20 34,22 V 32 H 18 Z" fill="url(#brand-grad)" opacity="0.15" />
+      <circle cx="26" cy="23" r="3.5" stroke="#4f46e5" stroke-width="1.5" fill="none" />
+      <path d="M 20,31 C 20,29 22,27 26,27 C 30,27 32,29 32,31" stroke="#4f46e5" stroke-width="1.5" stroke-linecap="round" />
+      <text x="44" y="28" font-size="12.5" font-weight="700" fill="#4f46e5">Profile Attributes</text>
+      
+      <!-- Field 1: User Language -->
+      <text x="18" y="58" font-size="10.5" fill="#475569">Default Language (CONTEXT_LANGUAGE)</text>
+      <rect x="18" y="68" width="244" height="32" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+      <text x="30" y="88" font-size="11.5" font-weight="600" fill="#0f172a">English (United States) — en_US</text>
+      <!-- Dropdown indicator vector -->
+      <path d="M 238,85 L 242,89 L 246,85" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+
+      <!-- Field 2: Excluded Genres -->
+      <text x="18" y="124" font-size="10.5" fill="#475569">Exclusions (CONTEXT_EXCLUSIONS)</text>
+      <!-- Tag Chips -->
+      <g transform="translate(18, 134)">
+        <rect x="0" y="0" width="62" height="24" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1" />
+        <text x="24" y="15" font-size="10" font-weight="600" fill="#ef4444">Horror</text>
+        <path d="M 48,10 L 54,16 M 54,10 L 48,16" stroke="#fca5a5" stroke-width="1.2" stroke-linecap="round" />
+
+        <rect x="70" y="0" width="72" height="24" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1" />
+        <text x="94" y="15" font-size="10" font-weight="600" fill="#ef4444">Romance</text>
+        <path d="M 124,10 L 130,16 M 130,10 L 124,16" stroke="#fca5a5" stroke-width="1.2" stroke-linecap="round" />
+
+        <rect x="150" y="0" width="60" height="24" rx="6" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1" />
+        <text x="180" y="15" font-size="10" font-weight="500" fill="#7c3aed" text-anchor="middle">+ Add</text>
+      </g>
+
+      <!-- Field 3: Cognitive Temperature slider -->
+      <text x="18" y="196" font-size="10.5" fill="#475569">Cognitive Temperature (CONTEXT_TEMPERATURE)</text>
+      <!-- Slider Track -->
+      <rect x="18" y="210" width="244" height="6" rx="3" fill="url(#slider-track)" />
+      <!-- Slider Handle -->
+      <circle cx="180" cy="213" r="8" fill="#ffffff" stroke="#4f46e5" stroke-width="2" />
+      <text x="180" y="234" font-size="10" font-weight="700" fill="#4f46e5" text-anchor="middle">0.7</text>
+      <text x="18" y="234" font-size="9" fill="#94a3b8">Deterministic (0.0)</text>
+      <text x="262" y="234" font-size="9" fill="#94a3b8" text-anchor="end">Creative (1.0)</text>
+    </g>
+
+    <!-- Right Column: Multimodal Capabilities (Toggles) -->
+    <g transform="translate(300, 0)">
+      <rect width="300" height="284" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" filter="url(#soft-shadow)" />
+      
+      <!-- Sparkle/Multi icon -->
+      <path d="M 22,24 L 25,18 L 28,24 L 34,27 L 28,30 L 25,36 L 22,30 L 16,27 Z" fill="url(#brand-grad)" opacity="0.15" />
+      <path d="M 23,24 L 25,20 L 27,24 L 31,26 L 27,28 L 25,32 L 23,28 L 19,26 Z" fill="#4f46e5" />
+      <text x="44" y="28" font-size="12.5" font-weight="700" fill="#4f46e5">Multi-Modal Modules</text>
+
+      <!-- Toggle 1: Media Search Active -->
+      <g transform="translate(20, 50)">
+        <text x="0" y="16" font-size="12" font-weight="600" fill="#0f172a">Enable Audio &amp; Screen Search</text>
+        <text x="0" y="30" font-size="9.5" fill="#64748b">Permit visual captures and audio snippet inputs</text>
+        <!-- Toggle Switch Active -->
+        <rect class="active-cyan" x="210" y="8" width="46" height="22" rx="11" fill="#0891b2" />
+        <circle cx="243" cy="19" r="8" fill="#ffffff" />
+      </g>
+
+      <!-- Toggle 2: Scene Video Insertion -->
+      <g transform="translate(20, 105)">
+        <text x="0" y="16" font-size="12" font-weight="600" fill="#0f172a">Allow Scene &amp; Sports Video Insertion</text>
+        <text x="0" y="30" font-size="9.5" fill="#64748b">Generate custom renders inserting user portrait</text>
+        <!-- Toggle Switch Active -->
+        <rect class="active-violet" x="210" y="8" width="46" height="22" rx="11" fill="#7c3aed" />
+        <circle cx="243" cy="19" r="8" fill="#ffffff" />
+      </g>
+
+      <!-- Toggle 3: Cache Invalidation Strategy -->
+      <g transform="translate(20, 160)">
+        <text x="0" y="16" font-size="12" font-weight="600" fill="#0f172a">Enable Passive Multi-Tier Caching</text>
+        <text x="0" y="30" font-size="9.5" fill="#64748b">Leverage Caffeine and PostgreSQL caching layers</text>
+        <!-- Toggle Switch Active -->
+        <rect x="210" y="8" width="46" height="22" rx="11" fill="#10b981" />
+        <circle cx="243" cy="19" r="8" fill="#ffffff" />
+      </g>
+
+      <!-- Save Button -->
+      <rect x="20" y="222" width="260" height="38" rx="8" fill="url(#brand-grad)" />
+      <!-- Save Icon -->
+      <path d="M 94,241 H 102 V 246 H 94 Z M 92,234 H 104 V 248 H 92 Z M 100,234 L 104,238" stroke="#ffffff" stroke-width="1.2" stroke-linejoin="round" fill="none" />
+      <text x="156" y="246" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">Save Configuration</text>
+    </g>
+  </g>
+</svg>
