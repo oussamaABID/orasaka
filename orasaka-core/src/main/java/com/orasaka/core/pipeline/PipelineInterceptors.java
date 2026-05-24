@@ -268,7 +268,7 @@ class OrasakaMemoryInterceptor implements OrasakaContextInterceptor {
       ChatMemory chatMemory = memoryResolver.resolve(conversationId);
       List<Message> history = chatMemory.get(conversationId);
       if (history != null && !history.isEmpty()) {
-        messages.addAll(history);
+        messages.addAll(0, history);
         logger.debug(
             "Loaded {} messages from ChatMemory for conversationId: {}",
             history.size(),

@@ -1,13 +1,15 @@
-package com.orasaka.core.engine;
+package com.orasaka.core.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.orasaka.core.engine.OrasakaEngine;
+import com.orasaka.core.model.OrasakaChatRequest;
+import com.orasaka.core.model.OrasakaChatResponse;
 import com.orasaka.core.pipeline.OrasakaKnowledgeService;
 import com.orasaka.core.pipeline.OrasakaToolRegistry;
-import com.orasaka.core.support.OrasakaChatRequest;
-import com.orasaka.core.support.OrasakaChatResponse;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,15 +35,17 @@ class OrasakaAiClientTest {
   void shouldDelegateChatToEngine() {
     // Given
     OrasakaChatRequest request = OrasakaChatRequest.simple("test prompt");
-    OrasakaChatResponse expectedResponse = new OrasakaChatResponse("test response", null, Map.of());
-    when(engine.chat(request)).thenReturn(expectedResponse);
+    com.orasaka.core.support.OrasakaChatResponse engineResponse =
+        new com.orasaka.core.support.OrasakaChatResponse("test response", null, Map.of());
+    when(engine.chat(any(com.orasaka.core.support.OrasakaChatRequest.class)))
+        .thenReturn(engineResponse);
 
     // When
     OrasakaChatResponse actualResponse = client.chat(request);
 
     // Then
-    assertThat(actualResponse).isEqualTo(expectedResponse);
-    verify(engine).chat(request);
+    assertThat(actualResponse.content()).isEqualTo("test response");
+    verify(engine).chat(any(com.orasaka.core.support.OrasakaChatRequest.class));
   }
 
   @Test

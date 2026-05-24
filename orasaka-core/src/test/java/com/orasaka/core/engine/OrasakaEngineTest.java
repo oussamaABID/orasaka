@@ -250,6 +250,47 @@ class OrasakaEngineTest {
   }
 
   @Test
+  void shouldPrependHistoryBeforeCurrentPrompt() {
+    // Given
+    org.springframework.ai.chat.memory.ChatMemory mockChatMemory =
+        mock(org.springframework.ai.chat.memory.ChatMemory.class);
+    org.springframework.ai.chat.messages.UserMessage oldUserMsg =
+        new org.springframework.ai.chat.messages.UserMessage("Old user prompt");
+    org.springframework.ai.chat.messages.AssistantMessage oldAssistantMsg =
+        new org.springframework.ai.chat.messages.AssistantMessage("Old assistant reply");
+
+    when(memoryResolver.resolve("session-123")).thenReturn(mockChatMemory);
+    when(mockChatMemory.get("session-123")).thenReturn(List.of(oldUserMsg, oldAssistantMsg));
+
+    com.orasaka.core.support.OrasakaContext context =
+        new com.orasaka.core.support.OrasakaContext(
+            "user-123", "session-123", Map.of(), java.util.Set.of());
+    OrasakaChatRequest request = new OrasakaChatRequest("New prompt", null, null, context);
+
+    AssistantMessage assistantMessage = new AssistantMessage("Response");
+    ChatResponse chatResponse = new ChatResponse(List.of(new Generation(assistantMessage)));
+    when(chatModel.call(any(Prompt.class))).thenReturn(chatResponse);
+
+    // When
+    engine.chat(request);
+
+    // Then
+    verify(chatModel)
+        .call(
+            argThat(
+                (Prompt prompt) -> {
+                  List<org.springframework.ai.chat.messages.Message> instructions =
+                      prompt.getInstructions();
+                  if (instructions.size() != 3) {
+                    return false;
+                  }
+                  return instructions.get(0).getText().equals("Old user prompt")
+                      && instructions.get(1).getText().equals("Old assistant reply")
+                      && instructions.get(2).getText().equals("New prompt");
+                }));
+  }
+
+  @Test
   void shouldThrowExceptionWhenProviderMissing() {
     // Given
     CoreProperties emptyProps =
