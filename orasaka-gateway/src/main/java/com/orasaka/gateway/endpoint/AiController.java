@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -150,13 +151,7 @@ public class AiController {
         "GraphQL chat mutation invoked for conversationId: {}, prompt: {}", conversationId, prompt);
     return CompletableFuture.supplyAsync(
         () -> {
-          String userId = user.id().toString();
-          Set<OrasakaAuthority> authorities =
-              user.authorities().stream()
-                  .map(OrasakaAuthority::new)
-                  .collect(java.util.stream.Collectors.toSet());
-          OrasakaContext context =
-              new OrasakaContext(userId, conversationId, user.preferences(), authorities);
+          OrasakaContext context = buildContext(user, conversationId);
           OrasakaChatRequest request = new OrasakaChatRequest(prompt, null, null, context);
           OrasakaChatResponse response = aiClient.chat(request);
           logger.debug(
@@ -296,12 +291,7 @@ public class AiController {
     logger.debug("GraphQL image mutation invoked for prompt: {}", prompt);
     return CompletableFuture.supplyAsync(
         () -> {
-          Set<OrasakaAuthority> authorities =
-              user.authorities().stream()
-                  .map(OrasakaAuthority::new)
-                  .collect(java.util.stream.Collectors.toSet());
-          OrasakaContext context =
-              new OrasakaContext(user.id().toString(), null, user.preferences(), authorities);
+          OrasakaContext context = buildContext(user, null);
           OrasakaImageRequest request = new OrasakaImageRequest(prompt, null, null, null, context);
           OrasakaImageResponse response = aiClient.generateImage(request);
           return new OrasakaChatResponse(response.url(), null, Map.of("format", response.format()));
@@ -321,12 +311,7 @@ public class AiController {
     logger.debug("GraphQL speech mutation invoked for prompt: {}", prompt);
     return CompletableFuture.supplyAsync(
         () -> {
-          Set<OrasakaAuthority> authorities =
-              user.authorities().stream()
-                  .map(OrasakaAuthority::new)
-                  .collect(java.util.stream.Collectors.toSet());
-          OrasakaContext context =
-              new OrasakaContext(user.id().toString(), null, user.preferences(), authorities);
+          OrasakaContext context = buildContext(user, null);
           OrasakaSpeechRequest request = new OrasakaSpeechRequest(prompt, null, context);
           byte[] audioBytes = aiClient.generateSpeech(request);
           String base64Audio = Base64.getEncoder().encodeToString(audioBytes);
@@ -389,5 +374,19 @@ public class AiController {
       return locked.lockedAt().toString();
     }
     return null;
+  }
+
+  /**
+   * Builds an OrasakaContext from a User and an optional conversation ID.
+   *
+   * @param user The authenticated user.
+   * @param conversationId The conversation ID, or null.
+   * @return The constructed OrasakaContext.
+   */
+  private OrasakaContext buildContext(User user, String conversationId) {
+    Set<OrasakaAuthority> authorities =
+        user.authorities().stream().map(OrasakaAuthority::new).collect(Collectors.toSet());
+    return new OrasakaContext(
+        user.id().toString(), conversationId, user.preferences(), authorities);
   }
 }

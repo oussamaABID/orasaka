@@ -2,6 +2,9 @@ package com.orasaka.gateway;
 
 import graphql.schema.Coercing;
 import graphql.schema.GraphQLScalarType;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
@@ -55,15 +58,13 @@ public class GatewayApplication {
                   public Object serialize(
                       Object dataFetcherResult,
                       graphql.GraphQLContext graphQLContext,
-                      java.util.Locale locale) {
+                      Locale locale) {
                     return dataFetcherResult;
                   }
 
                   @Override
                   public Object parseValue(
-                      Object input,
-                      graphql.GraphQLContext graphQLContext,
-                      java.util.Locale locale) {
+                      Object input, graphql.GraphQLContext graphQLContext, Locale locale) {
                     return input;
                   }
 
@@ -72,7 +73,7 @@ public class GatewayApplication {
                       graphql.language.Value<?> input,
                       graphql.execution.CoercedVariables variables,
                       graphql.GraphQLContext graphQLContext,
-                      java.util.Locale locale) {
+                      Locale locale) {
                     return parseLiteralValue(input);
                   }
 
@@ -96,7 +97,7 @@ public class GatewayApplication {
                       return arrayValue.getValues().stream().map(this::parseLiteralValue).toList();
                     }
                     if (value instanceof graphql.language.ObjectValue objectValue) {
-                      java.util.Map<String, Object> map = new java.util.HashMap<>();
+                      Map<String, Object> map = new HashMap<>();
                       objectValue
                           .getObjectFields()
                           .forEach(

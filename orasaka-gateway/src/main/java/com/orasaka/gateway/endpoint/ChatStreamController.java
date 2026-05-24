@@ -15,6 +15,8 @@ import com.orasaka.identity.domain.User;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -91,11 +93,7 @@ public class ChatStreamController {
       return ResponseEntity.badRequest().body(Map.of("error", "Prompt is required"));
     }
     User user = getCurrentUser();
-    java.util.Set<OrasakaAuthority> authorities =
-        user.authorities().stream()
-            .map(OrasakaAuthority::new)
-            .collect(java.util.stream.Collectors.toSet());
-    var context = new OrasakaContext(user.id().toString(), null, user.preferences(), authorities);
+    OrasakaContext context = buildContext(user);
     var request = new OrasakaImageRequest(prompt, null, null, null, context);
     var response = aiClient.generateImage(request);
 
@@ -134,11 +132,7 @@ public class ChatStreamController {
       return ResponseEntity.badRequest().body(Map.of("error", "Text is required"));
     }
     User user = getCurrentUser();
-    java.util.Set<OrasakaAuthority> authorities =
-        user.authorities().stream()
-            .map(OrasakaAuthority::new)
-            .collect(java.util.stream.Collectors.toSet());
-    var context = new OrasakaContext(user.id().toString(), null, user.preferences(), authorities);
+    OrasakaContext context = buildContext(user);
     var request = new OrasakaSpeechRequest(text, null, context);
     byte[] audioBytes = aiClient.generateSpeech(request);
     String base64Audio = Base64.getEncoder().encodeToString(audioBytes);
@@ -155,11 +149,7 @@ public class ChatStreamController {
   @PostMapping("/api/v1/media/analyze-image")
   public ResponseEntity<?> analyzePoster(@RequestBody MediaContracts.AnalyzePosterRequest request) {
     User user = getCurrentUser();
-    java.util.Set<OrasakaAuthority> authorities =
-        user.authorities().stream()
-            .map(OrasakaAuthority::new)
-            .collect(java.util.stream.Collectors.toSet());
-    var context = new OrasakaContext(user.id().toString(), null, user.preferences(), authorities);
+    OrasakaContext context = buildContext(user);
     var chatRequest =
         new OrasakaChatRequest(
             (request.prompt() != null ? request.prompt() : "Analyze this poster")
@@ -182,11 +172,7 @@ public class ChatStreamController {
   @PostMapping("/api/v1/media/analyze-audio")
   public ResponseEntity<?> analyzeAudio(@RequestBody MediaContracts.AnalyzeAudioRequest request) {
     User user = getCurrentUser();
-    java.util.Set<OrasakaAuthority> authorities =
-        user.authorities().stream()
-            .map(OrasakaAuthority::new)
-            .collect(java.util.stream.Collectors.toSet());
-    var context = new OrasakaContext(user.id().toString(), null, user.preferences(), authorities);
+    OrasakaContext context = buildContext(user);
     var chatRequest =
         new OrasakaChatRequest(
             "Analyze compliance for audio clip in thread: "
@@ -210,19 +196,20 @@ public class ChatStreamController {
   public ResponseEntity<Map<String, Object>> generateVideo(
       @RequestBody OrasakaVideoRequest request) {
     User user = getCurrentUser();
-    java.util.Set<OrasakaAuthority> authorities =
-        user.authorities().stream()
-            .map(OrasakaAuthority::new)
-            .collect(java.util.stream.Collectors.toSet());
-    var context = new OrasakaContext(user.id().toString(), null, user.preferences(), authorities);
-
+    OrasakaContext context = buildContext(user);
     var secureRequest =
         new OrasakaVideoRequest(
             request.prompt(), request.durationSeconds(), request.settings(), context);
 
     OrasakaVideoResponse response = orasakaVideoService.generateVideo(secureRequest);
-    String b64Data = java.util.Base64.getEncoder().encodeToString(response.videoData());
+    String b64Data = Base64.getEncoder().encodeToString(response.videoData());
 
     return ResponseEntity.ok(Map.of("format", "mp4", "url", "data:video/mp4;base64," + b64Data));
+  }
+
+  private OrasakaContext buildContext(User user) {
+    Set<OrasakaAuthority> authorities =
+        user.authorities().stream().map(OrasakaAuthority::new).collect(Collectors.toSet());
+    return new OrasakaContext(user.id().toString(), null, user.preferences(), authorities);
   }
 }

@@ -9,6 +9,7 @@ import com.orasaka.identity.domain.User;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -65,9 +66,7 @@ public class ChatStreamService {
           try {
             String userId = user.id().toString();
             Set<OrasakaAuthority> authorities =
-                user.authorities().stream()
-                    .map(OrasakaAuthority::new)
-                    .collect(java.util.stream.Collectors.toSet());
+                user.authorities().stream().map(OrasakaAuthority::new).collect(Collectors.toSet());
             OrasakaContext context =
                 new OrasakaContext(userId, conversationId, user.preferences(), authorities);
             OrasakaChatRequest request = new OrasakaChatRequest(prompt, null, null, context);
@@ -130,9 +129,7 @@ public class ChatStreamService {
 
     String userId = user.id().toString();
     Set<OrasakaAuthority> authorities =
-        user.authorities().stream()
-            .map(OrasakaAuthority::new)
-            .collect(java.util.stream.Collectors.toSet());
+        user.authorities().stream().map(OrasakaAuthority::new).collect(Collectors.toSet());
     OrasakaContext context =
         new OrasakaContext(userId, conversationId, user.preferences(), authorities);
     OrasakaChatRequest request = new OrasakaChatRequest(prompt, null, null, context);
