@@ -6,10 +6,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.orasaka.core.engine.OrasakaEngine;
-import com.orasaka.core.model.OrasakaChatRequest;
-import com.orasaka.core.model.OrasakaChatResponse;
 import com.orasaka.core.pipeline.OrasakaKnowledgeService;
 import com.orasaka.core.pipeline.OrasakaToolRegistry;
+import com.orasaka.core.support.InternalChatRequest;
+import com.orasaka.core.support.InternalChatResponse;
+import com.orasaka.core.support.OrasakaChatRequest;
+import com.orasaka.core.support.OrasakaChatResponse;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,17 +37,15 @@ class OrasakaAiClientTest {
   void shouldDelegateChatToEngine() {
     // Given
     OrasakaChatRequest request = OrasakaChatRequest.simple("test prompt");
-    com.orasaka.core.support.OrasakaChatResponse engineResponse =
-        new com.orasaka.core.support.OrasakaChatResponse("test response", null, Map.of());
-    when(engine.chat(any(com.orasaka.core.support.OrasakaChatRequest.class)))
-        .thenReturn(engineResponse);
+    InternalChatResponse engineResponse = new InternalChatResponse("test response", null, Map.of());
+    when(engine.chat(any(InternalChatRequest.class))).thenReturn(engineResponse);
 
     // When
     OrasakaChatResponse actualResponse = client.chat(request);
 
     // Then
     assertThat(actualResponse.content()).isEqualTo("test response");
-    verify(engine).chat(any(com.orasaka.core.support.OrasakaChatRequest.class));
+    verify(engine).chat(any(InternalChatRequest.class));
   }
 
   @Test
