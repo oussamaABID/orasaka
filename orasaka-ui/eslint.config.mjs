@@ -18,6 +18,12 @@ const eslintConfig = defineConfig([
           message:
             "Traditional TypeScript enums are strictly banned in Orasaka. Use 'export const MyValues = [...] as const' paired with 'export type MyType = typeof MyValues[number]' to maintain pure, tree-shakable, structural Type-Safe compliance.",
         },
+        {
+          selector:
+            "JSXElement[openingElement.name.name='div'] > JSXElement[openingElement.name.name='div'] > JSXElement[openingElement.name.name='div']",
+          message:
+            "Deeply nested generic <div> structures are banned in Orasaka. Use semantic HTML5 elements (<main>, <section>, <article>, <header>, <footer>).",
+        },
       ],
       "no-restricted-imports": [
         "error",

@@ -10,6 +10,8 @@
   * `com.orasaka.core.engine` -> Core execution loops, engine, and option mappers.
   * `com.orasaka.core.pipeline` -> Dynamic interceptors, context resolvers, tool registries, and mappers.
   * `com.orasaka.core.support` -> Public APIs, facades, exceptions, request/response models, and unified records.
+  * `com.orasaka.core.ingest` -> Multi-modal pre-processing ports and payload records.
+  * `com.orasaka.core.infrastructure` -> Heavy third-party adapters (FFmpeg, RestClient wrappers).
 * **Zero Infrastructure Coupling in Core Engine [ERR-100]**:
   * The core execution engine classes (`AbstractOrasakaEngine` and `OrasakaEngine`) must remain completely decoupled from specialized domain services, vector stores, registries, or orchestrators. They must never directly reference classes like `OrasakaToolRegistry`, `McpOrchestrator`, `OrasakaKnowledgeService`, or `OrasakaMemoryResolver` as fields or constructor arguments. Instead, all context-enrichment behaviors must be executed dynamically through the generic interceptor pipeline (`List<OrasakaContextInterceptor>`).
 * **Stateless Core IoC Isolation**:
@@ -42,3 +44,13 @@
 * **Rule**: Collections inside Records must ALWAYS be defensively copied (`Map.copyOf`, `List.copyOf`, `Set.copyOf`) during construction to achieve compile-time and runtime immutability.
 * **Rule**: Read-before-write existence checking (e.g. executing select queries prior to inserts) is strictly banned to prevent concurrency race conditions. Database-level UNIQUE constraints must handle key collision validation, caught via `DataIntegrityViolationException`.
 * **Rule**: Hashing, cryptography, and heavy CPU-bound actions must execute outside transaction blocks (`@Transactional`) to minimize database connection holding times under Virtual Threads.
+
+## 🎬 5. Multi-Modal Ingestion Boundaries [ERR-101]
+
+* **The Ingestion Principle:** All raw binary or complex file formats (Video, Audio, Image, Documents) must be parsed, compressed, or transcribed *before* hitting the execution layer.
+* **Package Distribution:**
+  * `com.orasaka.core.ingest.*` → Ports, DTO templates, and lightweight processed records.
+  * `com.orasaka.core.infrastructure.*` → Operational hardware adapters (e.g., FFmpeg pipelines, RestClient wrappers).
+* **The Text Exception:** Raw textual sequences and native chat tokens bypass the ingest layer entirely, flowing directly into `pipeline` interceptors.
+* **Inversion of Control:** The `engine` package must remain 100% blind to concrete infrastructure tools. It may only import structures from the `ingest` abstraction tree.
+* **Credential Hygiene [ERR-102]:** Direct `System.getenv()` invocations and hardcoded credential fallbacks (`"dummy-key"`) are strictly banned in production source. All external values must flow through typed `CoreProperties` configuration records, with YAML `${ENV_VAR:default}` bindings.
