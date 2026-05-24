@@ -1,9 +1,9 @@
 package com.orasaka.gateway.endpoint;
 
 import com.orasaka.core.client.OrasakaAiClient;
-import com.orasaka.core.engine.video.OrasakaVideoRequest;
-import com.orasaka.core.engine.video.OrasakaVideoResponse;
-import com.orasaka.core.engine.video.OrasakaVideoService;
+import com.orasaka.core.infrastructure.video.OrasakaVideoService;
+import com.orasaka.core.ingest.video.OrasakaVideoRequest;
+import com.orasaka.core.ingest.video.OrasakaVideoResponse;
 import com.orasaka.core.support.OrasakaAuthority;
 import com.orasaka.core.support.OrasakaChatRequest;
 import com.orasaka.core.support.OrasakaContext;
