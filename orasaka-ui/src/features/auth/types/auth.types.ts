@@ -1,7 +1,7 @@
 /**
  * User representation inside the frontend authentication context.
  */
-export interface OrasakaUser {
+export interface User {
   id: string;
   name?: string | null;
   email?: string | null;
@@ -13,7 +13,7 @@ export interface OrasakaUser {
  * Authentication state wrapping loading status and current logged-in user context.
  */
 export interface AuthState {
-  user: OrasakaUser | null;
+  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 }

@@ -8,17 +8,17 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { OrasakaSettings } from "@/features/settings/types/settings.types";
+import { Settings } from "@/features/settings/types/settings.types";
 
 /**
  * Fetches user preference configurations from the backend.
  * Uses a GraphQL query directed to the BFF API route.
  *
  * @async
- * @returns {Promise<OrasakaSettings>} A promise resolving to the user's parsed settings.
+ * @returns {Promise<Settings>} A promise resolving to the user's parsed settings.
  * @throws {Error} If the HTTP fetch fails or GraphQL returns user errors.
  */
-const fetchSettings = async (): Promise<OrasakaSettings> => {
+const fetchSettings = async (): Promise<Settings> => {
   const query = `
     query GetMe {
       me {
@@ -61,13 +61,13 @@ const fetchSettings = async (): Promise<OrasakaSettings> => {
  * Submits partial user configurations to the backend settings DB resolver.
  *
  * @async
- * @param {Partial<OrasakaSettings>} settings - Partial preference keys to modify.
+ * @param {Partial<Settings>} settings - Partial preference keys to modify.
  * @returns {Promise<Record<string, any>>} The updated settings payload from the server.
  * @throws {Error} If mutation request returns invalid statuses or GraphQL validation errors.
  */
 const updateSettings = async (
-  settings: Partial<OrasakaSettings>,
-): Promise<Partial<OrasakaSettings>> => {
+  settings: Partial<Settings>,
+): Promise<Partial<Settings>> => {
   const query = `
     mutation UpdatePrefs($prefs: Map!) {
       updatePreferences(preferences: $prefs) {
@@ -97,7 +97,7 @@ const updateSettings = async (
   }
 
   return (
-    (result.data?.updatePreferences?.preferences as Partial<OrasakaSettings>) ||
+    (result.data?.updatePreferences?.preferences as Partial<Settings>) ||
     {}
   );
 };
@@ -122,7 +122,7 @@ export function useSettings() {
       // Optimistically update the settings query cache
       queryClient.setQueryData(
         ["settings"],
-        (old: OrasakaSettings | undefined) => {
+        (old: Settings | undefined) => {
           if (!old) return old;
           return {
             ...old,

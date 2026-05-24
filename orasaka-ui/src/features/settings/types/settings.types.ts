@@ -7,7 +7,7 @@
 
 import type { AiPersona, ThemeAccent, ThemeLayout } from "@/constants/settings.constants";
 
-export interface OrasakaSettings {
+export interface Settings {
   language: string;
   autoSave: boolean;
   aiPersona: AiPersona;

@@ -24,6 +24,12 @@ const eslintConfig = defineConfig([
           message:
             "Deeply nested generic <div> structures are banned in Orasaka. Use semantic HTML5 elements (<main>, <section>, <article>, <header>, <footer>).",
         },
+        {
+          selector:
+            "ExportNamedDeclaration > :matches(TSInterfaceDeclaration, TSTypeAliasDeclaration, ClassDeclaration, FunctionDeclaration)[id.name=/^Orasaka/]",
+          message:
+            "[ERR-104] Orasaka prefix is banned on internal types. The module path already establishes ownership. Use clean domain names (e.g., 'Settings' not 'OrasakaSettings').",
+        },
       ],
       "no-restricted-imports": [
         "error",
