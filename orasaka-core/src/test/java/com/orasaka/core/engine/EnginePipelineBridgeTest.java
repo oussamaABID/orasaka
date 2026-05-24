@@ -22,7 +22,7 @@ import org.springframework.ai.chat.messages.UserMessage;
 class EnginePipelineBridgeTest {
 
   private static final CoreProperties PROPS =
-      new CoreProperties("ollama", Map.of(), null, null, null);
+      new CoreProperties("ollama", Map.of(), null, null, null, null);
 
   private static EngineModelRegistry stubRegistry() {
     return new EngineModelRegistry(Map.of(), Map.of(), Map.of(), Map.of(), PROPS);

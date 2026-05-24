@@ -24,8 +24,9 @@ class OrasakaMcpServiceTest {
                 false,
                 new CoreProperties.UserContextConfig(false),
                 new CoreProperties.SystemContextConfig(false),
-                new CoreProperties.RefinerConfig(false, null, null, 0.0),
-                new CoreProperties.RouterConfig(false, null, null, 0.0)));
+                new CoreProperties.InterceptorConfig(false, null, null, 0.0),
+                new CoreProperties.InterceptorConfig(false, null, null, 0.0)),
+            null);
 
     // When
     OrasakaMcpService service = new OrasakaMcpService(props);

@@ -67,8 +67,9 @@ class OrasakaEngineTest {
                 false,
                 new CoreProperties.UserContextConfig(false),
                 new CoreProperties.SystemContextConfig(false),
-                new CoreProperties.RefinerConfig(false, null, null, 0.0),
-                new CoreProperties.RouterConfig(false, null, null, 0.0)));
+                new CoreProperties.InterceptorConfig(false, null, null, 0.0),
+                new CoreProperties.InterceptorConfig(false, null, null, 0.0)),
+            null);
 
     var memoryInterceptor = createMemoryInterceptor(memoryResolver);
     var mcpInterceptor = createMcpInterceptor(mcpOrchestrator);
@@ -188,8 +189,9 @@ class OrasakaEngineTest {
                 false,
                 new CoreProperties.UserContextConfig(false),
                 new CoreProperties.SystemContextConfig(false),
-                new CoreProperties.RefinerConfig(false, null, null, 0.0),
-                new CoreProperties.RouterConfig(false, null, null, 0.0)));
+                new CoreProperties.InterceptorConfig(false, null, null, 0.0),
+                new CoreProperties.InterceptorConfig(false, null, null, 0.0)),
+            null);
 
     var memoryInterceptor = createMemoryInterceptor(memoryResolver);
     var mcpInterceptor = createMcpInterceptor(mcpOrchestrator);
@@ -303,8 +305,9 @@ class OrasakaEngineTest {
                 false,
                 new CoreProperties.UserContextConfig(false),
                 new CoreProperties.SystemContextConfig(false),
-                new CoreProperties.RefinerConfig(false, null, null, 0.0),
-                new CoreProperties.RouterConfig(false, null, null, 0.0)));
+                new CoreProperties.InterceptorConfig(false, null, null, 0.0),
+                new CoreProperties.InterceptorConfig(false, null, null, 0.0)),
+            null);
     OrasakaEngine badEngine =
         new OrasakaEngine(
             Map.of(), Map.of(), Map.of(), Map.of(), emptyProps, List.of(), eventPublisher);
@@ -365,15 +368,16 @@ class OrasakaEngineTest {
             true,
             new CoreProperties.UserContextConfig(true),
             new CoreProperties.SystemContextConfig(true),
-            new CoreProperties.RefinerConfig(true, "ollama", "llama-refine", 0.2),
-            new CoreProperties.RouterConfig(true, "ollama", "llama-route", 0.0));
+            new CoreProperties.InterceptorConfig(true, "ollama", "llama-refine", 0.2),
+            new CoreProperties.InterceptorConfig(true, "ollama", "llama-route", 0.0));
     CoreProperties enabledProps =
         new CoreProperties(
             "ollama",
             Map.of(),
             new CoreProperties.RagConfig(false, null, 3),
             new CoreProperties.McpConfig(List.of()),
-            orchConfig);
+            orchConfig,
+            null);
 
     AssistantMessage refineResponse = new AssistantMessage("Refined prompt instruction");
     AssistantMessage routeResponse = new AssistantMessage("openai");

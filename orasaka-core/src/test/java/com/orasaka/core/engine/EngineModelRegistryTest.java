@@ -18,12 +18,12 @@ import org.springframework.ai.embedding.EmbeddingModel;
 class EngineModelRegistryTest {
 
   private static CoreProperties props(String defaultProvider) {
-    return new CoreProperties(defaultProvider, Map.of(), null, null, null);
+    return new CoreProperties(defaultProvider, Map.of(), null, null, null, null);
   }
 
   private static CoreProperties propsWithOverrides(
       String defaultProvider, Map<String, CoreProperties.ProviderConfig> overrides) {
-    return new CoreProperties(defaultProvider, overrides, null, null, null);
+    return new CoreProperties(defaultProvider, overrides, null, null, null, null);
   }
 
   @Nested
