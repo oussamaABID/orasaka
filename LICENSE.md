@@ -1,6 +1,8 @@
 # MIT License
 
-Copyright (c) 2026 Oussama Abid
+Copyright © 2026 Oussama Abid — All Rights Reserved under the terms below.
+
+---
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -12,6 +14,10 @@ furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 
+---
+
+## Disclaimer
+
 **THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,3 +25,30 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.**
+
+---
+
+## Third-Party Notices
+
+Orasaka relies on the following open-source projects, each governed by their
+own respective licenses:
+
+| Dependency | License |
+| :--- | :--- |
+| [Spring Boot](https://spring.io/projects/spring-boot) | Apache 2.0 |
+| [Spring AI](https://spring.io/projects/spring-ai) | Apache 2.0 |
+| [Next.js](https://nextjs.org/) | MIT |
+| [Ollama](https://ollama.com/) | MIT |
+| [stable-diffusion.cpp](https://github.com/leejet/stable-diffusion.cpp) | MIT |
+| [PostgreSQL](https://www.postgresql.org/) | PostgreSQL License |
+| [pgvector](https://github.com/pgvector/pgvector) | PostgreSQL License |
+
+For complete dependency trees, run:
+
+```bash
+# Java dependencies
+mvn dependency:tree
+
+# TypeScript dependencies
+cd orasaka-ui && npm ls
+```

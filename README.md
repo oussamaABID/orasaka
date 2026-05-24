@@ -1,14 +1,10 @@
-# ORASAKA
-
-> Native AI Orchestration Engine — Java 21, Spring Boot 3.5, Spring AI 1.1.6
+# ORASAKA - Native AI Orchestration Engine
 
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-6DB33F?logo=springboot&logoColor=white)
 ![Spring AI](https://img.shields.io/badge/Spring_AI-1.1.6-6DB33F?logo=spring&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-16-000?logo=next.js)
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
-
-
 
 ![Orasaka Logo](docs/assets/logo.svg)
 
@@ -24,6 +20,7 @@ Orasaka is a production-grade Java monorepo for multi-session, multi-modal AI or
 | **Agentic Tool Calling** | MCP-compliant function registry | MCP Protocol Servers + `CachingToolCallback` |
 | **Text-to-Image Generation** | Bare-metal `stable-diffusion.cpp` | Native C++ on Apple Metal (Port `8085`) |
 | **Text-to-Video Generation** | Bare-metal LTX-Video runner | Native C++ DiT on Apple Unified Memory (Port `8086`) |
+| **Video Analysis Pipeline** | `VideoPreProcessor` port/adapter | Keyframe extraction + Whisper stub (conditional) |
 | **Text-to-Speech** | OpenAI TTS API bridge | Spring AI OpenAI TTS Model |
 | **RAG / Knowledge Ingestion** | Async chunking pipeline | `OrasakaChunkingStrategies` → Vector Store |
 | **Server-Driven UI** | `OrasakaOperationGraph` | Polymorphic capability states (Active/Locked/Invisible) |
@@ -247,7 +244,7 @@ mvn clean test -pl orasaka-gateway -am
 | Fail-Fast Compliance | ArchUnit | OrasakaException only in engine services |
 | Encapsulation | ArchUnit | Private fields in concrete classes |
 | Gateway Boundary | ArchUnit | No Spring AI leaks, pkg-private filters |
-| Coverage Gate | JaCoCo | 10% min instruction coverage (ratchet up) |
+| Coverage Gate | JaCoCo | 60% min instruction coverage |
 
 ### TypeScript (Dependency Cruiser + Jest)
 
@@ -302,6 +299,33 @@ The `.agent/rules/` and `.agent/workflows/` directories contain machine-readable
 | [ADR Log](docs/CONTEXT.md) | Architectural Decision Records |
 | [Business Guide](docs/BUSINESS_IMPLEMENTATION.md) | Vertical domain implementation blueprint |
 | [Aggregate Javadoc](docs/apidocs/) | Auto-generated API documentation |
+
+---
+
+## Video Pipeline Configuration
+
+The video pipeline is partitioned into **analysis** (vision input) and **generation** (text-to-video output), each independently toggleable:
+
+```yaml
+orasaka:
+  engine:
+    video:
+      analysis:
+        enabled: true
+        max-keyframes: 8
+        frame-interval-sec: 5
+      generation:
+        enabled: true
+        provider: localai-video
+```
+
+| Key | Default | Description |
+| :--- | :--- | :--- |
+| `analysis.enabled` | `false` | Activates the `LocalVideoProcessor` conditional bean |
+| `analysis.max-keyframes` | `8` | Maximum keyframes extracted per video |
+| `analysis.frame-interval-sec` | `5` | Seconds between keyframe samples |
+| `generation.enabled` | `false` | Enables the `OrasakaVideoService` generation endpoint |
+| `generation.provider` | `localai-video` | Provider key resolved via `CoreProperties.overrides` |
 
 ---
 
