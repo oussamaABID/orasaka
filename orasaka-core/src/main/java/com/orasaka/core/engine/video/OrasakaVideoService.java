@@ -11,49 +11,74 @@ import org.springframework.web.client.RestClient;
 @Service
 public class OrasakaVideoService {
   private final RestClient restClient;
+  private final boolean generationEnabled;
 
   public OrasakaVideoService(RestClient.Builder builder, CoreProperties properties) {
-    var videoConfig =
-        properties.overrides() != null ? properties.overrides().get("localai-video") : null;
-    String targetUrl =
-        videoConfig != null && videoConfig.baseUrl() != null
-            ? videoConfig.baseUrl()
-            : "http://localhost:8086";
+    this.generationEnabled = resolveGenerationEnabled(properties);
+    String targetUrl = resolveBaseUrl(properties);
     this.restClient = builder.baseUrl(targetUrl).build();
   }
 
   @SuppressWarnings("unchecked")
   public OrasakaVideoResponse generateVideo(OrasakaVideoRequest request) {
+    if (!generationEnabled) {
+      throw new NonTransientAiException("Video generation is disabled via configuration");
+    }
+
     Map<String, Object> payload =
         Map.of("prompt", request.prompt(), "video_length", request.durationSeconds());
 
     try {
-      Map<String, Object> response =
-          restClient
-              .post()
-              .uri("/v1/videos/generations")
-              .body(payload)
-              .retrieve()
-              .toEntity(Map.of().getClass())
-              .getBody();
-
-      if (response == null || !response.containsKey("data")) {
-        throw new IllegalStateException("Response body is empty or missing data array");
-      }
-
-      List<Map<String, Object>> dataList = (List<Map<String, Object>>) response.get("data");
-      if (dataList == null || dataList.isEmpty()) {
-        throw new IllegalStateException("Response data array is empty");
-      }
-
-      String base64Video = (String) dataList.get(0).get("b64_json");
-      if (base64Video == null || base64Video.isBlank()) {
-        throw new IllegalStateException("Response base64 video string is missing or empty");
-      }
-
+      Map<String, Object> response = executeInference(payload);
+      String base64Video = extractBase64Video(response);
       return new OrasakaVideoResponse(Base64.getDecoder().decode(base64Video.trim()), "mp4");
+    } catch (NonTransientAiException e) {
+      throw e;
     } catch (Exception e) {
       throw new NonTransientAiException("Native bare-metal video inference call failed", e);
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  private Map<String, Object> executeInference(Map<String, Object> payload) {
+    Map<String, Object> response =
+        restClient
+            .post()
+            .uri("/v1/videos/generations")
+            .body(payload)
+            .retrieve()
+            .toEntity(Map.of().getClass())
+            .getBody();
+    if (response == null || !response.containsKey("data")) {
+      throw new IllegalStateException("Response body is empty or missing data array");
+    }
+    return response;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static String extractBase64Video(Map<String, Object> response) {
+    List<Map<String, Object>> dataList = (List<Map<String, Object>>) response.get("data");
+    if (dataList == null || dataList.isEmpty()) {
+      throw new IllegalStateException("Response data array is empty");
+    }
+    String base64Video = (String) dataList.get(0).get("b64_json");
+    if (base64Video == null || base64Video.isBlank()) {
+      throw new IllegalStateException("Response base64 video string is missing or empty");
+    }
+    return base64Video;
+  }
+
+  private static boolean resolveGenerationEnabled(CoreProperties properties) {
+    return properties.video() != null
+        && properties.video().generation() != null
+        && properties.video().generation().enabled();
+  }
+
+  private static String resolveBaseUrl(CoreProperties properties) {
+    var videoConfig =
+        properties.overrides() != null ? properties.overrides().get("localai-video") : null;
+    return (videoConfig != null && videoConfig.baseUrl() != null)
+        ? videoConfig.baseUrl()
+        : "http://localhost:8086";
   }
 }
