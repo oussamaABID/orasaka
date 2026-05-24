@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 import org.springframework.util.StreamUtils;
 
 /** Caches incoming HTTP request body bytes so they can be read multiple times. */
-public class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
+class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
 
   private final byte[] cachedBody;
 

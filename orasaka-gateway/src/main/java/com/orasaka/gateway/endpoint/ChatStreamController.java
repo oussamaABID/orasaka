@@ -1,14 +1,14 @@
 package com.orasaka.gateway.endpoint;
 
 import com.orasaka.core.client.OrasakaAiClient;
-import com.orasaka.core.context.OrasakaContext;
 import com.orasaka.core.engine.video.OrasakaVideoRequest;
 import com.orasaka.core.engine.video.OrasakaVideoResponse;
 import com.orasaka.core.engine.video.OrasakaVideoService;
-import com.orasaka.core.identity.OrasakaAuthority;
-import com.orasaka.core.model.OrasakaChatRequest;
-import com.orasaka.core.model.OrasakaImageRequest;
-import com.orasaka.core.model.OrasakaSpeechRequest;
+import com.orasaka.core.support.OrasakaAuthority;
+import com.orasaka.core.support.OrasakaChatRequest;
+import com.orasaka.core.support.OrasakaContext;
+import com.orasaka.core.support.OrasakaImageRequest;
+import com.orasaka.core.support.OrasakaSpeechRequest;
 import com.orasaka.gateway.service.ChatStreamService;
 import com.orasaka.gateway.support.MediaContracts;
 import com.orasaka.identity.domain.User;
@@ -30,10 +30,10 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  * REST controller exposing real-time Server-Sent Events (SSE) chat streaming and media analysis.
  */
 @RestController
+@RequestMapping("/api/v1")
 public class ChatStreamController {
 
   private static final Logger logger = LoggerFactory.getLogger(ChatStreamController.class);
-  private static final String CHAT_STREAM_PATH = "/api/v1/chat/stream/{conversationId}";
 
   private final ChatStreamService chatStreamService;
   private final OrasakaAiClient aiClient;
@@ -70,7 +70,7 @@ public class ChatStreamController {
    * @param prompt The prompt.
    * @return SseEmitter instance.
    */
-  @GetMapping(value = CHAT_STREAM_PATH, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  @GetMapping(value = "/chat/stream/{conversationId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public SseEmitter streamChat(@PathVariable String conversationId, @RequestParam String prompt) {
     logger.debug(
         "SSE stream request received for conversationId: {}, prompt: {}", conversationId, prompt);
@@ -86,7 +86,7 @@ public class ChatStreamController {
    * @param body The prompt wrapper.
    * @return Response containing image url.
    */
-  @PostMapping("/api/v1/chat/image")
+  @PostMapping("/chat/image")
   public ResponseEntity<?> generateImage(@RequestBody Map<String, String> body) {
     String prompt = body.get("prompt");
     if (prompt == null || prompt.isBlank()) {
@@ -97,7 +97,7 @@ public class ChatStreamController {
     var request = new OrasakaImageRequest(prompt, null, null, null, context);
     var response = aiClient.generateImage(request);
 
-    // 💎 Elite Defensive Payload Packing
+    // Elite Defensive Payload Packing
     String base64Data = "";
     if (response.imageData() != null) {
       base64Data = Base64.getEncoder().encodeToString(response.imageData());
@@ -125,7 +125,7 @@ public class ChatStreamController {
    * @param body The text wrapper.
    * @return Response containing speech audio url.
    */
-  @PostMapping("/api/v1/chat/speech")
+  @PostMapping("/chat/speech")
   public ResponseEntity<?> generateSpeech(@RequestBody Map<String, String> body) {
     String text = body.get("text");
     if (text == null || text.isBlank()) {
@@ -146,7 +146,7 @@ public class ChatStreamController {
    * @param request The poster analysis request.
    * @return Response containing analysis content.
    */
-  @PostMapping("/api/v1/media/analyze-image")
+  @PostMapping("/media/analyze-image")
   public ResponseEntity<?> analyzePoster(@RequestBody MediaContracts.AnalyzePosterRequest request) {
     User user = getCurrentUser();
     OrasakaContext context = buildContext(user);
@@ -169,7 +169,7 @@ public class ChatStreamController {
    * @param request The audio analysis request.
    * @return Response containing compliance analysis content.
    */
-  @PostMapping("/api/v1/media/analyze-audio")
+  @PostMapping("/media/analyze-audio")
   public ResponseEntity<?> analyzeAudio(@RequestBody MediaContracts.AnalyzeAudioRequest request) {
     User user = getCurrentUser();
     OrasakaContext context = buildContext(user);
@@ -192,7 +192,7 @@ public class ChatStreamController {
    * @param request The video generation request parameters.
    * @return Base64 data URL representing the video content.
    */
-  @PostMapping("/api/v1/ai/video")
+  @PostMapping("/ai/video")
   public ResponseEntity<Map<String, Object>> generateVideo(
       @RequestBody OrasakaVideoRequest request) {
     User user = getCurrentUser();

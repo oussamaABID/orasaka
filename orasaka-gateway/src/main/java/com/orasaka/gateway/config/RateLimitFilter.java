@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-public class RateLimitFilter extends OncePerRequestFilter {
+class RateLimitFilter extends OncePerRequestFilter {
 
   private static final Logger logger = LoggerFactory.getLogger(RateLimitFilter.class);
 

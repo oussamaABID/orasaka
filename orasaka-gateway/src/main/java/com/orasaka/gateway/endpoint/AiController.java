@@ -1,19 +1,19 @@
 package com.orasaka.gateway.endpoint;
 
 import com.orasaka.core.client.OrasakaAiClient;
-import com.orasaka.core.context.OrasakaContext;
 import com.orasaka.core.engine.NodeState;
 import com.orasaka.core.engine.NodeState.Active;
 import com.orasaka.core.engine.NodeState.Invisible;
 import com.orasaka.core.engine.NodeState.Locked;
 import com.orasaka.core.engine.OrasakaGraphEngine;
 import com.orasaka.core.engine.OrasakaOperationGraph;
-import com.orasaka.core.identity.OrasakaAuthority;
-import com.orasaka.core.model.OrasakaChatRequest;
-import com.orasaka.core.model.OrasakaChatResponse;
-import com.orasaka.core.model.OrasakaImageRequest;
-import com.orasaka.core.model.OrasakaImageResponse;
-import com.orasaka.core.model.OrasakaSpeechRequest;
+import com.orasaka.core.support.OrasakaAuthority;
+import com.orasaka.core.support.OrasakaChatRequest;
+import com.orasaka.core.support.OrasakaChatResponse;
+import com.orasaka.core.support.OrasakaContext;
+import com.orasaka.core.support.OrasakaImageRequest;
+import com.orasaka.core.support.OrasakaImageResponse;
+import com.orasaka.core.support.OrasakaSpeechRequest;
 import com.orasaka.gateway.service.ChatStreamService;
 import com.orasaka.identity.config.IdentityInfrastructureProperties;
 import com.orasaka.identity.domain.User;
@@ -356,10 +356,11 @@ public class AiController {
    */
   @SchemaMapping(typeName = "NodeState", field = "reason")
   public String nodeStateReason(NodeState state) {
-    if (state instanceof Locked locked) {
-      return locked.reason();
-    }
-    return null;
+    return switch (state) {
+      case Locked locked -> locked.reason();
+      case Active a -> null;
+      case Invisible i -> null;
+    };
   }
 
   /**
@@ -370,10 +371,11 @@ public class AiController {
    */
   @SchemaMapping(typeName = "NodeState", field = "lockedAt")
   public String nodeStateLockedAt(NodeState state) {
-    if (state instanceof Locked locked) {
-      return locked.lockedAt().toString();
-    }
-    return null;
+    return switch (state) {
+      case Locked locked -> locked.lockedAt().toString();
+      case Active a -> null;
+      case Invisible i -> null;
+    };
   }
 
   /**

@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /** Infrastructure filter verifying capability availability from the Orasaka Operation Graph. */
-public class OrasakaOperationGraphFilter extends OncePerRequestFilter {
+class OrasakaOperationGraphFilter extends OncePerRequestFilter {
 
   private static final Logger logger = LoggerFactory.getLogger(OrasakaOperationGraphFilter.class);
 
