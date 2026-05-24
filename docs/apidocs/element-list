@@ -1,6 +1,14 @@
+com.orasaka.core.client
+com.orasaka.core.context
 com.orasaka.core.engine
+com.orasaka.core.engine.video
+com.orasaka.core.exception
+com.orasaka.core.identity
+com.orasaka.core.model
 com.orasaka.core.pipeline
+com.orasaka.core.rag
 com.orasaka.core.support
+com.orasaka.core.tool
 com.orasaka.gateway
 com.orasaka.gateway.config
 com.orasaka.gateway.endpoint
