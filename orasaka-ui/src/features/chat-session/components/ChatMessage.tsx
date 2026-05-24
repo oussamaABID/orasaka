@@ -1,4 +1,5 @@
 import React from "react";
+import ReactMarkdown from "react-markdown";
 import { ChatMessage as ChatMessageType } from "../types/chat.types";
 import { useTranslation } from "@/core/context/LocaleContext";
 
@@ -7,7 +8,77 @@ interface Props {
 }
 
 const ContentText: React.FC<{ content: string }> = ({ content }) => (
-  <p className="whitespace-pre-wrap">{content}</p>
+  <div className="max-w-none text-zinc-900 dark:text-zinc-100">
+    <ReactMarkdown
+      components={{
+        h1: ({ children }) => (
+          <h1 className="text-base font-semibold mt-3 mb-1 text-zinc-900 dark:text-zinc-50">
+            {children}
+          </h1>
+        ),
+        h2: ({ children }) => (
+          <h2 className="text-sm font-semibold mt-3 mb-1 text-zinc-900 dark:text-zinc-50">
+            {children}
+          </h2>
+        ),
+        h3: ({ children }) => (
+          <h3 className="text-xs font-semibold mt-2 mb-1 text-zinc-900 dark:text-zinc-50">
+            {children}
+          </h3>
+        ),
+        p: ({ children }) => (
+          <p className="mb-2 last:mb-0 leading-relaxed break-words whitespace-pre-wrap">
+            {children}
+          </p>
+        ),
+        ul: ({ children }) => (
+          <ul className="list-disc pl-5 mb-2 space-y-1">{children}</ul>
+        ),
+        ol: ({ children }) => (
+          <ol className="list-decimal pl-5 mb-2 space-y-1">{children}</ol>
+        ),
+        li: ({ children }) => <li className="mb-0.5">{children}</li>,
+        strong: ({ children }) => (
+          <strong className="font-semibold text-zinc-950 dark:text-zinc-50">
+            {children}
+          </strong>
+        ),
+        em: ({ children }) => <em className="italic">{children}</em>,
+        a: ({ href, children }) => (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-cyan-600 dark:text-cyan-400 hover:underline break-all"
+          >
+            {children}
+          </a>
+        ),
+        pre: ({ children }) => (
+          <pre className="overflow-x-auto rounded-lg bg-zinc-950 p-3 my-2 font-mono text-xs text-zinc-50 border border-zinc-800/60 shadow-inner">
+            {children}
+          </pre>
+        ),
+        code: ({ className, children }) => {
+          const isInline = !className;
+          return isInline ? (
+            <code className="bg-zinc-200/60 dark:bg-zinc-800/80 rounded px-1 py-0.5 font-mono text-[11px] text-zinc-900 dark:text-zinc-100">
+              {children}
+            </code>
+          ) : (
+            <code className={className}>{children}</code>
+          );
+        },
+        blockquote: ({ children }) => (
+          <blockquote className="border-l-2 border-zinc-300 dark:border-zinc-700 pl-3 py-0.5 italic my-2 text-zinc-500 dark:text-zinc-400">
+            {children}
+          </blockquote>
+        ),
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  </div>
 );
 
 const ContentImage: React.FC<{ content: string }> = ({ content }) => (
