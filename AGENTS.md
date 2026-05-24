@@ -65,55 +65,12 @@ When internal contracts, schema definitions, or module dependencies evolve, the 
 
 ## 🏛️ 3. Architectural Decisions Log (ADR)
 
-### ADR-004: Shift to Self-Validating Rich Domain Records via Java 21 Compact Constructors
-
-* **Context**: Moving away from legacy procedural Java 8 coding patterns where services were littered with null-checks, leading to runtime risk and bloated service code.
-* **Consequence**: Complete immunity against NullPointerException across the agent pipeline (orasaka-core, orasaka-gateway). Service retention windows are minimized, fully unlocking Virtual Threads performance.
-* **Concurrency & Thread Safety**: Mandate short transaction retention windows under Virtual Threads by computing cryptographic operations outside `@Transactional` and letting PostgreSQL handle identity collisions atomically via unique constraints.
-
-### ADR-005: Decoupled Cognitive Core & Open/Closed Interceptor Pipeline
-
-* **Context**: The `orasaka-core` execution engines (`AbstractOrasakaEngine` and `OrasakaEngine`) were directly coupled with concrete components such as `OrasakaToolRegistry`, `McpOrchestrator`, `OrasakaKnowledgeService`, and `OrasakaMemoryResolver`. This violates the Open/Closed Principle and couples the core orchestration engine to specific infrastructure or RAG/MCP logic.
-* **Consequence**: Full encapsulation of RAG, MCP, Memory, and Tool calling operations inside concrete `OrasakaContextInterceptor` implementations. The cognitive engine is now purely generic, invoking the pipeline of context interceptors (`List<OrasakaContextInterceptor>`) during the chat execution cycle. This ensures the core engine is decoupled, extensible, and adheres strictly to the Ports & Adapters boundary.
-* **Cross-Module Compliance Boundary & Data Purity**:
-  * To prevent N+1 queries and manual JSON serialization overhead inside business service layers (e.g. `orasaka-identity`), serialization logic must be offloaded to native JPA Attribute Converters (`@Convert`), and multi-table entity lookups combined using JPQL `LEFT JOIN FETCH` operations to enforce a single atomic database roundtrip.
-  * This monorepo-wide data fetch and parsing optimization guarantees microsecond-range database connection windows, preventing connection pool exhaustion and ensuring structural stability and high throughput for the Java 21 Virtual Thread engine.
-
-### ADR-006: Protocol-Driven Workspace Indexing via Externalized MCP Workspace Database
-
-* **Context**: Iterative directory-walking and file-looping across package boundaries inside multi-module repositories are slow, redundant, and exhaust model context windows.
-* **Consequence**: Full transition to protocol-driven workspace indexing via an externalized MCP Workspace Database (`orasaka-code-intel`). Direct iterative scanning is strictly banned. Broad architectural review sweeps are driven exclusively by targeting files using semantic coordinates resolved via workspace tools (`search_symbols`, `grep_pattern`).
-
-### ADR-007: Enforcing Self-Validating Domain Records & Anemic Service Orchestration
-
-* **Context**: Application services (`IdentityService`) and core cognitive engines (`AbstractOrasakaEngine`) were previously burdened with procedural data-assembly checks, null-checks, collection fallback mappings, and payload compilation loops. This leaked domain-integrity validation logic from the data layer into the orchestration/service layer, violating the separation of concerns.
-* **Consequence**: Universal enforcement of the Self-Validating Domain Records pattern. All operational payloads and domain records (`User`, `OrasakaChatRequest`) must handle state constraints, collection defensive copying (`List.copyOf`, `Map.copyOf`), and fallback parameter defaults (e.g. language fallback) in their **Compact Constructors**. Services and engines are strictly anemic orchestration layers, relying on rich, self-contained domain methods (like `request.compileMessages(...)`) to retrieve compiled payloads ready for downstream consumption.
-* **Data Purity**: Complete eradication of procedural conditionals inside `AbstractOrasakaEngine` and `IdentityService` when preparing inputs, guaranteeing immutability and thread-safety under heavy concurrent execution (Virtual Threads).
-
-### ADR-008: Strict Data Component Naming & Record Conventions
-
-* **Context**: Avoiding pseudo-record naming patterns on mutable standard Java classes.
-* **Consequence**: All pure data carriers and context transfer contexts must be modeled as immutable Java 21 `record` types. If a component is a standard `public class`, it MUST adhere strictly to JavaBean naming conventions (e.g., using `get` prefixes for accessors). Mixing Record naming patterns (e.g., `userMetadata()`) inside standard mutable classes is strictly banned.
-
-### ADR-009: Collapse Package Architecture & Encapsulation Boundary
-
-* **Context**: Avoiding structural bleed, package-private leakage, and maintaining a high-cohesion API boundary within monorepo modules.
-* **Consequence**: Inner classes, orchestrator implementations, and pipeline utility beans must be marked package-private. Only the main entry points (e.g. interfaces, factories, or facades) may be public. All internal mechanisms within a package must be hidden from external access.
-
-### ADR-010: Code Locality, Fluid Cohesion & Unified Frontiers
-* **Context**: Traditional Java codebases separate every single class, record, or enum into an independent file, cluttering the directory tree and breaking cognitive focus.
-* **Consequence**: Maximize Java 21 file density. Group tightly coupled records, sealed hierarchies, and inner implementation steps inside the same file boundary using nested types or package-private inline structures. This leads to shorter, cleaner file structures, faster navigation, and immediate context visibility for the engineer.
-* **Unified Frontiers Expanded Scope**: Application edge boundaries must present a unified facade. Protocols are just transport details; the domain component is the true owner. Split packages by technical transport protocols (e.g. `rest` and `graphql`) are strictly prohibited; entry points must reside in a unified `.endpoint` package boundary, and interconnected data transport objects (DTOs) must maintain ultimate density to prevent file-tree explosion by grouping them inline within singular container contract files (e.g., `AuthContracts.java`).
-
-### ADR-011: Absolute Prohibition of Direct Environment Sniffing in Functional Beans [ERR-113]
-* **Context**: Injecting `org.springframework.core.env.Environment` into functional components, filters, services, interceptors, or controllers creates fragile coupling to raw configuration state and Spring profile names.
-* **Consequence**: Injecting `Environment` or calling `.getProperty()`/`.acceptsProfiles()` inside code bodies is strictly FORBIDDEN. All functional components must remain completely oblivious to raw environment variables and Spring profile names. Configuration mapping must be managed exclusively at the configuration bootstrap layer using immutable, type-safe Record structures populated via Spring's programmatic Binder matrix. Components must receive clean, pre-resolved configuration properties through explicit constructor dependency injection.
-
-### ADR-012: Master Code Craftsmanship Mandate
-* **Context**: Avoiding boilerplate, hardcoded strings, large methods, and div-soup in frontend.
-* **Consequence**: 
-  * Leverage Native Java 21 & Standard APIs: Use standard JDK or Spring Framework utilities. Apply modern Java idioms (e.g., Pattern matching for switch, record patterns).
-  * Externalize ALL Prompt Textual Matrices: Prompt text blocks must be moved to `.st` (StringTemplate) or `.md` files in `src/main/resources/prompts/`.
-  * Strict SRP (15-Line Limit): Methods should not exceed 15-20 lines. Extract specific pipeline steps into highly-focused helper methods.
-  * Frontend Semantic HTML: Eradicate "Div-Soup". Implement clear, semantic HTML5 tags (`<main>`, `<section>`, `<article>`, `<aside>`) for layout structures.
-
+> [!IMPORTANT]
+> **ADR Source of Truth**: All Architectural Decision Records are maintained in
+> [`docs/CONTEXT.md`](docs/CONTEXT.md). Agents MUST dynamically load and
+> enforce all active ADRs from that canonical ledger prior to any code
+> generation or architectural review task. The following ADR identifiers are
+> currently active and enforceable:
+>
+> ADR-001 through ADR-022 — see [`docs/CONTEXT.md`](docs/CONTEXT.md) for full
+> context, rationale, and approval status.

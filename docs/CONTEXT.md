@@ -1,5 +1,10 @@
 # Orasaka Architecture Decision Record (ADR)
 
+> **Canonical ADR Ledger** — This file is the single source of truth for all
+> Architectural Decision Records. It is dynamically loaded by
+> [`AGENTS.md`](../AGENTS.md) as part of the Agent Execution Contract.
+
+
 ## ADR 001: Ollama as Default Provider
 
 - **Decision**: Ollama is the default provider for the `orasaka-core` module.
