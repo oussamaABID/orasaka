@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Enforces fail-fast compliance: production engine and pipeline service classes must throw only
- * {@code OrasakaException}, never raw {@code RuntimeException} or {@code IllegalStateException}.
+ * {@code CoreException}, never raw {@code RuntimeException} or {@code IllegalStateException}.
  *
  * <p>Exemptions per ADR:
  *
@@ -52,7 +52,7 @@ class FailFastComplianceTest {
         .dependOnClassesThat()
         .haveFullyQualifiedName("java.lang.IllegalStateException")
         .because(
-            "Engine service classes must throw OrasakaException, not IllegalStateException."
+            "Engine service classes must throw CoreException, not IllegalStateException."
                 + " Records, Configuration, and Bridge/Video adapter classes are exempt.")
         .check(engineServiceClasses);
   }

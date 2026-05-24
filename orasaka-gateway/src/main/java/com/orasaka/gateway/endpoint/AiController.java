@@ -1,19 +1,19 @@
 package com.orasaka.gateway.endpoint;
 
-import com.orasaka.core.client.OrasakaAiClient;
+import com.orasaka.core.client.AiClient;
+import com.orasaka.core.engine.GraphEngine;
 import com.orasaka.core.engine.NodeState;
 import com.orasaka.core.engine.NodeState.Active;
 import com.orasaka.core.engine.NodeState.Invisible;
 import com.orasaka.core.engine.NodeState.Locked;
-import com.orasaka.core.engine.OrasakaGraphEngine;
-import com.orasaka.core.engine.OrasakaOperationGraph;
-import com.orasaka.core.support.OrasakaAuthority;
-import com.orasaka.core.support.OrasakaChatRequest;
-import com.orasaka.core.support.OrasakaChatResponse;
-import com.orasaka.core.support.OrasakaContext;
-import com.orasaka.core.support.OrasakaImageRequest;
-import com.orasaka.core.support.OrasakaImageResponse;
-import com.orasaka.core.support.OrasakaSpeechRequest;
+import com.orasaka.core.engine.OperationGraph;
+import com.orasaka.core.support.Authority;
+import com.orasaka.core.support.ChatRequest;
+import com.orasaka.core.support.ChatResponse;
+import com.orasaka.core.support.Context;
+import com.orasaka.core.support.ImageRequest;
+import com.orasaka.core.support.ImageResponse;
+import com.orasaka.core.support.SpeechRequest;
 import com.orasaka.gateway.service.ChatStreamService;
 import com.orasaka.identity.config.IdentityInfrastructureProperties;
 import com.orasaka.identity.domain.User;
@@ -53,12 +53,12 @@ public class AiController {
 
   private static final Logger logger = LoggerFactory.getLogger(AiController.class);
 
-  private final OrasakaAiClient aiClient;
+  private final AiClient aiClient;
   private final IdentityService identityService;
   private final ChatStreamService chatStreamService;
   private final IdentityInfrastructureProperties identityProperties;
   private final ResourceLoader resourceLoader;
-  private final OrasakaGraphEngine graphEngine;
+  private final GraphEngine graphEngine;
   private final ExecutorService virtualThreadExecutor;
 
   /**
@@ -72,12 +72,12 @@ public class AiController {
    * @param graphEngine The graph engine.
    */
   public AiController(
-      OrasakaAiClient aiClient,
+      AiClient aiClient,
       IdentityService identityService,
       ChatStreamService chatStreamService,
       IdentityInfrastructureProperties identityProperties,
       ResourceLoader resourceLoader,
-      OrasakaGraphEngine graphEngine) {
+      GraphEngine graphEngine) {
     this.aiClient = aiClient;
     this.identityService = identityService;
     this.chatStreamService = chatStreamService;
@@ -144,16 +144,16 @@ public class AiController {
    * @return The chat response.
    */
   @MutationMapping
-  public CompletableFuture<OrasakaChatResponse> chat(
+  public CompletableFuture<ChatResponse> chat(
       @Argument String prompt, @Argument String conversationId) {
     User user = getCurrentUser();
     logger.debug(
         "GraphQL chat mutation invoked for conversationId: {}, prompt: {}", conversationId, prompt);
     return CompletableFuture.supplyAsync(
         () -> {
-          OrasakaContext context = buildContext(user, conversationId);
-          OrasakaChatRequest request = new OrasakaChatRequest(prompt, null, null, context);
-          OrasakaChatResponse response = aiClient.chat(request);
+          Context context = buildContext(user, conversationId);
+          ChatRequest request = new ChatRequest(prompt, null, null, context);
+          ChatResponse response = aiClient.chat(request);
           logger.debug(
               "GraphQL chat mutation completed for conversationId: {}, response length: {} chars",
               conversationId,
@@ -171,8 +171,7 @@ public class AiController {
    * @return The stream of responses.
    */
   @SubscriptionMapping
-  public Flux<OrasakaChatResponse> chatStream(
-      @Argument String prompt, @Argument String conversationId) {
+  public Flux<ChatResponse> chatStream(@Argument String prompt, @Argument String conversationId) {
     User user = getCurrentUser();
     logger.debug(
         "GraphQL chat stream subscription invoked for conversationId: {}, prompt: {}",
@@ -286,15 +285,15 @@ public class AiController {
    * @return The image URL response.
    */
   @MutationMapping
-  public CompletableFuture<OrasakaChatResponse> image(@Argument String prompt) {
+  public CompletableFuture<ChatResponse> image(@Argument String prompt) {
     User user = getCurrentUser();
     logger.debug("GraphQL image mutation invoked for prompt: {}", prompt);
     return CompletableFuture.supplyAsync(
         () -> {
-          OrasakaContext context = buildContext(user, null);
-          OrasakaImageRequest request = new OrasakaImageRequest(prompt, null, null, null, context);
-          OrasakaImageResponse response = aiClient.generateImage(request);
-          return new OrasakaChatResponse(response.url(), null, Map.of("format", response.format()));
+          Context context = buildContext(user, null);
+          ImageRequest request = new ImageRequest(prompt, null, null, null, context);
+          ImageResponse response = aiClient.generateImage(request);
+          return new ChatResponse(response.url(), null, Map.of("format", response.format()));
         },
         virtualThreadExecutor);
   }
@@ -306,17 +305,17 @@ public class AiController {
    * @return The speech URL response.
    */
   @MutationMapping
-  public CompletableFuture<OrasakaChatResponse> speech(@Argument String prompt) {
+  public CompletableFuture<ChatResponse> speech(@Argument String prompt) {
     User user = getCurrentUser();
     logger.debug("GraphQL speech mutation invoked for prompt: {}", prompt);
     return CompletableFuture.supplyAsync(
         () -> {
-          OrasakaContext context = buildContext(user, null);
-          OrasakaSpeechRequest request = new OrasakaSpeechRequest(prompt, null, context);
+          Context context = buildContext(user, null);
+          SpeechRequest request = new SpeechRequest(prompt, null, context);
           byte[] audioBytes = aiClient.generateSpeech(request);
           String base64Audio = Base64.getEncoder().encodeToString(audioBytes);
           String audioUrl = "data:audio/mp3;base64," + base64Audio;
-          return new OrasakaChatResponse(audioUrl, null, Map.of("format", "mp3"));
+          return new ChatResponse(audioUrl, null, Map.of("format", "mp3"));
         },
         virtualThreadExecutor);
   }
@@ -327,7 +326,7 @@ public class AiController {
    * @return Compiled operation graph.
    */
   @QueryMapping
-  public CompletableFuture<OrasakaOperationGraph> operationGraph() {
+  public CompletableFuture<OperationGraph> operationGraph() {
     User user = getCurrentUser();
     logger.debug("GraphQL query operationGraph() invoked for user: {}", user.username());
     return CompletableFuture.supplyAsync(graphEngine::compileGraph, virtualThreadExecutor);
@@ -379,16 +378,15 @@ public class AiController {
   }
 
   /**
-   * Builds an OrasakaContext from a User and an optional conversation ID.
+   * Builds an Context from a User and an optional conversation ID.
    *
    * @param user The authenticated user.
    * @param conversationId The conversation ID, or null.
-   * @return The constructed OrasakaContext.
+   * @return The constructed Context.
    */
-  private OrasakaContext buildContext(User user, String conversationId) {
-    Set<OrasakaAuthority> authorities =
-        user.authorities().stream().map(OrasakaAuthority::new).collect(Collectors.toSet());
-    return new OrasakaContext(
-        user.id().toString(), conversationId, user.preferences(), authorities);
+  private Context buildContext(User user, String conversationId) {
+    Set<Authority> authorities =
+        user.authorities().stream().map(Authority::new).collect(Collectors.toSet());
+    return new Context(user.id().toString(), conversationId, user.preferences(), authorities);
   }
 }

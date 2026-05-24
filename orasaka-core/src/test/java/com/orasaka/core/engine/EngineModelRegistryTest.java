@@ -3,7 +3,7 @@ package com.orasaka.core.engine;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.orasaka.core.support.OrasakaException;
+import com.orasaka.core.support.CoreException;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -38,17 +38,17 @@ class EngineModelRegistryTest {
     }
 
     @Test
-    @DisplayName("throws OrasakaException when default provider is null")
+    @DisplayName("throws CoreException when default provider is null")
     void throwsWhenNull() {
       var registry = createRegistry(props(null));
-      assertThrows(OrasakaException.class, registry::getActiveProvider);
+      assertThrows(CoreException.class, registry::getActiveProvider);
     }
 
     @Test
-    @DisplayName("throws OrasakaException when default provider is blank")
+    @DisplayName("throws CoreException when default provider is blank")
     void throwsWhenBlank() {
       var registry = createRegistry(props("  "));
-      assertThrows(OrasakaException.class, registry::getActiveProvider);
+      assertThrows(CoreException.class, registry::getActiveProvider);
     }
   }
 
@@ -65,10 +65,10 @@ class EngineModelRegistryTest {
     }
 
     @Test
-    @DisplayName("throws OrasakaException for unregistered provider")
+    @DisplayName("throws CoreException for unregistered provider")
     void throwsForUnregistered() {
       var registry = createRegistry(props("ollama"));
-      assertThrows(OrasakaException.class, () -> registry.getChatModel("unknown"));
+      assertThrows(CoreException.class, () -> registry.getChatModel("unknown"));
     }
   }
 
@@ -87,10 +87,10 @@ class EngineModelRegistryTest {
     }
 
     @Test
-    @DisplayName("throws OrasakaException when embedding model not found")
+    @DisplayName("throws CoreException when embedding model not found")
     void throwsWhenMissing() {
       var registry = createRegistry(props("ollama"));
-      assertThrows(OrasakaException.class, registry::getActiveEmbeddingModel);
+      assertThrows(CoreException.class, registry::getActiveEmbeddingModel);
     }
   }
 
@@ -111,10 +111,10 @@ class EngineModelRegistryTest {
     }
 
     @Test
-    @DisplayName("throws OrasakaException when base URL is missing")
+    @DisplayName("throws CoreException when base URL is missing")
     void throwsWhenMissing() {
       var registry = createRegistry(props("ollama"));
-      assertThrows(OrasakaException.class, registry::getBaseUrl);
+      assertThrows(CoreException.class, registry::getBaseUrl);
     }
   }
 
@@ -123,10 +123,10 @@ class EngineModelRegistryTest {
   class ImageModelFailFast {
 
     @Test
-    @DisplayName("throws OrasakaException when no image models registered")
+    @DisplayName("throws CoreException when no image models registered")
     void throwsWhenNoImageModel() {
       var registry = createRegistry(props("ollama"));
-      assertThrows(OrasakaException.class, registry::getActiveImageModel);
+      assertThrows(CoreException.class, registry::getActiveImageModel);
     }
   }
 
@@ -135,10 +135,10 @@ class EngineModelRegistryTest {
   class SpeechModelFailFast {
 
     @Test
-    @DisplayName("throws OrasakaException when no speech models registered")
+    @DisplayName("throws CoreException when no speech models registered")
     void throwsWhenNoSpeechModel() {
       var registry = createRegistry(props("ollama"));
-      assertThrows(OrasakaException.class, registry::getActiveSpeechModel);
+      assertThrows(CoreException.class, registry::getActiveSpeechModel);
     }
   }
 

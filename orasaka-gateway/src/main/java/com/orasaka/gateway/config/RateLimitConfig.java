@@ -1,6 +1,6 @@
 package com.orasaka.gateway.config;
 
-import com.orasaka.identity.repository.OrasakaRateLimitTierRepository;
+import com.orasaka.identity.repository.RateLimitTierRepository;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.lettuce.core.RedisClient;
@@ -85,7 +85,7 @@ public class RateLimitConfig {
    */
   @Bean
   public RateLimitFilter rateLimitFilter(
-      ProxyManager<String> proxyManager, OrasakaRateLimitTierRepository tierRepository) {
+      ProxyManager<String> proxyManager, RateLimitTierRepository tierRepository) {
     return new RateLimitFilter(proxyManager, tierRepository, properties);
   }
 

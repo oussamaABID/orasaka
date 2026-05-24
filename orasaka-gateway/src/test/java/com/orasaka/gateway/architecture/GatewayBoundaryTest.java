@@ -58,7 +58,7 @@ class GatewayBoundaryTest {
         .resideInAPackage("org.springframework.ai..")
         .because(
             "Spring AI types must remain encapsulated inside orasaka-core."
-                + " Gateway interacts only through OrasakaAiClient facade [Section 1.A, ADR-005]")
+                + " Gateway interacts only through AiClient facade [Section 1.A, ADR-005]")
         .check(gatewayClasses);
   }
 

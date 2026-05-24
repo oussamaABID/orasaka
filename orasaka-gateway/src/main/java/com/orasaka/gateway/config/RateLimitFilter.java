@@ -1,8 +1,8 @@
 package com.orasaka.gateway.config;
 
 import com.orasaka.identity.domain.User;
-import com.orasaka.identity.entity.OrasakaRateLimitTierEntity;
-import com.orasaka.identity.repository.OrasakaRateLimitTierRepository;
+import com.orasaka.identity.entity.RateLimitTierEntity;
+import com.orasaka.identity.repository.RateLimitTierRepository;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
@@ -21,24 +21,53 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+/**
+ * HTTP request rate-limiting filter using Bucket4j token-bucket algorithm.
+ *
+ * <p>Applies per-user (authenticated) or per-IP (anonymous) rate limiting based on configurable
+ * tiers stored in the database. Tier configurations are cached in-memory for 10 seconds to minimize
+ * database roundtrips.
+ *
+ * <p>Responds with HTTP 429 and JSON error body when the rate limit is exceeded. Sets {@code
+ * X-RateLimit-Limit} and {@code X-RateLimit-Remaining} headers on all responses.
+ *
+ * @see RateLimitProperties
+ * @see RateLimitConfig
+ * @since 1.0.0
+ */
 class RateLimitFilter extends OncePerRequestFilter {
 
   private static final Logger logger = LoggerFactory.getLogger(RateLimitFilter.class);
 
   private final ProxyManager<String> proxyManager;
-  private final OrasakaRateLimitTierRepository tierRepository;
+  private final RateLimitTierRepository tierRepository;
   private final RateLimitProperties properties;
   private final ConcurrentHashMap<String, CachedTier> cache = new ConcurrentHashMap<>();
 
+  /**
+   * Constructs the rate limit filter.
+   *
+   * @param proxyManager Bucket4j proxy manager for distributed buckets.
+   * @param tierRepository Repository for resolving rate limit tier configurations.
+   * @param properties Rate limit default configuration properties.
+   */
   public RateLimitFilter(
       ProxyManager<String> proxyManager,
-      OrasakaRateLimitTierRepository tierRepository,
+      RateLimitTierRepository tierRepository,
       RateLimitProperties properties) {
     this.proxyManager = proxyManager;
     this.tierRepository = tierRepository;
     this.properties = properties;
   }
 
+  /**
+   * Cached rate limit tier configuration with TTL expiry.
+   *
+   * @param capacity Maximum bucket capacity (tokens).
+   * @param refillTokens Number of tokens refilled per interval.
+   * @param refillSeconds Refill interval duration in seconds.
+   * @param expiresAt Cache entry expiry timestamp (millis since epoch).
+   */
   record CachedTier(int capacity, int refillTokens, int refillSeconds, long expiresAt) {}
 
   @Override
@@ -101,9 +130,9 @@ class RateLimitFilter extends OncePerRequestFilter {
     }
 
     try {
-      Optional<OrasakaRateLimitTierEntity> tierOpt = tierRepository.findById(tierId);
+      Optional<RateLimitTierEntity> tierOpt = tierRepository.findById(tierId);
       if (tierOpt.isPresent()) {
-        OrasakaRateLimitTierEntity tier = tierOpt.get();
+        RateLimitTierEntity tier = tierOpt.get();
         CachedTier resolved =
             new CachedTier(
                 tier.getCapacity(), tier.getRefillTokens(), tier.getRefillSeconds(), now + 10000);

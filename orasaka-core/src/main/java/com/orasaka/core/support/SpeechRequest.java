@@ -1,0 +1,10 @@
+package com.orasaka.core.support;
+
+/**
+ * Unified speech request record for Text-To-Speech generation.
+ *
+ * @param text The text content to convert to speech.
+ * @param options Provider-specific speech options.
+ * @param context The execution context carrying user preferences (e.g., voice models, speed).
+ */
+public record SpeechRequest(String text, Options options, Context context) {}

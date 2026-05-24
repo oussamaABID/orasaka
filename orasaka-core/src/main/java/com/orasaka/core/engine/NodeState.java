@@ -19,8 +19,15 @@ import java.util.Objects;
 })
 public sealed interface NodeState permits NodeState.Active, NodeState.Locked, NodeState.Invisible {
 
+  /** Active state — the capability is available for execution. No additional metadata. */
   record Active() implements NodeState {}
 
+  /**
+   * Locked state — the capability is temporarily disabled by an administrator.
+   *
+   * @param reason Human-readable explanation for the lock (required, non-blank).
+   * @param lockedAt Audit timestamp of when the lock was applied (required).
+   */
   record Locked(String reason, LocalDateTime lockedAt) implements NodeState {
     public Locked {
       Objects.requireNonNull(reason, "Lock reason cannot be null");
@@ -31,5 +38,6 @@ public sealed interface NodeState permits NodeState.Active, NodeState.Locked, No
     }
   }
 
+  /** Invisible state — the capability is hidden from clients entirely (disabled in config). */
   record Invisible() implements NodeState {}
 }

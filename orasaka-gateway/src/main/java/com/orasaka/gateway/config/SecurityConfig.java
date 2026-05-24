@@ -1,6 +1,6 @@
 package com.orasaka.gateway.config;
 
-import com.orasaka.core.engine.OrasakaGraphEngine;
+import com.orasaka.core.engine.GraphEngine;
 import com.orasaka.identity.service.IdentityService;
 import java.util.List;
 import java.util.Optional;
@@ -23,12 +23,12 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  *
  * <p>Defines the security filter chain, CORS policy, and request authorization rules. All session
  * management is disabled ({@link SessionCreationPolicy#STATELESS}); every incoming request is
- * authenticated on-the-fly by {@link OrasakaSecurityFilter}.
+ * authenticated on-the-fly by {@link SecurityFilter}.
  *
  * <p>CORS allowed origins are environment-driven via {@code orasaka.gateway.cors.allowed-origins}
  * in {@code application.yml}, ensuring zero hardcoded infrastructure values in compiled artifacts.
  *
- * @see OrasakaSecurityFilter
+ * @see SecurityFilter
  * @see com.orasaka.identity.service.IdentityService
  */
 @Configuration
@@ -39,13 +39,13 @@ public class SecurityConfig {
   private final IdentityService identityService;
   private final GatewayProperties gatewayProperties;
   private final Optional<RateLimitFilter> rateLimitFilter;
-  private final OrasakaGraphEngine graphEngine;
+  private final GraphEngine graphEngine;
 
   /**
    * Constructs the security configuration with its dependencies.
    *
-   * @param identityService The service used by {@link OrasakaSecurityFilter} to resolve
-   *     authenticated users from the Bearer token header.
+   * @param identityService The service used by {@link SecurityFilter} to resolve authenticated
+   *     users from the Bearer token header.
    * @param gatewayProperties Environment-driven gateway properties config mapping.
    * @param rateLimitFilter The optional rate limiting filter to register.
    * @param graphEngine The short-circuit graph compilation engine.
@@ -54,7 +54,7 @@ public class SecurityConfig {
       IdentityService identityService,
       GatewayProperties gatewayProperties,
       Optional<RateLimitFilter> rateLimitFilter,
-      OrasakaGraphEngine graphEngine) {
+      GraphEngine graphEngine) {
     this.identityService = identityService;
     this.gatewayProperties = gatewayProperties;
     this.rateLimitFilter = rateLimitFilter;
@@ -73,13 +73,13 @@ public class SecurityConfig {
    *   <li>{@code /api/v1/auth/login} and GraphQL explorer endpoints are public.
    *   <li>SSE streaming endpoint requires {@code ROLE_ADMIN} or {@code ROLE_USER} authority.
    *   <li>All other requests require authentication.
-   *   <li>{@link OrasakaSecurityFilter} runs before the standard form-login filter.
+   *   <li>{@link SecurityFilter} runs before the standard form-login filter.
    * </ol>
    *
    * @param http The {@link HttpSecurity} builder provided by Spring Security.
    * @return The fully configured {@link SecurityFilterChain}.
    * @throws Exception If any security configuration step fails during initialization.
-   * @see OrasakaSecurityFilter
+   * @see SecurityFilter
    */
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -113,11 +113,11 @@ public class SecurityConfig {
                         .anyRequest()
                         .authenticated())
             .addFilterBefore(
-                new OrasakaSecurityFilter(identityService, gatewayProperties.security()),
+                new SecurityFilter(identityService, gatewayProperties.security()),
                 UsernamePasswordAuthenticationFilter.class);
 
-    chain.addFilterAfter(new OrasakaOperationGraphFilter(graphEngine), OrasakaSecurityFilter.class);
-    rateLimitFilter.ifPresent(filter -> chain.addFilterAfter(filter, OrasakaSecurityFilter.class));
+    chain.addFilterAfter(new OperationGraphFilter(graphEngine), SecurityFilter.class);
+    rateLimitFilter.ifPresent(filter -> chain.addFilterAfter(filter, SecurityFilter.class));
 
     return chain.build();
   }

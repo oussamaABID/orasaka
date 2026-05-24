@@ -5,8 +5,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.orasaka.identity.domain.User;
-import com.orasaka.identity.entity.OrasakaRateLimitTierEntity;
-import com.orasaka.identity.repository.OrasakaRateLimitTierRepository;
+import com.orasaka.identity.entity.RateLimitTierEntity;
+import com.orasaka.identity.repository.RateLimitTierRepository;
 import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
@@ -34,7 +34,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class RateLimitFilterTest {
 
   private ProxyManager<String> proxyManager;
-  private OrasakaRateLimitTierRepository tierRepository;
+  private RateLimitTierRepository tierRepository;
   private RateLimitProperties properties;
   private RateLimitFilter filter;
   private SecurityContext originalSecurityContext;
@@ -43,7 +43,7 @@ public class RateLimitFilterTest {
   @SuppressWarnings("unchecked")
   void setUp() {
     proxyManager = mock(ProxyManager.class);
-    tierRepository = mock(OrasakaRateLimitTierRepository.class);
+    tierRepository = mock(RateLimitTierRepository.class);
     properties = new RateLimitProperties(true, "redis://localhost:6379", "free");
     filter = new RateLimitFilter(proxyManager, tierRepository, properties);
     originalSecurityContext = SecurityContextHolder.getContext();
@@ -74,7 +74,7 @@ public class RateLimitFilterTest {
     SecurityContextHolder.getContext().setAuthentication(authToken);
 
     // Mock DB query for "premium" tier
-    OrasakaRateLimitTierEntity tierEntity = new OrasakaRateLimitTierEntity();
+    RateLimitTierEntity tierEntity = new RateLimitTierEntity();
     tierEntity.setId("premium");
     tierEntity.setCapacity(100);
     tierEntity.setRefillTokens(10);
@@ -125,7 +125,7 @@ public class RateLimitFilterTest {
     SecurityContextHolder.getContext().setAuthentication(authToken);
 
     // Mock DB query for "free" tier
-    OrasakaRateLimitTierEntity tierEntity = new OrasakaRateLimitTierEntity();
+    RateLimitTierEntity tierEntity = new RateLimitTierEntity();
     tierEntity.setId("free");
     tierEntity.setCapacity(10);
     tierEntity.setRefillTokens(1);
@@ -168,7 +168,7 @@ public class RateLimitFilterTest {
     SecurityContextHolder.getContext().setAuthentication(null);
 
     // Mock DB query for "free" default tier
-    OrasakaRateLimitTierEntity tierEntity = new OrasakaRateLimitTierEntity();
+    RateLimitTierEntity tierEntity = new RateLimitTierEntity();
     tierEntity.setId("free");
     tierEntity.setCapacity(10);
     tierEntity.setRefillTokens(1);

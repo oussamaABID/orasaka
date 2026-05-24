@@ -2,8 +2,8 @@ package com.orasaka.core.engine;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.orasaka.core.support.Context;
 import com.orasaka.core.support.InternalChatRequest;
-import com.orasaka.core.support.OrasakaContext;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -85,7 +85,7 @@ class EnginePipelineBridgeTest {
     @Test
     @DisplayName("compiles context with conversation ID")
     void compilesWithConversationId() {
-      var ctx = new OrasakaContext("user1", "conv-123", Map.of(), Set.of());
+      var ctx = new Context("user1", "conv-123", Map.of(), Set.of());
       var request = new InternalChatRequest("test", List.of(), null, ctx);
       var result = EnginePipelineBridge.compileContext(request, null, stubRegistry(), List.of());
 

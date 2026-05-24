@@ -2,17 +2,17 @@ package com.orasaka.identity.service;
 
 import com.orasaka.identity.config.IdentityInfrastructureProperties;
 import com.orasaka.identity.domain.User;
-import com.orasaka.identity.entity.OrasakaAuthorityEntity;
-import com.orasaka.identity.entity.OrasakaUserEntity;
-import com.orasaka.identity.entity.OrasakaUserInterceptionEntity;
-import com.orasaka.identity.entity.OrasakaUserInterceptionId;
-import com.orasaka.identity.entity.OrasakaVerificationTokenEntity;
+import com.orasaka.identity.entity.AuthorityEntity;
+import com.orasaka.identity.entity.UserEntity;
+import com.orasaka.identity.entity.UserInterceptionEntity;
+import com.orasaka.identity.entity.UserInterceptionId;
+import com.orasaka.identity.entity.VerificationTokenEntity;
 import com.orasaka.identity.event.UserRegisteredEvent;
 import com.orasaka.identity.exception.UserAlreadyExistsException;
-import com.orasaka.identity.repository.OrasakaAuthorityRepository;
-import com.orasaka.identity.repository.OrasakaUserInterceptionRepository;
-import com.orasaka.identity.repository.OrasakaUserRepository;
-import com.orasaka.identity.repository.OrasakaVerificationTokenRepository;
+import com.orasaka.identity.repository.AuthorityRepository;
+import com.orasaka.identity.repository.UserInterceptionRepository;
+import com.orasaka.identity.repository.UserRepository;
+import com.orasaka.identity.repository.VerificationTokenRepository;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -53,10 +53,10 @@ public class IdentityService {
 
   private static final Logger logger = LoggerFactory.getLogger(IdentityService.class);
 
-  private final OrasakaUserRepository userRepository;
-  private final OrasakaAuthorityRepository authorityRepository;
-  private final OrasakaVerificationTokenRepository verificationTokenRepository;
-  private final OrasakaUserInterceptionRepository userInterceptionRepository;
+  private final UserRepository userRepository;
+  private final AuthorityRepository authorityRepository;
+  private final VerificationTokenRepository verificationTokenRepository;
+  private final UserInterceptionRepository userInterceptionRepository;
   private final BCryptPasswordEncoder passwordEncoder;
   private final IdentityInfrastructureProperties properties;
   private final ApplicationEventPublisher eventPublisher;
@@ -75,10 +75,10 @@ public class IdentityService {
    * @param transactionManager The platform transaction manager.
    */
   public IdentityService(
-      OrasakaUserRepository userRepository,
-      OrasakaAuthorityRepository authorityRepository,
-      OrasakaVerificationTokenRepository verificationTokenRepository,
-      OrasakaUserInterceptionRepository userInterceptionRepository,
+      UserRepository userRepository,
+      AuthorityRepository authorityRepository,
+      VerificationTokenRepository verificationTokenRepository,
+      UserInterceptionRepository userInterceptionRepository,
       BCryptPasswordEncoder passwordEncoder,
       IdentityInfrastructureProperties properties,
       ApplicationEventPublisher eventPublisher,
@@ -100,7 +100,7 @@ public class IdentityService {
    * @return The resolved {@link User} record, or {@code null} if no user exists.
    */
   public User getUser(String userId) {
-    Optional<OrasakaUserEntity> userOpt = userRepository.findByIdWithAssociations(userId);
+    Optional<UserEntity> userOpt = userRepository.findByIdWithAssociations(userId);
     if (userOpt.isEmpty()) {
       return null;
     }
@@ -115,13 +115,13 @@ public class IdentityService {
    * @return Fully resolved updated {@link User} record.
    */
   public User updatePreferences(String userId, Map<String, Object> preferences) {
-    Optional<OrasakaUserEntity> userOpt = userRepository.findByIdWithAssociations(userId);
+    Optional<UserEntity> userOpt = userRepository.findByIdWithAssociations(userId);
     if (userOpt.isEmpty()) {
       logger.warn("updatePreferences: no user found for userId={}", userId);
       return null;
     }
 
-    OrasakaUserEntity userEntity = userOpt.get();
+    UserEntity userEntity = userOpt.get();
     Map<String, Object> merged = new HashMap<>(userEntity.getPreferences());
     if (preferences != null) {
       merged.putAll(preferences);
@@ -140,13 +140,12 @@ public class IdentityService {
    * @return Fully resolved {@link User} if successful; {@code null} otherwise.
    */
   public User authenticate(String email, String password) {
-    Optional<OrasakaUserEntity> userOpt =
-        userRepository.findByEmailAndEnabledTrueWithAssociations(email);
+    Optional<UserEntity> userOpt = userRepository.findByEmailAndEnabledTrueWithAssociations(email);
     if (userOpt.isEmpty()) {
       return null;
     }
 
-    OrasakaUserEntity userEntity = userOpt.get();
+    UserEntity userEntity = userOpt.get();
     if (!passwordEncoder.matches(password, userEntity.getPasswordHash())) {
       return null;
     }
@@ -163,8 +162,7 @@ public class IdentityService {
    */
   @Transactional
   public User provisionOrAuthenticateOAuth(String email, String username) {
-    Optional<OrasakaUserEntity> userOpt =
-        userRepository.findByEmailAndEnabledTrueWithAssociations(email);
+    Optional<UserEntity> userOpt = userRepository.findByEmailAndEnabledTrueWithAssociations(email);
     if (userOpt.isPresent()) {
       return mapToUserDomain(userOpt.get());
     }
@@ -176,7 +174,7 @@ public class IdentityService {
         new User(
             UUID.fromString(userId), username, email, true, Set.of(), Map.of("language", "en"));
 
-    OrasakaUserEntity userEntity = new OrasakaUserEntity();
+    UserEntity userEntity = new UserEntity();
     userEntity.setId(userId);
     userEntity.setUsername(validatedUser.username());
     userEntity.setPasswordHash(passwordHash);
@@ -188,7 +186,7 @@ public class IdentityService {
 
     userRepository.save(userEntity);
 
-    OrasakaAuthorityEntity authorityEntity = new OrasakaAuthorityEntity();
+    AuthorityEntity authorityEntity = new AuthorityEntity();
     authorityEntity.setUserId(userId);
     authorityEntity.setAuthorityName("ROLE_USER");
     authorityRepository.save(authorityEntity);
@@ -239,7 +237,7 @@ public class IdentityService {
       user =
           transactionTemplate.execute(
               status -> {
-                OrasakaUserEntity userEntity = new OrasakaUserEntity();
+                UserEntity userEntity = new UserEntity();
                 userEntity.setId(userId);
                 userEntity.setUsername(validatedUser.username());
                 userEntity.setPasswordHash(passwordHash);
@@ -250,7 +248,7 @@ public class IdentityService {
 
                 userRepository.save(userEntity);
 
-                OrasakaAuthorityEntity authorityEntity = new OrasakaAuthorityEntity();
+                AuthorityEntity authorityEntity = new AuthorityEntity();
                 authorityEntity.setUserId(userId);
                 authorityEntity.setAuthorityName("ROLE_USER");
                 authorityRepository.save(authorityEntity);
@@ -261,7 +259,7 @@ public class IdentityService {
                   String tokenHash = hashToken(plaintextToken);
                   Instant expiry = Instant.now().plus(24, ChronoUnit.HOURS);
 
-                  OrasakaVerificationTokenEntity tokenEntity = new OrasakaVerificationTokenEntity();
+                  VerificationTokenEntity tokenEntity = new VerificationTokenEntity();
                   tokenEntity.setId(UUID.randomUUID().toString());
                   tokenEntity.setUserId(userId);
                   tokenEntity.setTokenType("EMAIL_VERIFICATION");
@@ -303,11 +301,9 @@ public class IdentityService {
     return user;
   }
 
-  /**
-   * Maps an OrasakaUserEntity and its attributes to a clean immutable User domain record in-memory.
-   */
+  /** Maps an UserEntity and its attributes to a clean immutable User domain record in-memory. */
   private User mapToUserDomain(
-      OrasakaUserEntity row, Set<String> authorities, List<String> activeInterceptions) {
+      UserEntity row, Set<String> authorities, List<String> activeInterceptions) {
     return new User(
         UUID.fromString(row.getId()),
         row.getUsername(),
@@ -320,10 +316,10 @@ public class IdentityService {
   }
 
   /** Maps user entity with pre-fetched lazy collections to domain User record in-memory. */
-  private User mapToUserDomain(OrasakaUserEntity row) {
+  private User mapToUserDomain(UserEntity row) {
     Set<String> authorities =
         row.getAuthorities().stream()
-            .map(OrasakaAuthorityEntity::getAuthorityName)
+            .map(AuthorityEntity::getAuthorityName)
             .collect(Collectors.toUnmodifiableSet());
 
     List<String> activeInterceptions =
@@ -342,9 +338,8 @@ public class IdentityService {
    * @param schemaId The schema to associate.
    */
   public void triggerInterception(UUID userId, String interceptionType, String schemaId) {
-    OrasakaUserInterceptionId interceptionId =
-        new OrasakaUserInterceptionId(userId.toString(), interceptionType);
-    OrasakaUserInterceptionEntity entity = new OrasakaUserInterceptionEntity();
+    UserInterceptionId interceptionId = new UserInterceptionId(userId.toString(), interceptionType);
+    UserInterceptionEntity entity = new UserInterceptionEntity();
     entity.setId(interceptionId);
     entity.setSchemaId(schemaId);
     entity.setCreatedAt(Instant.now());
@@ -369,8 +364,7 @@ public class IdentityService {
       UUID userId, String interceptionType, String schemaId, Map<String, Object> responses) {
     updatePreferences(userId.toString(), responses);
 
-    OrasakaUserInterceptionId interceptionId =
-        new OrasakaUserInterceptionId(userId.toString(), interceptionType);
+    UserInterceptionId interceptionId = new UserInterceptionId(userId.toString(), interceptionType);
     userInterceptionRepository.deleteById(interceptionId);
     logger.info(
         "Resolved interception '{}' (schema: '{}') for user {}",
@@ -388,14 +382,14 @@ public class IdentityService {
   @Transactional
   public boolean verifyToken(String token) {
     String tokenHash = hashToken(token);
-    Optional<OrasakaVerificationTokenEntity> tokenOpt =
+    Optional<VerificationTokenEntity> tokenOpt =
         verificationTokenRepository.findByTokenHashAndUsedFalse(tokenHash);
     if (tokenOpt.isEmpty()) {
       logger.warn("Verification token not found or already used");
       return false;
     }
 
-    OrasakaVerificationTokenEntity row = tokenOpt.get();
+    VerificationTokenEntity row = tokenOpt.get();
     if (row.getExpiryTimestamp() == null || row.getExpiryTimestamp().isBefore(Instant.now())) {
       logger.warn("Verification token has expired");
       return false;
@@ -404,9 +398,9 @@ public class IdentityService {
     row.setUsed(true);
     verificationTokenRepository.save(row);
 
-    Optional<OrasakaUserEntity> userOpt = userRepository.findById(row.getUserId());
+    Optional<UserEntity> userOpt = userRepository.findById(row.getUserId());
     if (userOpt.isPresent()) {
-      OrasakaUserEntity userEntity = userOpt.get();
+      UserEntity userEntity = userOpt.get();
       userEntity.setEnabled(true);
       userRepository.save(userEntity);
     }

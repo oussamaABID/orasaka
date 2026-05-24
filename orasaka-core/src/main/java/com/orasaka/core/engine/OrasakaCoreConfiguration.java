@@ -14,19 +14,54 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
+/**
+ * Spring Boot {@code @Configuration} class for the {@code orasaka-core} module.
+ *
+ * <p>Defines and assembles all core engine beans: AI model maps (chat, image, embedding, speech),
+ * configuration properties ({@link CoreProperties}, {@link FeaturesProperties}), the {@link
+ * GraphEngine}, and the {@link AdminRegistry}.
+ *
+ * <p>Model instantiation is delegated to {@link ModelFactory}, with a special case for LocalAI
+ * image models that use the OpenAI-compatible API.
+ *
+ * @see ModelFactory
+ * @see CoreProperties
+ * @since 1.0.0
+ */
 @Configuration
 public class OrasakaCoreConfiguration {
 
+  /**
+   * Creates the provider → {@link ChatModel} map bean.
+   *
+   * @param properties Core configuration with provider overrides.
+   * @return Immutable map of provider name → ChatModel.
+   */
   @Bean
   public Map<String, ChatModel> chatModels(CoreProperties properties) {
     return ModelFactory.createChatModels(properties);
   }
 
+  /**
+   * Creates the provider → {@link EmbeddingModel} map bean.
+   *
+   * @param properties Core configuration with provider overrides.
+   * @return Immutable map of provider name → EmbeddingModel.
+   */
   @Bean
   public Map<String, EmbeddingModel> embeddingModels(CoreProperties properties) {
     return ModelFactory.createEmbeddingModels(properties);
   }
 
+  /**
+   * Creates the provider → {@link ImageModel} map bean, including LocalAI fallback.
+   *
+   * <p>If a {@code localai} provider is configured, it is registered as both {@code "localai"} and
+   * {@code "ollama"} to enable transparent fallback.
+   *
+   * @param properties Core configuration with provider overrides.
+   * @return Mutable map of provider name → ImageModel.
+   */
   @Bean
   public Map<String, ImageModel> imageModels(CoreProperties properties) {
     Map<String, ImageModel> models = new HashMap<>(ModelFactory.createImageModels(properties));
@@ -56,11 +91,26 @@ public class OrasakaCoreConfiguration {
     return models;
   }
 
+  /**
+   * Creates an empty provider → {@link TextToSpeechModel} map bean.
+   *
+   * <p>TTS models are currently not auto-discovered; this provides a placeholder for manual or
+   * conditional registration.
+   *
+   * @return An empty mutable map.
+   */
   @Bean
   public Map<String, TextToSpeechModel> speechModels() {
     return new HashMap<>();
   }
 
+  /**
+   * Binds the {@code orasaka.core} configuration prefix to a {@link CoreProperties} record.
+   *
+   * @param env The Spring environment for property resolution.
+   * @return The bound CoreProperties instance.
+   * @throws IllegalStateException If the configuration prefix is missing or binding fails.
+   */
   @Bean
   public CoreProperties coreProperties(Environment env) {
     try {
@@ -77,21 +127,39 @@ public class OrasakaCoreConfiguration {
     }
   }
 
+  /**
+   * Binds the {@code orasaka} configuration prefix to {@link FeaturesProperties}.
+   *
+   * @param env The Spring environment for property resolution.
+   * @return The bound features properties, or a default empty instance.
+   */
   @Bean
-  public OrasakaFeaturesProperties featuresProperties(Environment env) {
+  public FeaturesProperties featuresProperties(Environment env) {
     return Binder.get(env)
-        .bind("orasaka", OrasakaFeaturesProperties.class)
-        .orElseGet(() -> new OrasakaFeaturesProperties(Map.of()));
+        .bind("orasaka", FeaturesProperties.class)
+        .orElseGet(() -> new FeaturesProperties(Map.of()));
   }
 
+  /**
+   * Creates the singleton {@link AdminRegistry} for runtime capability lock management.
+   *
+   * @return A new thread-safe admin registry instance.
+   */
   @Bean
-  public OrasakaAdminRegistry adminRegistry() {
-    return new OrasakaAdminRegistry();
+  public AdminRegistry adminRegistry() {
+    return new AdminRegistry();
   }
 
+  /**
+   * Creates the {@link GraphEngine} bean for SDUI Operation Graph compilation.
+   *
+   * @param featuresProperties Static feature capability blueprints.
+   * @param adminRegistry Runtime lock registry for dynamic capability control.
+   * @return A configured graph engine instance.
+   */
   @Bean
-  public OrasakaGraphEngine graphEngine(
-      OrasakaFeaturesProperties featuresProperties, OrasakaAdminRegistry adminRegistry) {
-    return new OrasakaGraphEngine(featuresProperties, adminRegistry);
+  public GraphEngine graphEngine(
+      FeaturesProperties featuresProperties, AdminRegistry adminRegistry) {
+    return new GraphEngine(featuresProperties, adminRegistry);
   }
 }

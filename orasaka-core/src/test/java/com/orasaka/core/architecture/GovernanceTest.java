@@ -31,7 +31,11 @@ import org.junit.jupiter.api.Test;
  */
 class GovernanceTest {
 
+  /** Production-only classes (used by ADR-007, GOV-001..003 rules). */
   private static JavaClasses coreClasses;
+
+  /** All core classes including test layer (used by ERR-103 file isolation rule). */
+  private static JavaClasses allCoreClasses;
 
   @BeforeAll
   static void importClasses() {
@@ -39,6 +43,7 @@ class GovernanceTest {
         new ClassFileImporter()
             .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
             .importPackages("com.orasaka.core");
+    allCoreClasses = new ClassFileImporter().importPackages("com.orasaka.core");
   }
 
   @Test
@@ -118,7 +123,7 @@ class GovernanceTest {
         .should()
         .bePublic()
         .because(
-            "Engine integration gates (OrasakaEngine, AbstractOrasakaEngine) must be public."
+            "Engine integration gates (Engine, AbstractEngine) must be public."
                 + " EngineModelRegistry is package-private per ADR-009.")
         .check(coreClasses);
   }
@@ -171,6 +176,50 @@ class GovernanceTest {
     assertTrue(
         violations.isEmpty(),
         "Production source contains banned literals:\n" + String.join("\n", violations));
+  }
+
+  @Test
+  @DisplayName(
+      "[ERR-103] Every top-level class (production + test) must reside in a dedicated file")
+  void oneTopLevelClassPerFile() {
+    classes()
+        .that()
+        .resideInAPackage("com.orasaka.core..")
+        .and()
+        .doNotHaveModifier(com.tngtech.archunit.core.domain.JavaModifier.SYNTHETIC)
+        .should(
+            new ArchCondition<com.tngtech.archunit.core.domain.JavaClass>(
+                "reside in a dedicated file matching their class name") {
+              @Override
+              public void check(
+                  com.tngtech.archunit.core.domain.JavaClass javaClass, ConditionEvents events) {
+                // Bypass nested, inner, member, or anonymous classes
+                if (javaClass.isAnonymousClass() || javaClass.isMemberClass()) {
+                  return;
+                }
+                String sourceFileName =
+                    javaClass.getSource().isPresent()
+                        ? javaClass.getSource().get().getFileName().orElse(null)
+                        : null;
+                if (sourceFileName != null && !sourceFileName.equals("Unknown Source")) {
+                  String expectedFileName = javaClass.getSimpleName() + ".java";
+                  if (!sourceFileName.equals(expectedFileName)) {
+                    String message =
+                        String.format(
+                            "Architecture Violation [ERR-103]: Class '%s' is illegally bundled"
+                                + " inside '%s'. Every top-level component (production or test)"
+                                + " must have its own dedicated file.",
+                            javaClass.getFullName(), sourceFileName);
+                    events.add(SimpleConditionEvent.violated(javaClass, message));
+                  }
+                }
+              }
+            })
+        .because(
+            "Every top-level Java class, interface, enum, or record—whether in production"
+                + " (src/main) or test suites (src/test)—must reside in its own dedicated"
+                + " .java source file [ERR-103, Source File Isolation Invariant].")
+        .check(allCoreClasses);
   }
 
   private static ArchCondition<JavaField> bePrivateAndFinal() {

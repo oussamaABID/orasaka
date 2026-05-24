@@ -27,10 +27,10 @@
             <artifactId>spring-security-crypto</artifactId>
         </dependency>
 
+        <!-- JSON support (required by JsonMapConverter for JPA attribute conversion) -->
         <dependency>
-            <groupId>com.orasaka</groupId>
-            <artifactId>orasaka-core</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
 
         <!-- JDBC and PostgreSQL Database integration -->

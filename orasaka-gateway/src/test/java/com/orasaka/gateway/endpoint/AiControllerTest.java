@@ -5,10 +5,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.orasaka.core.client.OrasakaAiClient;
-import com.orasaka.core.engine.OrasakaGraphEngine;
-import com.orasaka.core.support.OrasakaChatRequest;
-import com.orasaka.core.support.OrasakaChatResponse;
+import com.orasaka.core.client.AiClient;
+import com.orasaka.core.engine.GraphEngine;
+import com.orasaka.core.support.ChatRequest;
+import com.orasaka.core.support.ChatResponse;
 import com.orasaka.gateway.service.ChatStreamService;
 import com.orasaka.identity.config.IdentityInfrastructureProperties;
 import com.orasaka.identity.domain.User;
@@ -35,7 +35,7 @@ public class AiControllerTest {
 
   @Autowired private GraphQlTester graphQlTester;
 
-  @MockitoBean private OrasakaAiClient aiClient;
+  @MockitoBean private AiClient aiClient;
 
   @MockitoBean private IdentityService identityService;
 
@@ -43,7 +43,7 @@ public class AiControllerTest {
 
   @MockitoBean private IdentityInfrastructureProperties identityProperties;
 
-  @MockitoBean private OrasakaGraphEngine graphEngine;
+  @MockitoBean private GraphEngine graphEngine;
 
   /** Set up testing environment and mock user session context. */
   @BeforeEach
@@ -70,9 +70,8 @@ public class AiControllerTest {
   /** Verify that user details and chat properties are routed cleanly. */
   @Test
   void shouldPropagateContextOnChat() {
-    OrasakaChatResponse mockResponse =
-        new OrasakaChatResponse("Hello from AI", "session-123", Map.of());
-    when(aiClient.chat(any(OrasakaChatRequest.class))).thenReturn(mockResponse);
+    ChatResponse mockResponse = new ChatResponse("Hello from AI", "session-123", Map.of());
+    when(aiClient.chat(any(ChatRequest.class))).thenReturn(mockResponse);
 
     String document =
         """
@@ -94,11 +93,10 @@ public class AiControllerTest {
         .entity(String.class)
         .isEqualTo("session-123");
 
-    ArgumentCaptor<OrasakaChatRequest> requestCaptor =
-        ArgumentCaptor.forClass(OrasakaChatRequest.class);
+    ArgumentCaptor<ChatRequest> requestCaptor = ArgumentCaptor.forClass(ChatRequest.class);
     verify(aiClient).chat(requestCaptor.capture());
 
-    OrasakaChatRequest capturedRequest = requestCaptor.getValue();
+    ChatRequest capturedRequest = requestCaptor.getValue();
     assertThat(capturedRequest.prompt()).isEqualTo("Hello");
     assertThat(capturedRequest.context()).isNotNull();
     assertThat(capturedRequest.context().userId())

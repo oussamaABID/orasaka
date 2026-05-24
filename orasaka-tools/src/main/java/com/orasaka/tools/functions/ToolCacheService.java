@@ -2,9 +2,9 @@ package com.orasaka.tools.functions;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.orasaka.tools.entity.OrasakaToolCacheEntity;
-import com.orasaka.tools.entity.OrasakaToolCacheId;
-import com.orasaka.tools.repository.OrasakaToolCacheRepository;
+import com.orasaka.tools.entity.ToolCacheEntity;
+import com.orasaka.tools.entity.ToolCacheId;
+import com.orasaka.tools.repository.ToolCacheRepository;
 import java.time.Instant;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -22,7 +22,7 @@ public class ToolCacheService {
 
   private static final Logger log = LoggerFactory.getLogger(ToolCacheService.class);
 
-  private final OrasakaToolCacheRepository cacheRepository;
+  private final ToolCacheRepository cacheRepository;
   private final Cache<String, CacheEntry> localCache;
 
   /**
@@ -55,7 +55,7 @@ public class ToolCacheService {
    *
    * @param cacheRepository The JPA cache repository for database communication.
    */
-  public ToolCacheService(OrasakaToolCacheRepository cacheRepository) {
+  public ToolCacheService(ToolCacheRepository cacheRepository) {
     this.cacheRepository = cacheRepository;
     this.localCache = Caffeine.newBuilder().maximumSize(5000).build();
   }
@@ -85,10 +85,9 @@ public class ToolCacheService {
 
     log.debug("Local cache miss. Checking DB for tool={}, key={}", toolId, cacheKey);
     try {
-      Optional<OrasakaToolCacheEntity> dbOpt =
-          cacheRepository.findById(new OrasakaToolCacheId(toolId, cacheKey));
+      Optional<ToolCacheEntity> dbOpt = cacheRepository.findById(new ToolCacheId(toolId, cacheKey));
       if (dbOpt.isPresent()) {
-        OrasakaToolCacheEntity entity = dbOpt.get();
+        ToolCacheEntity entity = dbOpt.get();
         CacheEntry dbEntry = new CacheEntry(entity.getCacheValue(), entity.getExpiresAt());
         if (!dbEntry.isExpired()) {
           log.debug("DB cache hit for tool={}, key={}", toolId, cacheKey);
@@ -123,8 +122,8 @@ public class ToolCacheService {
     localCache.put(fullKey, entry);
 
     try {
-      OrasakaToolCacheId id = new OrasakaToolCacheId(toolId, cacheKey);
-      OrasakaToolCacheEntity entity = new OrasakaToolCacheEntity();
+      ToolCacheId id = new ToolCacheId(toolId, cacheKey);
+      ToolCacheEntity entity = new ToolCacheEntity();
       entity.setId(id);
       entity.setCacheValue(value);
       entity.setExpiresAt(expiresAt);
@@ -143,7 +142,7 @@ public class ToolCacheService {
    */
   private void evictFromDb(String toolId, String cacheKey) {
     try {
-      cacheRepository.deleteById(new OrasakaToolCacheId(toolId, cacheKey));
+      cacheRepository.deleteById(new ToolCacheId(toolId, cacheKey));
     } catch (Exception e) {
       log.error(
           "Failed to delete expired cache entry from DB for tool={}, key={}", toolId, cacheKey, e);

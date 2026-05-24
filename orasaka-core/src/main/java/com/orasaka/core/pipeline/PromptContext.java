@@ -2,7 +2,6 @@ package com.orasaka.core.pipeline;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * State machine context holding user and system matrices for prompt refinement and routing.
@@ -22,36 +21,18 @@ public record PromptContext(
     String refinedPrompt,
     String routedProvider) {
 
-  /** Compact constructor enforcing immutability and defensive copying. */
+  /**
+   * Compact constructor enforcing immutability and defensive copying.
+   *
+   * @param rawUserQuery The original raw user query prompt.
+   * @param userMetadata Immutable map containing enriched user attributes and preferences.
+   * @param systemMetadata Immutable map containing enriched system and environment signals.
+   * @param refinedPrompt The refined instruction text (defaults to rawUserQuery).
+   * @param routedProvider The routed model provider key (or null if default).
+   */
   public PromptContext {
-    userMetadata =
-        Optional.ofNullable(userMetadata)
-            .map(
-                m -> {
-                  var clean = new HashMap<String, Object>();
-                  m.forEach(
-                      (k, v) -> {
-                        if (k != null && v != null) {
-                          clean.put(k, v);
-                        }
-                      });
-                  return Map.copyOf(clean);
-                })
-            .orElseGet(Map::of);
-    systemMetadata =
-        Optional.ofNullable(systemMetadata)
-            .map(
-                m -> {
-                  var clean = new HashMap<String, Object>();
-                  m.forEach(
-                      (k, v) -> {
-                        if (k != null && v != null) {
-                          clean.put(k, v);
-                        }
-                      });
-                  return Map.copyOf(clean);
-                })
-            .orElseGet(Map::of);
+    userMetadata = sanitizeMap(userMetadata);
+    systemMetadata = sanitizeMap(systemMetadata);
   }
 
   /**
@@ -106,5 +87,25 @@ public record PromptContext(
   public PromptContext withSystemMetadata(Map<String, Object> systemMetadata) {
     return new PromptContext(
         rawUserQuery, userMetadata, systemMetadata, refinedPrompt, routedProvider);
+  }
+
+  /**
+   * Sanitizes a map by removing null keys and values, then wrapping it in an immutable copy.
+   *
+   * @param input The map to sanitize.
+   * @return A new immutable map containing only non-null entries.
+   */
+  private static Map<String, Object> sanitizeMap(Map<String, Object> input) {
+    if (input == null || input.isEmpty()) {
+      return Map.of();
+    }
+    var clean = new HashMap<String, Object>();
+    input.forEach(
+        (k, v) -> {
+          if (k != null && v != null) {
+            clean.put(k, v);
+          }
+        });
+    return Map.copyOf(clean);
   }
 }

@@ -2,9 +2,9 @@ package com.orasaka.core.engine;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.orasaka.core.support.Context;
 import com.orasaka.core.support.InternalImageRequest;
 import com.orasaka.core.support.InternalSpeechRequest;
-import com.orasaka.core.support.OrasakaContext;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +21,7 @@ class MediaPayloadHandlerTest {
     @Test
     @DisplayName("returns user preference when present")
     void returnsPreference() {
-      var ctx = new OrasakaContext("u", "c", Map.of("tts-voice", "nova"), Set.of());
+      var ctx = new Context("u", "c", Map.of("tts-voice", "nova"), Set.of());
       assertEquals("nova", MediaPayloadHandler.resolveVoicePreference(ctx));
     }
 
@@ -34,7 +34,7 @@ class MediaPayloadHandlerTest {
     @Test
     @DisplayName("returns 'alloy' when preferences lack tts-voice")
     void defaultWhenMissing() {
-      var ctx = new OrasakaContext("u", "c", Map.of(), Set.of());
+      var ctx = new Context("u", "c", Map.of(), Set.of());
       assertEquals("alloy", MediaPayloadHandler.resolveVoicePreference(ctx));
     }
   }

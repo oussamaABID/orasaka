@@ -1,10 +1,10 @@
 package com.orasaka.gateway.service;
 
-import com.orasaka.core.client.OrasakaAiClient;
-import com.orasaka.core.support.OrasakaAuthority;
-import com.orasaka.core.support.OrasakaChatRequest;
-import com.orasaka.core.support.OrasakaChatResponse;
-import com.orasaka.core.support.OrasakaContext;
+import com.orasaka.core.client.AiClient;
+import com.orasaka.core.support.Authority;
+import com.orasaka.core.support.ChatRequest;
+import com.orasaka.core.support.ChatResponse;
+import com.orasaka.core.support.Context;
 import com.orasaka.identity.domain.User;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -25,8 +25,8 @@ import reactor.core.publisher.Flux;
  * <p>All asynchronous streaming flows are initiated and processed utilizing Java 21 Virtual
  * Threads.
  *
- * @see OrasakaAiClient
- * @see OrasakaContext
+ * @see AiClient
+ * @see Context
  * @see SseEmitter
  */
 @Service
@@ -34,7 +34,7 @@ public class ChatStreamService {
 
   private static final Logger logger = LoggerFactory.getLogger(ChatStreamService.class);
 
-  private final OrasakaAiClient aiClient;
+  private final AiClient aiClient;
   private final ExecutorService virtualThreadExecutor;
 
   /**
@@ -42,7 +42,7 @@ public class ChatStreamService {
    *
    * @param aiClient The core AI client facade.
    */
-  public ChatStreamService(OrasakaAiClient aiClient) {
+  public ChatStreamService(AiClient aiClient) {
     this.aiClient = aiClient;
     this.virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
   }
@@ -65,13 +65,12 @@ public class ChatStreamService {
         () -> {
           try {
             String userId = user.id().toString();
-            Set<OrasakaAuthority> authorities =
-                user.authorities().stream().map(OrasakaAuthority::new).collect(Collectors.toSet());
-            OrasakaContext context =
-                new OrasakaContext(userId, conversationId, user.preferences(), authorities);
-            OrasakaChatRequest request = new OrasakaChatRequest(prompt, null, null, context);
+            Set<Authority> authorities =
+                user.authorities().stream().map(Authority::new).collect(Collectors.toSet());
+            Context context = new Context(userId, conversationId, user.preferences(), authorities);
+            ChatRequest request = new ChatRequest(prompt, null, null, context);
 
-            Flux<OrasakaChatResponse> stream = aiClient.stream(request);
+            Flux<ChatResponse> stream = aiClient.stream(request);
 
             stream.subscribe(
                 response -> {
@@ -121,18 +120,17 @@ public class ChatStreamService {
    * @param conversationId The session identifier for thread isolation.
    * @param prompt The raw user message input.
    * @param user The currently authenticated user.
-   * @return A reactive {@link Flux} emitting {@link OrasakaChatResponse} chunks.
-   * @see OrasakaAiClient#stream(OrasakaChatRequest)
+   * @return A reactive {@link Flux} emitting {@link ChatResponse} chunks.
+   * @see AiClient#stream(ChatRequest)
    */
-  public Flux<OrasakaChatResponse> streamGraphQL(String conversationId, String prompt, User user) {
+  public Flux<ChatResponse> streamGraphQL(String conversationId, String prompt, User user) {
     logger.debug("Constructing GraphQL subscription stream for conversation: {}", conversationId);
 
     String userId = user.id().toString();
-    Set<OrasakaAuthority> authorities =
-        user.authorities().stream().map(OrasakaAuthority::new).collect(Collectors.toSet());
-    OrasakaContext context =
-        new OrasakaContext(userId, conversationId, user.preferences(), authorities);
-    OrasakaChatRequest request = new OrasakaChatRequest(prompt, null, null, context);
+    Set<Authority> authorities =
+        user.authorities().stream().map(Authority::new).collect(Collectors.toSet());
+    Context context = new Context(userId, conversationId, user.preferences(), authorities);
+    ChatRequest request = new ChatRequest(prompt, null, null, context);
 
     return aiClient.stream(request);
   }
