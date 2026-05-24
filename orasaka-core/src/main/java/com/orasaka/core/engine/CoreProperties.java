@@ -22,7 +22,8 @@ public record CoreProperties(
     Map<String, ProviderConfig> overrides,
     RagConfig rag,
     McpConfig mcp,
-    OrchestrationConfig orchestration) {
+    OrchestrationConfig orchestration,
+    VideoConfig video) {
 
   /**
    * Configuration for a specific AI provider.
@@ -61,8 +62,8 @@ public record CoreProperties(
       boolean enabled,
       UserContextConfig userContext,
       SystemContextConfig systemContext,
-      RefinerConfig refiner,
-      RouterConfig router) {}
+      InterceptorConfig refiner,
+      InterceptorConfig router) {}
 
   /** User context resolver configuration details. */
   public record UserContextConfig(boolean enabled) {}
@@ -70,9 +71,16 @@ public record CoreProperties(
   /** System context injector configuration details. */
   public record SystemContextConfig(boolean enabled) {}
 
-  /** Refiner interceptor configuration details. */
-  public record RefinerConfig(boolean enabled, String provider, String model, Double temperature) {}
+  /** Unified interceptor configuration for refiner and router pipeline stages. */
+  public record InterceptorConfig(
+      boolean enabled, String provider, String model, Double temperature) {}
 
-  /** Router interceptor configuration details. */
-  public record RouterConfig(boolean enabled, String provider, String model, Double temperature) {}
+  /** Partitioned video pipeline configuration (analysis vs generation). */
+  public record VideoConfig(VideoAnalysisConfig analysis, VideoGenerationConfig generation) {}
+
+  /** Video analysis (vision input) configuration. */
+  public record VideoAnalysisConfig(boolean enabled, int maxKeyframes, int frameIntervalSec) {}
+
+  /** Video generation (text-to-video output) configuration. */
+  public record VideoGenerationConfig(boolean enabled, String provider) {}
 }
