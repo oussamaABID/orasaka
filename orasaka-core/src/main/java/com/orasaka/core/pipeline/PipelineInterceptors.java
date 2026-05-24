@@ -162,12 +162,13 @@ class RefinerInterceptor implements PromptInterceptor {
 
   private PromptContext executeRefinement(ChatModel model, Prompt prompt, PromptContext context) {
     try {
-      return extractResponseText(model.call(prompt))
+      return PipelineInterceptors.extractResponseText(model.call(prompt))
           .filter(refined -> !refined.isBlank())
-          .map(refined -> {
-            logger.debug("Refinement generated: {}", refined);
-            return context.withRefinedPrompt(refined);
-          })
+          .map(
+              refined -> {
+                logger.debug("Refinement generated: {}", refined);
+                return context.withRefinedPrompt(refined);
+              })
           .orElse(context);
     } catch (Exception e) {
       logger.error("Failed to refine prompt.", e);
@@ -235,7 +236,7 @@ class RouterInterceptor implements PromptInterceptor {
 
   private PromptContext executeRouting(ChatModel model, Prompt prompt, PromptContext context) {
     try {
-      return extractResponseText(model.call(prompt))
+      return PipelineInterceptors.extractResponseText(model.call(prompt))
           .map(String::toLowerCase)
           .filter(chatModels::containsKey)
           .map(context::withRoutedProvider)
@@ -268,28 +269,34 @@ class OrasakaMemoryInterceptor implements OrasakaContextInterceptor {
   private final OrasakaMemoryResolver memoryResolver;
 
   public OrasakaMemoryInterceptor(OrasakaMemoryResolver memoryResolver) {
-    this.memoryResolver = Objects.requireNonNull(memoryResolver, "OrasakaMemoryResolver must not be null");
+    this.memoryResolver =
+        Objects.requireNonNull(memoryResolver, "OrasakaMemoryResolver must not be null");
   }
 
   @Override
   public ChatOptions preProcess(
       InternalChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
-    resolveConversationId(request).ifPresent(convId -> {
-      List<Message> history = memoryResolver.resolve(convId).get(convId);
-      if (!history.isEmpty()) messages.addAll(0, history);
-    });
+    resolveConversationId(request)
+        .ifPresent(
+            convId -> {
+              List<Message> history = memoryResolver.resolve(convId).get(convId);
+              if (!history.isEmpty()) messages.addAll(0, history);
+            });
     return options;
   }
 
   @Override
   public void postProcess(InternalChatRequest request, String promptText, String responseText) {
-    resolveConversationId(request).ifPresent(convId -> {
-      ChatMemory chatMemory = memoryResolver.resolve(convId);
-      List<Message> newMessages = new ArrayList<>();
-      if (promptText != null && !promptText.isBlank()) newMessages.add(new UserMessage(promptText));
-      newMessages.add(new AssistantMessage(responseText));
-      chatMemory.add(convId, newMessages);
-    });
+    resolveConversationId(request)
+        .ifPresent(
+            convId -> {
+              ChatMemory chatMemory = memoryResolver.resolve(convId);
+              List<Message> newMessages = new ArrayList<>();
+              if (promptText != null && !promptText.isBlank())
+                newMessages.add(new UserMessage(promptText));
+              newMessages.add(new AssistantMessage(responseText));
+              chatMemory.add(convId, newMessages);
+            });
   }
 
   private Optional<String> resolveConversationId(InternalChatRequest request) {
@@ -304,13 +311,14 @@ class OrasakaMcpInterceptor implements OrasakaContextInterceptor {
   private final McpOrchestrator mcpOrchestrator;
 
   public OrasakaMcpInterceptor(McpOrchestrator mcpOrchestrator) {
-    this.mcpOrchestrator = Objects.requireNonNull(mcpOrchestrator, "McpOrchestrator must not be null");
+    this.mcpOrchestrator =
+        Objects.requireNonNull(mcpOrchestrator, "McpOrchestrator must not be null");
   }
 
   @Override
   public ChatOptions preProcess(
       InternalChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
-    Optional.of(mcpOrchestrator.resolveExternalContext())
+    Optional.ofNullable(mcpOrchestrator.resolveExternalContext())
         .filter(ctx -> !ctx.isBlank())
         .ifPresent(ctx -> messages.add(new SystemMessage("MCP Context: " + ctx)));
     return options;
@@ -325,7 +333,8 @@ class OrasakaRagInterceptor implements OrasakaContextInterceptor {
   public OrasakaRagInterceptor(
       CoreProperties properties, OrasakaKnowledgeService knowledgeService) {
     this.properties = Objects.requireNonNull(properties, "CoreProperties must not be null");
-    this.knowledgeService = Objects.requireNonNull(knowledgeService, "OrasakaKnowledgeService must not be null");
+    this.knowledgeService =
+        Objects.requireNonNull(knowledgeService, "OrasakaKnowledgeService must not be null");
   }
 
   @Override
@@ -333,11 +342,12 @@ class OrasakaRagInterceptor implements OrasakaContextInterceptor {
       InternalChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
     Optional.ofNullable(properties.rag())
         .filter(CoreProperties.RagConfig::enabled)
-        .ifPresent(rag -> {
-          String context = knowledgeService.retrieveContext(promptText, rag.topK());
-          if (context != null && !context.isBlank())
-            messages.add(new SystemMessage("RAG Context: \n" + context));
-        });
+        .ifPresent(
+            rag -> {
+              String context = knowledgeService.retrieveContext(promptText, rag.topK());
+              if (context != null && !context.isBlank())
+                messages.add(new SystemMessage("RAG Context: \n" + context));
+            });
     return options;
   }
 }
