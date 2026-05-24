@@ -23,6 +23,8 @@
 | **Verification Token** | Hash-based registration validation (`orasaka_verification_tokens`). | Enforces secure, passive double opt-in account enablement. |
 | **Interception Registry** | Contextual interception mapping (`orasaka_user_interceptions`). | Stores active session interruption events (onboarding, reviews) resolved dynamically during login context queries. |
 | **Video Engine** | Local sovereign Text-to-Video engine powered by quantized LTX-Video. | Decoupled generation node running on port 8086. |
+| **StringTemplate (.st)** | Externalized template format for prompt definitions and instructions. | Separates prompt instructions from Java functional source code. |
+| **Context-Matrix Orchestration Pipeline** | Chain of ordered context enrichment and refiner interceptor beans. | Sequential flow resolving user, system, refiner, and router contexts. |
 
 ## Environment Variables
 

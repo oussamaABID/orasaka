@@ -62,6 +62,16 @@ This document specifies the public API interfaces, configuration properties, gat
   - `MARKDOWN_CHUNKERS`: Identifies and splits sections using Markdown headers (`#`, `##`, etc.).
   - `JSON_ARRAY`: Parses array elements into independent documents, appending structured fields to metadata mappings.
 
+### [OrasakaContextInterceptor](../orasaka-core/src/main/java/com/orasaka/core/pipeline/OrasakaContextInterceptor.java)
+
+- **Role**: Interface defining pre-processing and post-processing context hooks for LLM operations.
+- **Ordered Implementations** (Context-Matrix Orchestration Pipeline):
+  - `UserContextResolver` (Order 1): Resolves and enriches request context with user attributes, tenant preferences, and security clearances.
+  - `SystemContextInjector` (Order 2): Injects system-level signals, environment states, and tools array configurations.
+  - `RefinerInterceptor` (Order 3): Refines user inputs using classpath resource template `system-refinement.st` and conversation history.
+  - `RouterInterceptor` (Order 4): Routes requests dynamically using model intent analysis (`system-router.st`) at 0.0 temperature.
+
+
 ---
 
 ## 🛠️ Tools Implementation (`orasaka-tools`)

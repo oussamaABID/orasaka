@@ -248,3 +248,13 @@ OrasakaOrchestrationPipeline customCodingPipeline = OrasakaPipelineBuilder.creat
 
 - **Absolute Package Privacy**: All individual concrete interceptor definitions must remain package-private within `com.orasaka.core.pipeline`. Only the Orchestrator and the Builder are allowed to be public.
 - **Virtual Thread Purity**: Because interceptors rely entirely on linear functional reduction (`Stream.reduce`), adding or removing nodes into a pipeline layout introduces zero race conditions or thread-local storage leaks.
+
+### 🗂️ 5.5 Externalized Prompt Templates & Resource Templates
+
+To satisfy the strict master craftsmanship rules, all prompt textual matrices, system instructions, and routing guidelines are externalized from Java source code files. They are stored as `.st` (StringTemplate) files in the classpath:
+- `orasaka-core/src/main/resources/prompts/system-refinement.st`: Template for user query refinement and context enrichment.
+- `orasaka-core/src/main/resources/prompts/context-envelope.st`: Structured container format holding user and system metadata matrices.
+- `orasaka-core/src/main/resources/prompts/system-router.st`: Template for intent classification and model routing decisions.
+
+These template resources are loaded dynamically using Spring's `ResourceLoader` and resolved at runtime during cognitive execution loops, preventing hardcoded instructions inside functional classes.
+

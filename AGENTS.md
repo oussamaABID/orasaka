@@ -109,4 +109,11 @@ When internal contracts, schema definitions, or module dependencies evolve, the 
 * **Context**: Injecting `org.springframework.core.env.Environment` into functional components, filters, services, interceptors, or controllers creates fragile coupling to raw configuration state and Spring profile names.
 * **Consequence**: Injecting `Environment` or calling `.getProperty()`/`.acceptsProfiles()` inside code bodies is strictly FORBIDDEN. All functional components must remain completely oblivious to raw environment variables and Spring profile names. Configuration mapping must be managed exclusively at the configuration bootstrap layer using immutable, type-safe Record structures populated via Spring's programmatic Binder matrix. Components must receive clean, pre-resolved configuration properties through explicit constructor dependency injection.
 
+### ADR-012: Master Code Craftsmanship Mandate
+* **Context**: Avoiding boilerplate, hardcoded strings, large methods, and div-soup in frontend.
+* **Consequence**: 
+  * Leverage Native Java 21 & Standard APIs: Use standard JDK or Spring Framework utilities. Apply modern Java idioms (e.g., Pattern matching for switch, record patterns).
+  * Externalize ALL Prompt Textual Matrices: Prompt text blocks must be moved to `.st` (StringTemplate) or `.md` files in `src/main/resources/prompts/`.
+  * Strict SRP (15-Line Limit): Methods should not exceed 15-20 lines. Extract specific pipeline steps into highly-focused helper methods.
+  * Frontend Semantic HTML: Eradicate "Div-Soup". Implement clear, semantic HTML5 tags (`<main>`, `<section>`, `<article>`, `<aside>`) for layout structures.
 
