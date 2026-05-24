@@ -1,18 +1,19 @@
 package com.orasaka.gateway.endpoint;
 
+import com.orasaka.core.client.OrasakaAiClient;
+import com.orasaka.core.context.OrasakaContext;
 import com.orasaka.core.engine.NodeState;
 import com.orasaka.core.engine.NodeState.Active;
 import com.orasaka.core.engine.NodeState.Invisible;
 import com.orasaka.core.engine.NodeState.Locked;
-import com.orasaka.core.engine.OrasakaAiClient;
 import com.orasaka.core.engine.OrasakaGraphEngine;
 import com.orasaka.core.engine.OrasakaOperationGraph;
-import com.orasaka.core.support.OrasakaChatRequest;
-import com.orasaka.core.support.OrasakaChatResponse;
-import com.orasaka.core.support.OrasakaContext;
-import com.orasaka.core.support.OrasakaImageRequest;
-import com.orasaka.core.support.OrasakaImageResponse;
-import com.orasaka.core.support.OrasakaSpeechRequest;
+import com.orasaka.core.identity.OrasakaAuthority;
+import com.orasaka.core.model.OrasakaChatRequest;
+import com.orasaka.core.model.OrasakaChatResponse;
+import com.orasaka.core.model.OrasakaImageRequest;
+import com.orasaka.core.model.OrasakaImageResponse;
+import com.orasaka.core.model.OrasakaSpeechRequest;
 import com.orasaka.gateway.service.ChatStreamService;
 import com.orasaka.identity.config.IdentityInfrastructureProperties;
 import com.orasaka.identity.domain.User;
@@ -150,9 +151,12 @@ public class AiController {
     return CompletableFuture.supplyAsync(
         () -> {
           String userId = user.id().toString();
-          Set<String> roles = user.authorities();
+          Set<OrasakaAuthority> authorities =
+              user.authorities().stream()
+                  .map(OrasakaAuthority::new)
+                  .collect(java.util.stream.Collectors.toSet());
           OrasakaContext context =
-              new OrasakaContext(userId, conversationId, user.preferences(), roles);
+              new OrasakaContext(userId, conversationId, user.preferences(), authorities);
           OrasakaChatRequest request = new OrasakaChatRequest(prompt, null, null, context);
           OrasakaChatResponse response = aiClient.chat(request);
           logger.debug(
@@ -292,9 +296,12 @@ public class AiController {
     logger.debug("GraphQL image mutation invoked for prompt: {}", prompt);
     return CompletableFuture.supplyAsync(
         () -> {
+          Set<OrasakaAuthority> authorities =
+              user.authorities().stream()
+                  .map(OrasakaAuthority::new)
+                  .collect(java.util.stream.Collectors.toSet());
           OrasakaContext context =
-              new OrasakaContext(
-                  user.id().toString(), null, user.preferences(), user.authorities());
+              new OrasakaContext(user.id().toString(), null, user.preferences(), authorities);
           OrasakaImageRequest request = new OrasakaImageRequest(prompt, null, null, null, context);
           OrasakaImageResponse response = aiClient.generateImage(request);
           return new OrasakaChatResponse(response.url(), null, Map.of("format", response.format()));
@@ -314,9 +321,12 @@ public class AiController {
     logger.debug("GraphQL speech mutation invoked for prompt: {}", prompt);
     return CompletableFuture.supplyAsync(
         () -> {
+          Set<OrasakaAuthority> authorities =
+              user.authorities().stream()
+                  .map(OrasakaAuthority::new)
+                  .collect(java.util.stream.Collectors.toSet());
           OrasakaContext context =
-              new OrasakaContext(
-                  user.id().toString(), null, user.preferences(), user.authorities());
+              new OrasakaContext(user.id().toString(), null, user.preferences(), authorities);
           OrasakaSpeechRequest request = new OrasakaSpeechRequest(prompt, null, context);
           byte[] audioBytes = aiClient.generateSpeech(request);
           String base64Audio = Base64.getEncoder().encodeToString(audioBytes);

@@ -18,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 public class OrasakaSecurityFilter extends OncePerRequestFilter {
 
+  public static final String DEV_ADMIN_USER_ID = "550e8400-e29b-41d4-a716-446655440001";
   private static final Logger logger = LoggerFactory.getLogger(OrasakaSecurityFilter.class);
   private final IdentityService identityService;
   private final GatewayProperties.SecurityProperties securityProperties;

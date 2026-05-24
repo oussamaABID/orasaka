@@ -67,6 +67,13 @@ orasaka:
       uri-path: "/api/v1/chat/stream"
       http-method: "POST"
       payload-template: "{\"prompt\":\"${prompt}\"}"
+    "[orasaka.core.media.video]":
+      enabled: true
+      label: "Generate Video"
+      icon: "video"
+      uri-path: "/api/v1/ai/video"
+      http-method: "POST"
+      payload-template: "{\"prompt\":\"${prompt}\"}"
   gateway:
     cors:
       # Comma-separated list of allowed origins. Override via ORASAKA_GATEWAY_CORS_ALLOWED_ORIGINS env var.
@@ -99,6 +106,9 @@ orasaka:
       localai:
         base-url: "http://localhost:8085"
         model: "stable-diffusion"
+      localai-video:
+        base-url: ${ORASAKA_VIDEO_BASE_URL:http://localhost:8086}
+        model: "ltx-video"
       openai:
         base-url: ${ORASAKA_OPENAI_BASE_URL:https://api.openai.com/v1}
         model: ${ORASAKA_OPENAI_MODEL:gpt-4o}

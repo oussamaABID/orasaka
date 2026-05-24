@@ -5,10 +5,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.orasaka.core.engine.OrasakaAiClient;
+import com.orasaka.core.client.OrasakaAiClient;
 import com.orasaka.core.engine.OrasakaGraphEngine;
-import com.orasaka.core.support.OrasakaChatRequest;
-import com.orasaka.core.support.OrasakaChatResponse;
+import com.orasaka.core.model.OrasakaChatRequest;
+import com.orasaka.core.model.OrasakaChatResponse;
 import com.orasaka.gateway.service.ChatStreamService;
 import com.orasaka.identity.config.IdentityInfrastructureProperties;
 import com.orasaka.identity.domain.User;

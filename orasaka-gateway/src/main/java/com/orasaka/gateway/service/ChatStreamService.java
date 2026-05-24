@@ -1,9 +1,10 @@
 package com.orasaka.gateway.service;
 
-import com.orasaka.core.engine.OrasakaAiClient;
-import com.orasaka.core.support.OrasakaChatRequest;
-import com.orasaka.core.support.OrasakaChatResponse;
-import com.orasaka.core.support.OrasakaContext;
+import com.orasaka.core.client.OrasakaAiClient;
+import com.orasaka.core.context.OrasakaContext;
+import com.orasaka.core.identity.OrasakaAuthority;
+import com.orasaka.core.model.OrasakaChatRequest;
+import com.orasaka.core.model.OrasakaChatResponse;
 import com.orasaka.identity.domain.User;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -63,9 +64,12 @@ public class ChatStreamService {
         () -> {
           try {
             String userId = user.id().toString();
-            Set<String> roles = user.authorities();
+            Set<OrasakaAuthority> authorities =
+                user.authorities().stream()
+                    .map(OrasakaAuthority::new)
+                    .collect(java.util.stream.Collectors.toSet());
             OrasakaContext context =
-                new OrasakaContext(userId, conversationId, user.preferences(), roles);
+                new OrasakaContext(userId, conversationId, user.preferences(), authorities);
             OrasakaChatRequest request = new OrasakaChatRequest(prompt, null, null, context);
 
             Flux<OrasakaChatResponse> stream = aiClient.stream(request);
@@ -125,8 +129,12 @@ public class ChatStreamService {
     logger.debug("Constructing GraphQL subscription stream for conversation: {}", conversationId);
 
     String userId = user.id().toString();
-    Set<String> roles = user.authorities();
-    OrasakaContext context = new OrasakaContext(userId, conversationId, user.preferences(), roles);
+    Set<OrasakaAuthority> authorities =
+        user.authorities().stream()
+            .map(OrasakaAuthority::new)
+            .collect(java.util.stream.Collectors.toSet());
+    OrasakaContext context =
+        new OrasakaContext(userId, conversationId, user.preferences(), authorities);
     OrasakaChatRequest request = new OrasakaChatRequest(prompt, null, null, context);
 
     return aiClient.stream(request);
