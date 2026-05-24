@@ -18,33 +18,35 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.ollama.api.OllamaChatOptions;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 public final class PipelineInterceptors {
-
   private PipelineInterceptors() {}
 }
 
 @Component
 class UserContextResolver implements PromptInterceptor {
-
   private static final Logger logger = LoggerFactory.getLogger(UserContextResolver.class);
 
   @Override
   public PromptContext intercept(PromptContext context) {
     logger.debug("Resolving user security context details...");
     var securityData = SecurityContextUtil.extractSecurityMetadata();
-    if (!securityData.isEmpty()) {
-      var newUserMetadata = new java.util.HashMap<>(context.userMetadata());
-      newUserMetadata.putAll(securityData);
-      logger.debug(
-          "Successfully enriched user metadata with security claims: {}", securityData.keySet());
-      return context.withUserMetadata(newUserMetadata);
+    if (securityData.isEmpty()) {
+      return context;
     }
-    return context;
+    var newUserMetadata = new java.util.HashMap<>(context.userMetadata());
+    newUserMetadata.putAll(securityData);
+    logger.debug(
+        "Successfully enriched user metadata with security claims: {}", securityData.keySet());
+    return context.withUserMetadata(Map.copyOf(newUserMetadata));
   }
 
   @Override
@@ -55,30 +57,27 @@ class UserContextResolver implements PromptInterceptor {
 
 @Component
 class SystemContextInjector implements PromptInterceptor {
-
   private static final Logger logger = LoggerFactory.getLogger(SystemContextInjector.class);
-
   private final List<SystemContextProvider> providers;
 
   public SystemContextInjector(List<SystemContextProvider> providers) {
-    this.providers = providers != null ? providers : List.of();
+    this.providers = providers != null ? List.copyOf(providers) : List.of();
   }
 
   @Override
   public PromptContext intercept(PromptContext context) {
     logger.debug("Injecting system context signals. Provider count: {}", providers.size());
-    Map<String, Object> newSystemMetadata = new java.util.HashMap<>(context.systemMetadata());
+    var newSystemMetadata = new java.util.HashMap<>(context.systemMetadata());
+
     for (SystemContextProvider provider : providers) {
       try {
         Map<String, Object> data = provider.getSystemContext();
-        if (data != null) {
-          newSystemMetadata.putAll(data);
-        }
+        if (data != null) newSystemMetadata.putAll(data);
       } catch (Exception e) {
         logger.error("Error invoking SystemContextProvider: {}", provider.getClass().getName(), e);
       }
     }
-    return context.withSystemMetadata(newSystemMetadata);
+    return context.withSystemMetadata(Map.copyOf(newSystemMetadata));
   }
 
   @Override
@@ -89,54 +88,63 @@ class SystemContextInjector implements PromptInterceptor {
 
 @Component
 class RefinerInterceptor implements PromptInterceptor {
-
   private static final Logger logger = LoggerFactory.getLogger(RefinerInterceptor.class);
 
   private final Map<String, ChatModel> chatModels;
   private final CoreProperties properties;
 
+  @Value("classpath:/prompts/system-refinement.st")
+  private Resource systemRefinementResource;
+
+  @Value("classpath:/prompts/context-envelope.st")
+  private Resource contextEnvelopeResource;
+
   public RefinerInterceptor(Map<String, ChatModel> chatModels, CoreProperties properties) {
-    this.chatModels = chatModels;
+    this.chatModels = chatModels != null ? Map.copyOf(chatModels) : Map.of();
     this.properties = properties;
   }
 
   @Override
   public PromptContext intercept(PromptContext context) {
-    var opt = properties.orchestration() != null ? properties.orchestration().refiner() : null;
-    if (opt == null || !opt.enabled()) {
-      logger.debug("Refiner interceptor is disabled. Skipping prompt refinement.");
-      return context;
-    }
+    if (!isRefinementEnabled()) return context;
 
-    String provider = opt.provider() != null ? opt.provider() : properties.defaultProvider();
+    String provider = resolveProvider();
     ChatModel model = chatModels.get(provider);
     if (model == null) {
-      logger.warn(
-          "Refinement provider '{}' is not registered in chat models. Skipping refinement.",
-          provider);
+      logger.warn("Refinement provider '{}' is not registered.", provider);
       return context;
     }
 
-    logger.info("Refining prompt via LLM provider: {}, model: {}", provider, opt.model());
+    Prompt prompt = buildRefinementPrompt(provider, context);
+    return executeRefinement(model, prompt, context);
+  }
 
-    String systemInstruction =
-        "You are a prompt refinement engine for the Orasaka System. "
-            + "Your goal is to enrich the user's raw query by incorporating the provided user and system metadata, "
-            + "generating a highly detailed, precise, and contextual instruction prompt for a downstream LLM. "
-            + "Do NOT answer the query yourself. Output ONLY the refined prompt, with no intro, markdown formatting, or wrap-up text.";
+  private boolean isRefinementEnabled() {
+    var opt = properties.orchestration() != null ? properties.orchestration().refiner() : null;
+    return opt != null && opt.enabled();
+  }
 
-    String contextMatrix =
-        String.format(
-            "=== USER METADATA ===\n%s\n\n=== SYSTEM METADATA ===\n%s\n\n=== RAW QUERY ===\n%s",
-            context.userMetadata().toString(),
-            context.systemMetadata().toString(),
-            context.rawUserQuery());
+  private String resolveProvider() {
+    var opt = properties.orchestration().refiner();
+    return opt.provider() != null ? opt.provider() : properties.defaultProvider();
+  }
 
-    ChatOptions options = buildOptions(provider, opt.model(), opt.temperature());
-    Prompt prompt =
-        new Prompt(
-            List.of(new SystemMessage(systemInstruction), new UserMessage(contextMatrix)), options);
+  private Prompt buildRefinementPrompt(String provider, PromptContext context) {
+    var sysMsg = new SystemPromptTemplate(systemRefinementResource).createMessage();
+    var userMsg =
+        new PromptTemplate(contextEnvelopeResource)
+            .createMessage(
+                Map.of(
+                    "userMetadata", context.userMetadata().toString(),
+                    "systemMetadata", context.systemMetadata().toString(),
+                    "rawQuery", context.rawUserQuery()));
 
+    var opt = properties.orchestration().refiner();
+    ChatOptions options = PipelineOptionsBuilder.build(provider, opt.model(), opt.temperature());
+    return new Prompt(List.of(sysMsg, userMsg), options);
+  }
+
+  private PromptContext executeRefinement(ChatModel model, Prompt prompt, PromptContext context) {
     try {
       ChatResponse response = model.call(prompt);
       if (response != null
@@ -149,17 +157,9 @@ class RefinerInterceptor implements PromptInterceptor {
         }
       }
     } catch (Exception e) {
-      logger.error("Failed to refine prompt using model, falling back to raw query.", e);
+      logger.error("Failed to refine prompt.", e);
     }
     return context;
-  }
-
-  private ChatOptions buildOptions(String provider, String modelName, Double temp) {
-    return switch (provider.toLowerCase()) {
-      case "ollama" -> OllamaChatOptions.builder().model(modelName).temperature(temp).build();
-      case "openai" -> OpenAiChatOptions.builder().model(modelName).temperature(temp).build();
-      default -> null;
-    };
   }
 
   @Override
@@ -170,49 +170,53 @@ class RefinerInterceptor implements PromptInterceptor {
 
 @Component
 class RouterInterceptor implements PromptInterceptor {
-
   private static final Logger logger = LoggerFactory.getLogger(RouterInterceptor.class);
 
   private final Map<String, ChatModel> chatModels;
   private final CoreProperties properties;
 
+  @Value("classpath:/prompts/system-router.st")
+  private Resource systemRouterResource;
+
   public RouterInterceptor(Map<String, ChatModel> chatModels, CoreProperties properties) {
-    this.chatModels = chatModels;
+    this.chatModels = chatModels != null ? Map.copyOf(chatModels) : Map.of();
     this.properties = properties;
   }
 
   @Override
   public PromptContext intercept(PromptContext context) {
-    var opt = properties.orchestration() != null ? properties.orchestration().router() : null;
-    if (opt == null || !opt.enabled()) {
-      logger.debug("Router interceptor is disabled. Using default provider.");
-      return context;
-    }
+    if (!isRouterEnabled()) return context;
 
-    String provider = opt.provider() != null ? opt.provider() : properties.defaultProvider();
+    String provider = resolveProvider();
     ChatModel model = chatModels.get(provider);
     if (model == null) {
-      logger.warn(
-          "Router provider '{}' is not registered in chat models. Skipping routing.", provider);
+      logger.warn("Router provider '{}' is not registered.", provider);
       return context;
     }
 
-    logger.info("Routing prompt via LLM provider: {}, model: {}", provider, opt.model());
+    Prompt prompt = buildRouterPrompt(provider, context);
+    return executeRouting(model, prompt, context);
+  }
 
-    String systemInstruction =
-        "You are a prompt router for the Orasaka System. "
-            + "Evaluate the user's refined query and select the most specialized LLM execution provider. "
-            + "Available providers are: 'ollama' (for generic, local, lightweight operations) "
-            + "and 'openai' (for high-fidelity, complex logic, code generation, or translation). "
-            + "Output exactly one word representing the provider key: either 'ollama' or 'openai'. "
-            + "Do NOT write any additional text, explanation, or markdown wrappers.";
+  private boolean isRouterEnabled() {
+    var opt = properties.orchestration() != null ? properties.orchestration().router() : null;
+    return opt != null && opt.enabled();
+  }
 
-    ChatOptions options = buildOptions(provider, opt.model(), opt.temperature());
-    Prompt prompt =
-        new Prompt(
-            List.of(new SystemMessage(systemInstruction), new UserMessage(context.refinedPrompt())),
-            options);
+  private String resolveProvider() {
+    var opt = properties.orchestration().router();
+    return opt.provider() != null ? opt.provider() : properties.defaultProvider();
+  }
 
+  private Prompt buildRouterPrompt(String provider, PromptContext context) {
+    var sysMsg = new SystemPromptTemplate(systemRouterResource).createMessage();
+    var userMsg = new UserMessage(context.refinedPrompt());
+    var opt = properties.orchestration().router();
+    ChatOptions options = PipelineOptionsBuilder.build(provider, opt.model(), opt.temperature());
+    return new Prompt(List.of(sysMsg, userMsg), options);
+  }
+
+  private PromptContext executeRouting(ChatModel model, Prompt prompt, PromptContext context) {
     try {
       ChatResponse response = model.call(prompt);
       if (response != null
@@ -220,27 +224,13 @@ class RouterInterceptor implements PromptInterceptor {
           && response.getResult().getOutput() != null) {
         String routed = response.getResult().getOutput().getText().strip().toLowerCase();
         if (chatModels.containsKey(routed)) {
-          logger.info("Pipeline routed request to target provider: '{}'", routed);
           return context.withRoutedProvider(routed);
-        } else {
-          logger.warn(
-              "Pipeline routed request to unregistered provider key: '{}'. Ignoring selection.",
-              routed);
         }
       }
     } catch (Exception e) {
-      logger.error(
-          "Failed to dynamically route prompt using model, falling back to default provider.", e);
+      logger.error("Failed to dynamically route prompt.", e);
     }
     return context;
-  }
-
-  private ChatOptions buildOptions(String provider, String modelName, Double temp) {
-    return switch (provider.toLowerCase()) {
-      case "ollama" -> OllamaChatOptions.builder().model(modelName).temperature(temp).build();
-      case "openai" -> OpenAiChatOptions.builder().model(modelName).temperature(temp).build();
-      default -> null;
-    };
   }
 
   @Override
@@ -249,11 +239,19 @@ class RouterInterceptor implements PromptInterceptor {
   }
 }
 
+class PipelineOptionsBuilder {
+  static ChatOptions build(String provider, String modelName, Double temp) {
+    return switch (provider.toLowerCase()) {
+      case "ollama" -> OllamaChatOptions.builder().model(modelName).temperature(temp).build();
+      case "openai" -> OpenAiChatOptions.builder().model(modelName).temperature(temp).build();
+      default -> null;
+    };
+  }
+}
+
 @Component
 class OrasakaMemoryInterceptor implements OrasakaContextInterceptor {
-
   private static final Logger logger = LoggerFactory.getLogger(OrasakaMemoryInterceptor.class);
-
   private final OrasakaMemoryResolver memoryResolver;
 
   public OrasakaMemoryInterceptor(OrasakaMemoryResolver memoryResolver) {
@@ -263,18 +261,12 @@ class OrasakaMemoryInterceptor implements OrasakaContextInterceptor {
   @Override
   public ChatOptions preProcess(
       OrasakaChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
-    String conversationId = (request.context() != null) ? request.context().conversationId() : null;
-    if (conversationId != null && !conversationId.isBlank() && memoryResolver != null) {
+    String conversationId = resolveConversationId(request);
+    if (conversationId != null && memoryResolver != null) {
       ChatMemory chatMemory = memoryResolver.resolve(conversationId);
       List<Message> history = chatMemory.get(conversationId);
       if (history != null && !history.isEmpty()) {
         messages.addAll(0, history);
-        logger.debug(
-            "Loaded {} messages from ChatMemory for conversationId: {}",
-            history.size(),
-            conversationId);
-      } else {
-        logger.debug("No history found in ChatMemory for conversationId: {}", conversationId);
       }
     }
     return options;
@@ -282,23 +274,27 @@ class OrasakaMemoryInterceptor implements OrasakaContextInterceptor {
 
   @Override
   public void postProcess(OrasakaChatRequest request, String promptText, String responseText) {
-    String conversationId = (request.context() != null) ? request.context().conversationId() : null;
-    if (conversationId != null && !conversationId.isBlank() && memoryResolver != null) {
+    String conversationId = resolveConversationId(request);
+    if (conversationId != null && memoryResolver != null) {
       ChatMemory chatMemory = memoryResolver.resolve(conversationId);
       List<Message> newMessages = new ArrayList<>();
-      if (promptText != null && !promptText.isBlank()) {
-        newMessages.add(new UserMessage(promptText));
-      }
+      if (promptText != null && !promptText.isBlank()) newMessages.add(new UserMessage(promptText));
       newMessages.add(new AssistantMessage(responseText));
       chatMemory.add(conversationId, newMessages);
-      logger.debug("Saved new messages to ChatMemory for conversationId: {}", conversationId);
     }
+  }
+
+  private String resolveConversationId(OrasakaChatRequest request) {
+    return (request.context() != null
+            && request.context().conversationId() != null
+            && !request.context().conversationId().isBlank())
+        ? request.context().conversationId()
+        : null;
   }
 }
 
 @Component
 class OrasakaMcpInterceptor implements OrasakaContextInterceptor {
-
   private final McpOrchestrator mcpOrchestrator;
 
   public OrasakaMcpInterceptor(McpOrchestrator mcpOrchestrator) {
@@ -310,9 +306,8 @@ class OrasakaMcpInterceptor implements OrasakaContextInterceptor {
       OrasakaChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
     if (mcpOrchestrator != null) {
       String mcpContext = mcpOrchestrator.resolveExternalContext();
-      if (mcpContext != null && !mcpContext.isBlank()) {
+      if (mcpContext != null && !mcpContext.isBlank())
         messages.add(new SystemMessage("MCP Context: " + mcpContext));
-      }
     }
     return options;
   }
@@ -320,9 +315,6 @@ class OrasakaMcpInterceptor implements OrasakaContextInterceptor {
 
 @Component
 class OrasakaRagInterceptor implements OrasakaContextInterceptor {
-
-  private static final Logger logger = LoggerFactory.getLogger(OrasakaRagInterceptor.class);
-
   private final CoreProperties properties;
   private final OrasakaKnowledgeService knowledgeService;
 
@@ -335,24 +327,17 @@ class OrasakaRagInterceptor implements OrasakaContextInterceptor {
   @Override
   public ChatOptions preProcess(
       OrasakaChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
-    int ragContextSize = 0;
     if (properties.rag() != null && properties.rag().enabled() && knowledgeService != null) {
       String context = knowledgeService.retrieveContext(promptText, properties.rag().topK());
-      if (context != null && !context.isBlank()) {
+      if (context != null && !context.isBlank())
         messages.add(new SystemMessage("RAG Context: \n" + context));
-        ragContextSize = context.length();
-      }
     }
-    logger.debug("RAG Injection Context Size: {} characters", ragContextSize);
     return options;
   }
 }
 
 @Component
 class OrasakaToolInterceptor implements OrasakaContextInterceptor {
-
-  private static final Logger logger = LoggerFactory.getLogger(OrasakaToolInterceptor.class);
-
   private final OrasakaToolRegistry toolRegistry;
 
   public OrasakaToolInterceptor(OrasakaToolRegistry toolRegistry) {
@@ -362,71 +347,58 @@ class OrasakaToolInterceptor implements OrasakaContextInterceptor {
   @Override
   public ChatOptions preProcess(
       OrasakaChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
-    if (toolRegistry == null || toolRegistry.getRegisteredTools().isEmpty()) {
-      return options;
-    }
+    if (toolRegistry == null || toolRegistry.getRegisteredTools().isEmpty()) return options;
 
-    List<ToolCallback> demandedTools = new java.util.ArrayList<>();
+    List<ToolCallback> demandedTools = collectDemandedTools(request, promptText);
+    if (demandedTools.isEmpty()) return options;
+
+    return attachTools(options, demandedTools);
+  }
+
+  private List<ToolCallback> collectDemandedTools(OrasakaChatRequest request, String promptText) {
+    String lowerContext = extractFullText(request, promptText).toLowerCase();
+    List<ToolCallback> demanded = new ArrayList<>();
+
     for (ToolCallback tool : toolRegistry.getRegisteredTools()) {
       String name = tool.getToolDefinition().name();
-      boolean demand = true;
-      if ("analyzePoster".equals(name)) {
-        demand = demandsPosterTool(request, promptText);
-      } else if ("analyzeAudioExtract".equals(name)) {
-        demand = demandsAudioTool(request, promptText);
-      }
-      if (demand) {
-        demandedTools.add(tool);
-      }
+      if ("analyzePoster".equals(name) && demandsPosterTool(lowerContext)) demanded.add(tool);
+      else if ("analyzeAudioExtract".equals(name) && demandsAudioTool(lowerContext))
+        demanded.add(tool);
+      else if (!"analyzePoster".equals(name) && !"analyzeAudioExtract".equals(name))
+        demanded.add(tool);
     }
-
-    if (demandedTools.isEmpty()) {
-      return options;
-    }
-
-    options = attachTools(options, demandedTools);
-    logger.debug("Attached {} tools to ChatOptions", demandedTools.size());
-    return options;
+    return demanded;
   }
 
-  private boolean demandsPosterTool(OrasakaChatRequest request, String promptText) {
-    String text = (promptText != null ? promptText : "") + " " + request.prompt();
+  private String extractFullText(OrasakaChatRequest request, String promptText) {
+    StringBuilder text = new StringBuilder(promptText != null ? promptText : "");
+    text.append(" ").append(request.prompt() != null ? request.prompt() : "");
     if (request.messages() != null) {
-      for (var msg : request.messages()) {
-        if (msg.content() != null) {
-          text += " " + msg.content();
-        }
-      }
+      request.messages().stream()
+          .filter(m -> m.content() != null)
+          .forEach(m -> text.append(" ").append(m.content()));
     }
-    String lower = text.toLowerCase();
-    return lower.contains("poster")
-        || lower.contains("image")
-        || lower.contains("visual")
-        || lower.contains("picture");
+    return text.toString();
   }
 
-  private boolean demandsAudioTool(OrasakaChatRequest request, String promptText) {
-    String text = (promptText != null ? promptText : "") + " " + request.prompt();
-    if (request.messages() != null) {
-      for (var msg : request.messages()) {
-        if (msg.content() != null) {
-          text += " " + msg.content();
-        }
-      }
-    }
-    String lower = text.toLowerCase();
-    return lower.contains("audio")
-        || lower.contains("clip")
-        || lower.contains("compliance")
-        || lower.contains("sound")
-        || lower.contains("voice")
-        || lower.contains("music");
+  private boolean demandsPosterTool(String lowerContext) {
+    return lowerContext.contains("poster")
+        || lowerContext.contains("image")
+        || lowerContext.contains("visual")
+        || lowerContext.contains("picture");
+  }
+
+  private boolean demandsAudioTool(String lowerContext) {
+    return lowerContext.contains("audio")
+        || lowerContext.contains("clip")
+        || lowerContext.contains("voice")
+        || lowerContext.contains("music")
+        || lowerContext.contains("sound");
   }
 
   private ChatOptions attachTools(ChatOptions options, List<ToolCallback> demandedTools) {
     Set<String> toolNames =
         demandedTools.stream().map(t -> t.getToolDefinition().name()).collect(Collectors.toSet());
-
     return switch (options) {
       case OllamaChatOptions ollama ->
           OllamaChatOptions.builder()

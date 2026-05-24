@@ -1,6 +1,7 @@
 package com.orasaka.core.engine.video;
 
 import com.orasaka.core.engine.CoreProperties;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import org.springframework.ai.retry.NonTransientAiException;
@@ -54,8 +55,7 @@ public class OrasakaVideoService {
         throw new IllegalStateException("Response base64 video string is missing or empty");
       }
 
-      return new OrasakaVideoResponse(
-          java.util.Base64.getDecoder().decode(base64Video.trim()), "mp4");
+      return new OrasakaVideoResponse(Base64.getDecoder().decode(base64Video.trim()), "mp4");
     } catch (Exception e) {
       throw new NonTransientAiException("Native bare-metal video inference call failed", e);
     }

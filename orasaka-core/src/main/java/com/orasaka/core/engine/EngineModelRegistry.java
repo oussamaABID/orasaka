@@ -1,12 +1,21 @@
 package com.orasaka.core.engine;
 
 import com.orasaka.core.support.OrasakaException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.ai.audio.tts.Speech;
 import org.springframework.ai.audio.tts.TextToSpeechModel;
+import org.springframework.ai.audio.tts.TextToSpeechPrompt;
+import org.springframework.ai.audio.tts.TextToSpeechResponse;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.image.Image;
+import org.springframework.ai.image.ImageGeneration;
 import org.springframework.ai.image.ImageModel;
+import org.springframework.ai.image.ImagePrompt;
+import org.springframework.ai.image.ImageResponse;
+import reactor.core.publisher.Flux;
 
 class EngineModelRegistry {
   private final Map<String, ChatModel> chatModels;
@@ -69,13 +78,10 @@ class EngineModelRegistry {
       model =
           new ImageModel() {
             @Override
-            public org.springframework.ai.image.ImageResponse call(
-                org.springframework.ai.image.ImagePrompt prompt) {
+            public ImageResponse call(ImagePrompt prompt) {
               var gen =
-                  new org.springframework.ai.image.ImageGeneration(
-                      new org.springframework.ai.image.Image(
-                          "http://localhost:3000/placeholder.png", null));
-              return new org.springframework.ai.image.ImageResponse(java.util.List.of(gen));
+                  new ImageGeneration(new Image("http://localhost:3000/placeholder.png", null));
+              return new ImageResponse(List.of(gen));
             }
           };
     }
@@ -92,17 +98,13 @@ class EngineModelRegistry {
       model =
           new TextToSpeechModel() {
             @Override
-            public org.springframework.ai.audio.tts.TextToSpeechResponse call(
-                org.springframework.ai.audio.tts.TextToSpeechPrompt prompt) {
-              return new org.springframework.ai.audio.tts.TextToSpeechResponse(
-                  java.util.List.of(new org.springframework.ai.audio.tts.Speech(new byte[0])));
+            public TextToSpeechResponse call(TextToSpeechPrompt prompt) {
+              return new TextToSpeechResponse(List.of(new Speech(new byte[0])));
             }
 
             @Override
-            public reactor.core.publisher.Flux<
-                    org.springframework.ai.audio.tts.TextToSpeechResponse>
-                stream(org.springframework.ai.audio.tts.TextToSpeechPrompt prompt) {
-              return reactor.core.publisher.Flux.just(call(prompt));
+            public Flux<TextToSpeechResponse> stream(TextToSpeechPrompt prompt) {
+              return Flux.just(call(prompt));
             }
           };
     }

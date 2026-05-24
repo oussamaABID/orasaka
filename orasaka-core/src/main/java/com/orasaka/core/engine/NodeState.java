@@ -2,6 +2,8 @@ package com.orasaka.core.engine;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * Sealed interface representing the polymorphic state of a graph node in the Orasaka Operation
@@ -19,13 +21,13 @@ public sealed interface NodeState permits NodeState.Active, NodeState.Locked, No
 
   record Active() implements NodeState {}
 
-  record Locked(String reason, java.time.LocalDateTime lockedAt) implements NodeState {
+  record Locked(String reason, LocalDateTime lockedAt) implements NodeState {
     public Locked {
-      java.util.Objects.requireNonNull(reason, "Lock reason cannot be null");
+      Objects.requireNonNull(reason, "Lock reason cannot be null");
       if (reason.isBlank()) {
         throw new IllegalArgumentException("Lock reason cannot be blank");
       }
-      java.util.Objects.requireNonNull(lockedAt, "Lock audit timestamp cannot be null");
+      Objects.requireNonNull(lockedAt, "Lock audit timestamp cannot be null");
     }
   }
 
