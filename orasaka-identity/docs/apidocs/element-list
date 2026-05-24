@@ -1,8 +1,0 @@
-com.orasaka.identity.config
-com.orasaka.identity.domain
-com.orasaka.identity.entity
-com.orasaka.identity.entity.converter
-com.orasaka.identity.event
-com.orasaka.identity.exception
-com.orasaka.identity.repository
-com.orasaka.identity.service

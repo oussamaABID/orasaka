@@ -1,359 +1,321 @@
-# ORASAKA - Native IA Orchestration Engine
+# ORASAKA
+
+> Native AI Orchestration Engine — Java 21, Spring Boot 3.5, Spring AI 1.1.6
+
+![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-6DB33F?logo=springboot&logoColor=white)
+![Spring AI](https://img.shields.io/badge/Spring_AI-1.1.6-6DB33F?logo=spring&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-16-000?logo=next.js)
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
+
+
 
 ![Orasaka Logo](docs/assets/logo.svg)
 
-> **Precision in Implementation. Intelligence through Decoupling.**
-
-Orasaka is a professional-grade Java solution based on Spring, architected for **Multi-Session & Multi-Modal Context Memory**. It enforces strict domain isolation, stateless library design, and high-concurrency execution via Java 21 Virtual Threads.
+Orasaka is a production-grade Java monorepo for multi-session, multi-modal AI orchestration. It enforces strict domain isolation, stateless engine design, and high-concurrency execution via Java 21 Virtual Threads.
 
 ---
 
-## 📚 Documentation
+## Feature Inventory
 
-| Document | Description |
-| :--- | :--- |
-| [Architecture Reference](docs/ARCHITECTURE.md) | Complete system architecture, BFF topology, and cognitive engine flows |
-| [API Reference](docs/API_REFERENCE.md) | Full specification of public types, facades, and engine abstractions |
-| [Glossary](docs/GLOSSARY.md) | Definitions of all ecosystem terms and design patterns |
-| [Architectural Decisions (ADR)](docs/CONTEXT.md) | Architectural Decision Records governing the platform |
-
----
-
-## 🗺️ Ecosystem Feature Matrix
-
-- **Agentic Orchestration Framework (Satsui Engine)**: Multi-agent workflow scheduling, programmatic dynamic routing, and standard Model Context Protocol (MCP) server compliance mappings.
-- **Sovereign LLM Core Processing**: 100% offline text-to-text inference backed by local Ollama clusters running Llama 3.1 8B parameter models.
-- **Bare-Metal Multi-Modal Execution Layer**:
-  - **Text-to-Image Engine**: Native C++ `stable-diffusion.cpp` compiler stack accelerating SD 1.5 tensors over Apple Silicon Metal (Port `8085`).
-  - **Text-to-Video Engine**: Native C++ DiT runner running optimized LTX-Video layers over Apple Unified Memory architectures (Port `8086`).
-- **Decoupled Architecture Stack**: High-efficiency Java Spring Boot 3.x backend infrastructure integrated with a type-safe Next.js / Tailwind CSS reactive workspace canvas (`orasaka-ui`).
+| Capability | Engine | Stack |
+| :--- | :--- | :--- |
+| **Multi-Model Chat Orchestration** | Satsui Engine (context interceptor pipeline) | Spring AI → Ollama / OpenAI |
+| **Agentic Tool Calling** | MCP-compliant function registry | MCP Protocol Servers + `CachingToolCallback` |
+| **Text-to-Image Generation** | Bare-metal `stable-diffusion.cpp` | Native C++ on Apple Metal (Port `8085`) |
+| **Text-to-Video Generation** | Bare-metal LTX-Video runner | Native C++ DiT on Apple Unified Memory (Port `8086`) |
+| **Text-to-Speech** | OpenAI TTS API bridge | Spring AI OpenAI TTS Model |
+| **RAG / Knowledge Ingestion** | Async chunking pipeline | `OrasakaChunkingStrategies` → Vector Store |
+| **Server-Driven UI** | `OrasakaOperationGraph` | Polymorphic capability states (Active/Locked/Invisible) |
+| **Context-Matrix Pipeline** | 4-stage interceptor chain | UserContext → SystemContext → Refiner → Router |
 
 ---
 
-## 🏛️ Multi-Module Blueprint
+## Multi-Module Blueprint
 
 | Module | Role |
 | :--- | :--- |
-| **`orasaka-parent`** | Root BOM. Manages centralized dependency versions (Spring Boot 3.5, Spring AI 1.1.6, Java 21). |
-| **`orasaka-core`** | Pure AI Orchestration Engine. Stateless library, Bridge Pattern 2.0. No Spring Boot starters allowed. |
-| **`orasaka-identity`** | User management, RBAC, and cross-modality security contracts via Java 21 Sealed Interfaces. |
-| **`orasaka-tools`** | Concrete implementations of MCP orchestrators and Function Tool registries. Depends on `orasaka-core`. |
-| **`orasaka-gateway`** | GraphQL BFF (Spring Boot 3.5). Merges context from Identity and Core; streams results to UI and CLI. |
-| **`orasaka-ui`** | Next.js frontend application (BFF pattern). Routes client chat streams and queries. |
-| **`orasaka-cli`** | Node.js/TypeScript terminal client. Authenticates via JWT/UUID credentials and consumes SSE streams. |
+| **`orasaka-parent`** | Root BOM — centralized dependency versions |
+| **`orasaka-core`** | Stateless AI Orchestration Engine — Bridge Pattern 2.0, no web starters |
+| **`orasaka-identity`** | User management, RBAC, sealed security contracts |
+| **`orasaka-tools`** | MCP orchestrators, function tool registries, caching decorators |
+| **`orasaka-gateway`** | GraphQL BFF (Spring Boot 3.5) — context assembly, streaming |
+| **`orasaka-ui`** | Next.js 16 frontend — BFF proxy, workspace canvas |
+| **`orasaka-cli`** | TypeScript terminal client — JWT auth, SSE streams |
 
-> **Dependency Flow**:
->
-> - `orasaka-core` → `orasaka-identity`
-> - `orasaka-tools` → `orasaka-gateway`
->
-> Strictly unidirectional. No circular dependencies.
+```mermaid
+graph LR
+    core[orasaka-core] --> identity[orasaka-identity]
+    tools[orasaka-tools] --> core
+    gateway[orasaka-gateway] --> core
+    gateway --> identity
+    gateway --> tools
+    ui[orasaka-ui] -->|BFF| gateway
+    cli[orasaka-cli] -->|SSE| gateway
 
-## 📁 Repository Layout
+    classDef lib fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#047857;
+    classDef app fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#0369a1;
+    classDef fe fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px,color:#6d28d9;
+
+    class core,identity,tools lib;
+    class gateway app;
+    class ui,cli fe;
+```
+
+> **Dependency flow is strictly unidirectional.** No circular dependencies.
+
+---
+
+## Repository Layout
 
 ```text
 orasaka/
-├── ops/                     # DevOps, infrastructure, scripts, and testing assets
-│   ├── docker/              # Docker Compose and container orchestration configs
-│   │   └── docker-compose.yml
-│   ├── http/                # REST/GraphQL environment test files
-│   │   └── orasaka.http
-│   ├── postgres/            # Relational database migration and seeding scripts
-│   │   └── init/
-│   │       ├── 01-schema.sql
-│   │       └── 02-data.sql
-│   └── scripts/             # Operational automation scripts (e.g. bootstrap)
-│       └── setup.sh
-├── orasaka-core/            # Pure AI Orchestration Engine (Bridge Pattern 2.0)
-├── orasaka-gateway/         # Spring Boot BFF Routing & Streaming orchestrator
-├── orasaka-identity/        # User Authentication and Identity domain module
-├── orasaka-tools/           # MCP Integration and Concrete Tool registry
-├── orasaka-ui/              # Next.js Front-End Client App
-└── orasaka-cli/             # TS Node Terminal Client
+├── ops/                        # DevOps, Docker, scripts, DB migrations
+│   ├── docker/docker-compose.yml
+│   ├── http/orasaka.http       # REST/GraphQL test files
+│   ├── postgres/init/          # Schema and seed SQL
+│   └── scripts/                # setup.sh, start.sh, stop.sh
+├── orasaka-core/               # Pure AI Engine (Bridge Pattern 2.0)
+├── orasaka-gateway/            # Spring Boot BFF + GraphQL + Streaming
+├── orasaka-identity/           # Authentication & Identity Domain
+├── orasaka-tools/              # MCP + Tool Registry + Cache
+├── orasaka-ui/                 # Next.js Front-End
+├── orasaka-cli/                # TS Node CLI Client
+├── docs/                       # Architecture, API, Glossary, ADRs
+└── AGENTS.md                   # AI Agent Governance Contract
 ```
 
 ---
 
-## 🏢 Building on Orasaka: The Business Layer
-
-Orasaka is built to be an **enabler framework**. When implementing a new business venture or a unique domain use-case (e.g., cross-platform media recommendation engines, automated market research tools, or financial analysts), you do not alter the stateless `orasaka-core`.
-
-Instead, you implement a dedicated vertical domain. The business recipe always follows a 3-step pipeline:
-
-1. **Context & Profile Extraction**: Let `orasaka-identity` resolve who the customer is and what their explicit preferences are (e.g., favorite streaming services, language, content restrictions).
-2. **Agentic Knowledge Retrieval**: Use `orasaka-tools` to connect custom **MCP (Model Context Protocol) Servers** capable of fetching real-time real-world data (e.g., pulling active trending charts from Netflix, Apple TV, or Amazon Prime APIs).
-3. **Structured Orchestration**: The AI engine in `orasaka-core` processes the dynamic context, formats the outputs into strict, predictable schemas, and streams tailored, hyper-personalized value back to the `orasaka-ui` or `orasaka-cli`.
-
-> To see a comprehensive blueprint of a real-world startup feature implemented on this framework, read the [Business Implementation Guide](docs/BUSINESS_IMPLEMENTATION.md).
-
----
-
-## ⚙️ Architectural Mandates
-
-### A. Chat Memory — Session-Based Elasticity
-
-Users can instantiate unlimited independent conversation threads. `orasaka-core` resolves `ChatMemory` state dynamically per `conversationId`, ensuring full multi-tenant session isolation.
-
-### B. Multi-Modal Context Profiles
-
-For non-conversational AI (TTS, Image Generation), request records (e.g., `OrasakaSpeechRequest`) accept an immutable `OrasakaContext` profile carrying user-specific preferences: voice models, speed, and stylistic aspect ratios.
-
-### C. The Decoupling Rule
-
-`orasaka-core` is **stateless**. `orasaka-gateway` is responsible for fetching user profiles from `orasaka-identity`, merging them into an immutable `OrasakaContext`, and injecting that context into the Core Client on every single request.
-
----
-
-## 🛡️ Technical Standards
-
-| Standard | Enforcement |
-| :--- | :--- |
-| **Java 21** | Records, Sealed Interfaces, Pattern Matching, and Virtual Threads are mandatory. |
-| **Spring AI 1.1.6** | Strictly locked. No version drift permitted via `orasaka-parent` BOM. |
-| **No Starter Leaks** | `orasaka-core` must never import `spring-boot-starter` dependencies. |
-| **Real-time Streaming** | Gateway stream endpoints use GraphQL Subscriptions or HTTP SSE. |
-| **Virtual Threads** | All I/O-intensive and AI-inference tasks run on `Executors.newVirtualThreadPerTaskExecutor()`. |
-| **Multi-Tier Cache** | Transparent, passive caching decorator (`CachingToolCallback`) utilizing local Caffeine in-memory store and a persistent PostgreSQL database cache tier. |
-| **Asynchronous RAG** | Asynchronous pipeline invoking modular chunkers (`OrasakaChunkingStrategies`) to ingest document metadata into vector storage dynamically via context interceptor executions. |
-
----
-
-## 🚀 Getting Started (DevX Experience)
+## Getting Started
 
 ### Prerequisites
 
-- **Java 21+** (ensure `JAVA_HOME` points to JDK 21)
-- **Maven 3.9+**
-- **Node.js 20+** (required for `orasaka-ui` and `orasaka-cli`)
-- **Docker Compose** (to spin up auxiliary services)
+| Tool | Version |
+| :--- | :--- |
+| JDK | 21+ (`JAVA_HOME` must point here) |
+| Maven | 3.9+ |
+| Node.js | 20+ |
+| Docker Compose | latest |
 
-### 🔐 Pre-seeded Test Credentials
-
-For local development and testing, the database is pre-seeded with the following roles and default credentials:
-
-| Email | Plaintext Password | Authorities / Roles | Default Preferences |
-| :--- | :--- | :--- | :--- |
-| `admin@orasaka.com` | `admin` | `ROLE_ADMIN` | `{"language":"en", "tts-voice":"alloy", "chat-temperature":0.7}` |
-| `user@orasaka.com` | `user` | `ROLE_USER` | `{"language":"en", "tts-voice":"nova", "chat-temperature":0.7}` |
-| `guest@orasaka.com` | `guest` | `ROLE_GUEST` | `{"language":"en", "tts-voice":"shimmer", "chat-temperature":0.9}` |
-
-### Local Environment Setup
-
-Run the bundled setup script which validates the JDK, checks for a native Ollama instance, pulls required models, and starts auxiliary containers:
+### Quick Start
 
 ```bash
+# 1. Bootstrap environment (validates JDK, pulls Ollama models, starts containers)
 ./ops/scripts/setup.sh
+
+# 2. Build all modules
+mvn clean install
+
+# 3. Launch the Gateway
+mvn spring-boot:run -pl orasaka-gateway
+# → GraphQL Playground: http://localhost:8080/graphiql
+
+# 4. Launch the UI
+cd orasaka-ui && npm install && npm run dev
+# → http://localhost:3000
 ```
 
-> The script will also launch the `pgvector` database and the MCP debug server defined in [docker-compose.yml](ops/docker/docker-compose.yml).
-> [!TIP]
-> To run Docker containers manually, specify the project name and the configuration file path:
+### Pre-Seeded Test Credentials
+
+| Email | Password | Role |
+| :--- | :--- | :--- |
+| `admin@orasaka.com` | `admin` | `ROLE_ADMIN` |
+| `user@orasaka.com` | `user` | `ROLE_USER` |
+| `guest@orasaka.com` | `guest` | `ROLE_GUEST` |
+
+---
+
+## Hugging Face Model Ingestion
+
+Orasaka consumes model weights from Hugging Face for both text inference (via Ollama) and image/video generation (via `stable-diffusion.cpp`).
+
+### Text Models (Ollama)
+
+```bash
+# Install Hugging Face CLI
+pip install huggingface-hub
+
+# Download a GGUF model (e.g., Llama 3.1 8B)
+huggingface-cli download TheBloke/Llama-3.1-8B-GGUF llama-3.1-8b.Q4_K_M.gguf \
+  --local-dir ~/models/ollama
+
+# Create an Ollama Modelfile
+cat > ~/models/ollama/Modelfile <<EOF
+FROM ~/models/ollama/llama-3.1-8b.Q4_K_M.gguf
+PARAMETER temperature 0.7
+PARAMETER num_ctx 8192
+EOF
+
+# Register with Ollama
+ollama create llama3.1:8b -f ~/models/ollama/Modelfile
+ollama run llama3.1:8b "Hello"
+```
+
+Configure in `orasaka-gateway/src/main/resources/application.yml`:
+
+```yaml
+orasaka:
+  core:
+    default-provider: ollama
+    features:
+      chat:
+        provider: ollama
+        model: llama3.1:8b
+```
+
+### Image Models (stable-diffusion.cpp)
+
+```bash
+# Download SD 1.5 weights in safetensors format
+huggingface-cli download stable-diffusion-v1-5/stable-diffusion-v1-5 \
+  v1-5-pruned-emaonly.safetensors \
+  --local-dir ~/models/stable-diffusion
+
+# Build sd-server (Apple Silicon with Metal)
+git clone --recursive https://github.com/leejet/stable-diffusion.cpp
+cd stable-diffusion.cpp && mkdir build && cd build
+cmake .. -DSD_METAL=ON
+cmake --build . --config Release --target sd-server
+
+# Start on port 8085
+./bin/sd-server --listen-port 8085 -m ~/models/stable-diffusion/v1-5-pruned-emaonly.safetensors
+```
+
+### Video Models (LTX-Video)
+
+```bash
+# Download quantized LTX-Video checkpoint
+huggingface-cli download unsloth/LTX-Video-GGUF \
+  ltx-video-v0.9-q4_k_m.safetensors \
+  --local-dir ~/models/stable-diffusion
+
+# Start on port 8086
+./bin/sd-server --listen-port 8086 -m ~/models/stable-diffusion/ltx-video-v0.9-q4_k_m.safetensors
+```
+
+### Local Model Directory Layout
+
+```text
+~/models/
+├── ollama/
+│   ├── llama-3.1-8b.Q4_K_M.gguf
+│   └── Modelfile
+└── stable-diffusion/
+    ├── v1-5-pruned-emaonly.safetensors    # Image (Port 8085)
+    └── ltx-video-v0.9-q4_k_m.safetensors # Video (Port 8086)
+```
+
+---
+
+## Local AI Infrastructure
+
+Lifecycle scripts manage Ollama + the two `sd-server` workers:
+
+```bash
+# Start all workers (Ollama:11434, Image:8085, Video:8086)
+./ops/scripts/start.sh
+
+# Stop all workers
+./ops/scripts/stop.sh
+```
+
+Docker containers (PostgreSQL + pgvector, MCP debug server):
 
 ```bash
 docker compose -p orasaka -f ops/docker/docker-compose.yml up -d
 ```
 
-### Local Sovereign AI Image Generation Setup (`stable-diffusion.cpp`)
+---
 
-Orasaka supports 100% sovereign, local image generation via a bare-metal `stable-diffusion.cpp` engine.
+## Build & Test Governance
 
-1. **Build the `sd-server` binary**:
-   Compile `stable-diffusion.cpp` on your target hardware. For Apple Silicon with Metal GPU acceleration:
-   ```bash
-   git clone --recursive https://github.com/leejet/stable-diffusion.cpp
-   cd stable-diffusion.cpp
-   mkdir build && cd build
-   cmake .. -DSD_METAL=ON
-   cmake --build . --config Release --target sd-server
-   ```
-
-2. **Download a Model**:
-   Download a compatible Stable Diffusion model (e.g., `v1-5-pruned-emaonly.safetensors` in safetensors format) and place it on your machine.
-
-3. **Start the local server**:
-   Run the compiled server on port `8085`:
-   ```bash
-   ./bin/sd-server --listen-port 8085 -m ~/models/stable-diffusion/v1-5-pruned-emaonly.safetensors
-   ```
-
-4. **Verify Gateway Integration**:
-   The Orasaka gateway is pre-configured to bind the `localai` overrides context pointing directly to `http://localhost:8085`. Ensure connectivity responds:
-   ```bash
-   curl http://localhost:8085/
-   # Returns "Stable Diffusion Server is running"
-   ```
-
-### Local Sovereign AI Video Generation Setup (LTX-Video)
-
-Orasaka supports 100% sovereign, local video generation via a bare-metal `sd-server` (built above) loaded with quantized LTX-Video.
-
-1. **Quantized Checkpoint Ingestion**:
-   Download the optimized GGUF/Safetensors model checkpoint:
-   ```bash
-   mkdir -p ~/models/stable-diffusion
-   curl -L -o ~/models/stable-diffusion/ltx-video-q4_k_m.safetensors https://huggingface.co/unsloth/LTX-Video-GGUF/resolve/main/ltx-video-v0.9-q4_k_m.safetensors
-   ```
-
-2. **Start the local server**:
-   Run the compiled server on port `8086`:
-   ```bash
-   ./bin/sd-server --listen-port 8086 -m ~/models/stable-diffusion/ltx-video-q4_k_m.safetensors
-   ```
-
-3. **Verify Gateway Integration**:
-   The Orasaka gateway is pre-configured to bind the `localai-video` overrides context pointing directly to `http://localhost:8086`. Ensure connectivity responds:
-   ```bash
-   curl http://localhost:8086/
-   ```
-
-### Quick Start (Local Infrastructure CLI)
-
-To simplify the lifecycle management of our local AI workers (Ollama, Image worker, Video worker), we provide two execution scripts under `ops/scripts/`:
-
-- **Start Infrastructure**: Spin up Ollama and the two `sd-server` instances in the background, verifying port allocation and recording Process IDs (PIDs):
-  ```bash
-  ./ops/scripts/start.sh
-  ```
-  This will check and bind:
-  - **Ollama Core Client**: Port `11434`
-  - **Text-to-Image (Stable Diffusion) Worker**: Port `8085` (logs to `sd-image.log`)
-  - **Text-to-Video (LTX-Video) Worker**: Port `8086` (logs to `sd-video.log`)
-  - **State Tracking**: Active PIDs are saved in `.orasaka.pid` at the root.
-
-- **Stop Infrastructure**: Gracefully shut down background workers by reading the state file (or running socket inspection as a fallback):
-  ```bash
-  ./ops/scripts/stop.sh
-  ```
-
-### Build & Run All Modules
+### Java (ArchUnit + JaCoCo)
 
 ```bash
-mvn clean install
+# Full verification with architectural tests and coverage check
+mvn clean verify -pl orasaka-core -am
+
+# Run gateway boundary tests
+mvn clean test -pl orasaka-gateway -am
 ```
 
-### Build a Single Module
+| Gate | Tool | Scope |
+| :--- | :--- | :--- |
+| Layer Boundary | ArchUnit | Core ↛ Gateway, Core ↛ Web, Core ↛ Servlet |
+| Prompt Externalization | ArchUnit | No hardcoded prompts in engine/pipeline |
+| Fail-Fast Compliance | ArchUnit | OrasakaException only in engine services |
+| Encapsulation | ArchUnit | Private fields in concrete classes |
+| Gateway Boundary | ArchUnit | No Spring AI leaks, pkg-private filters |
+| Coverage Gate | JaCoCo | 10% min instruction coverage (ratchet up) |
 
-For fast iteration on a specific module, e.g. the core library:
+### TypeScript (Dependency Cruiser + Jest)
 
 ```bash
-mvn clean install -pl orasaka-core
+# Architectural boundary validation
+cd orasaka-ui && npm run validate
+
+# Component tests (next/jest SWC compiler)
+npm test
 ```
 
-### Run the Gateway locally
+| Gate | Tool | Scope |
+| :--- | :--- | :--- |
+| No Circular Deps | dependency-cruiser | All source files |
+| Feature Isolation | dependency-cruiser | No cross-feature imports |
+| Layer Direction | dependency-cruiser | Components ↛ Features |
+| Component Tests | Jest + RTL | UI primitives |
+
+### Formatting & Linting
 
 ```bash
-# Build and update dependencies in local repository
-mvn clean install
+# Java
+mvn spotless:apply
 
-# Launch Gateway
-mvn spring-boot:run -pl orasaka-gateway
+# TypeScript
+cd orasaka-ui && npm run format && npm run lint
 ```
-
-The GraphQL Playground will be available at `http://localhost:8080/graphiql`.
-
-### Run the UI (Next.js BFF) locally
-
-```bash
-cd orasaka-ui
-npm install
-npm run dev
-```
-
-The application will run at `http://localhost:3000`. Next.js API Routes act as a BFF proxying GraphQL queries to `http://localhost:8080/graphql` and Server-Sent Events to `http://localhost:8080/api/v1/chat/stream/[conversationId]`.
-
-### Run the CLI Client locally
-
-```bash
-cd orasaka-cli
-npm install
-# Run login command to save session configs in ~/.orasaka-cli.json
-npx ts-node src/index.ts login user@orasaka.com user
-
-# Execute streaming chat query
-npx ts-node src/index.ts chat "Explain quantum computing in one sentence."
-```
-
-## 🎙️ Elite Developer Experience (DevX) & Extensibility Matrix
-
-Orasaka is architected to provide an elite, modern development experience (DevX), leveraging cutting-edge Java 21 features and a decoupled component-driven extension model.
-
-### A. Dynamic Context Interceptor Pipeline
-
-Third-party developers can extend the orchestration engine without modifying the core cognitive code. By implementing the `OrasakaContextInterceptor` interface, custom components are automatically discovered via Spring dependency injection and woven into the functional execution pipeline:
-
-```mermaid
-graph LR
-    Request[OrasakaChatRequest] --> Interceptors[Stream/Reduce Pipeline]
-    Interceptors --> Interceptor1[UserContextResolver]
-    Interceptors --> Interceptor2[SystemContextInjector]
-    Interceptors --> Interceptor3[RefinerInterceptor]
-    Interceptors --> Interceptor4[RouterInterceptor]
-    Interceptor4 --> Engine[AbstractOrasakaEngine]
-
-    classDef client fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#0369a1;
-    classDef bff fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px,color:#6d28d9;
-    classDef core fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#047857;
-    classDef infra fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#b45309;
-    
-    class Request,Interceptors,Interceptor1,Interceptor2,Interceptor3,Interceptor4,Engine core;
-```
-
-### B. Decoupled Event-Driven Extensibility
-
-Execution lifecycle events are emitted asynchronously and reactively, enabling non-blocking analytics, auditing, and observability integrations:
-
-- **`OrasakaChatCompletedEvent`**: An immutable record published using Spring's `ApplicationEventPublisher` upon successful completion of synchronous chat executions or reactive token streams.
-
-### C. Self-Validating Records & Compile-Time Defensiveness
-
-We enforce compile-time verification and runtime safety by migrating defensive copies, default parameters, and structural validation from anemic services directly into the **Compact Constructors** of Java 21 records:
-
-- **Zero-Allocation Payloads**: Rich domain methods like `compileMessages()` eliminate procedural loop structures from the service layer, keeping service classes clean and orchestration-focused.
-
-### D. Server-Driven UX via the Orasaka Operation Graph
-
-Orasaka implements a Server-Driven UI capability architecture via the polymorphic `OrasakaOperationGraph`. Rather than hardcoding feature toggles in the frontend, the UI constructs its contextual "+" actions menu dynamically by querying the `/api/v1/operations/graph` endpoint:
-
-- **Polymorphic Capability States**: Capabilities can evaluate to `Active`, `Locked` (providing a contextual locking explanation and audit timestamp), or `Invisible` (which is skipped entirely in frontend rendering).
-- **Frontier Ingress Security**: The gateway boundary enforces matching access control via the `OrasakaOperationGraphFilter`. Calls to locked or invisible capabilities are aborted immediately at the frontier, returning an HTTP `403 Forbidden` response.
 
 ---
 
-## 🥷 AI Agent Governance & DevX Integration
+## Architecture & Governance
 
-To facilitate seamless collaboration between human developers and AI coding assistants, Orasaka enforces an autonomous governance layer.
+The [AGENTS.md](AGENTS.md) file is the system governance ledger. It defines:
 
-### 🏛️ The Master Contract (`AGENTS.md`)
+- **Decoupling boundaries** — `orasaka-core` is stateless, web-agnostic
+- **Bridge Pattern 2.0** — Spring AI types encapsulated in core, never leak outward
+- **Virtual Thread mandate** — all I/O on `Executors.newVirtualThreadPerTaskExecutor()`
+- **Self-validating records** — compact constructors handle all validation (ADR-007)
+- **Context-Matrix Pipeline** — ordered interceptor chain for prompt enrichment
 
-The [AGENTS.md](AGENTS.md) file serves as the system's ledger. It defines boundaries such as the statelessness of `orasaka-core`, thread safety, and Virtual Thread execution policies that AI models must respect.
-
-### 📁 Agent Context Matrix (`.agent/`)
-
-The `.agent/` directory contains reference guidelines:
-**Rules (`.agent/rules/`)**: Code-level constraints, e.g., the [naming conventions and persistence policies](.agent/rules/naming_conventions.md) which forbid database query duplication.
-**Workflows (`.agent/workflows/`)**: Step-by-step verification flows. The [review_architect workflow](.agent/workflows/review_architect.md) dictates how formatting, linting, and compilation cascade should be executed before any code validation loop is marked complete.
-
-### 💻 Integrating with your Development Cycle (DevX)
-
-1. **Instructing Agents**: When onboarding a new coding assistant or prompting an agent, begin with:
-   > "Read AGENTS.md and conform to all instructions in .agent/rules/ and .agent/workflows/."
-2. **Quality Verification Gate**: Run the compilation and verification workflow to ensure compatibility:
-
-   ```bash
-   # Run Java Code Quality and Spotless Apply
-   mvn spotless:apply -pl orasaka-gateway
-
-   # Run UI Code Formatting & Lint
-   cd orasaka-ui && npm run format && npm run lint
-
-   # Recompile entire integration mesh
-   mvn clean compile -pl orasaka-gateway -am
-   ```
+The `.agent/rules/` and `.agent/workflows/` directories contain machine-readable constraints and verification flows.
 
 ---
 
-For more details, see the [Architecture Reference](docs/ARCHITECTURE.md), [API Reference](docs/API_REFERENCE.md), and the [Architectural Decisions](docs/CONTEXT.md).
+## Documentation
+
+| Document | Content |
+| :--- | :--- |
+| [Architecture Reference](docs/ARCHITECTURE.md) | System topology, cognitive engine flows |
+| [API Reference](docs/API_REFERENCE.md) | Public types, facades, engine abstractions |
+| [Glossary](docs/GLOSSARY.md) | Ecosystem terms and patterns |
+| [ADR Log](docs/CONTEXT.md) | Architectural Decision Records |
+| [Business Guide](docs/BUSINESS_IMPLEMENTATION.md) | Vertical domain implementation blueprint |
+| [Aggregate Javadoc](docs/apidocs/) | Auto-generated API documentation |
 
 ---
 
-*Orasaka — Precision in Implementation, Intelligence through Decoupling.*
+## Fast-Iteration Build Workflow
+
+```bash
+# 1. Update identity contracts
+mvn clean install -pl orasaka-identity
+
+# 2. Recompile entire integration mesh (auto-cascades upstream deps)
+mvn clean compile -pl orasaka-gateway -am
+```
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.

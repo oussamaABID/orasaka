@@ -1,1 +1,0 @@
-packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"com.orasaka.gateway"},{"l":"com.orasaka.gateway.config"},{"l":"com.orasaka.gateway.endpoint"},{"l":"com.orasaka.gateway.service"},{"l":"com.orasaka.gateway.support"}];updateSearchResults();

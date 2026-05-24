@@ -1,1 +1,0 @@
-packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"com.orasaka.tools.config"},{"l":"com.orasaka.tools.entity"},{"l":"com.orasaka.tools.entity.converter"},{"l":"com.orasaka.tools.functions"},{"l":"com.orasaka.tools.mcp"},{"l":"com.orasaka.tools.repository"}];updateSearchResults();
