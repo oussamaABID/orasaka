@@ -17,12 +17,35 @@
 * **No Class Leakage**: Type signatures native to `org.springframework.ai` must remain encapsulated inside `orasaka-core`. They are strictly prohibited from leaking outward into the gateway controllers, CLI modules, or identity layers.
 * **Gateway Context Mandate**: `orasaka-gateway` acts as the single source of orchestration context. It is strictly responsible for fetching data profiles from `orasaka-identity`, assembling them into an immutable `PromptContext` snapshot, and injecting that context into the Core Client on every request.
 
+### 🏛️ Module Separation Invariant [ERR-102]
+
+* **Isolation of Concerns:** The core processing workspace (`orasaka-core`) and utilities package (`orasaka-tools`) are completely stateless regarding user identity and authentication mechanisms.
+* **The Gateway Rule:** Only `orasaka-gateway` possesses cross-cutting clearance to call identity models and feed the resulting identifiers as plain context to underlying engines.
+* **The Adapter Pattern:** `orasaka-tools` may implement interfaces defined in `orasaka-core.pipeline.*` (Ports & Adapters per ADR-007), but must never import from `orasaka-identity`. The reverse direction (`core → tools`) is strictly prohibited.
+* **Context-Passing Principle:** If `orasaka-core` or `orasaka-tools` require user references or session scopes, they must strictly consume them as primitive strings (`String userId`, `UUID sessionId`) inside their native request payloads. They must **NEVER** import security contexts, tokens, or domain objects belonging to `orasaka-identity`.
+
+### 🪓 Source File Isolation Invariant [ERR-103]
+
+* **The Single File Principle:** Every top-level Java class, interface, enum, or record—whether in production (`src/main`) or test suites (`src/test`)—must reside in its own dedicated `.java` source file matching its simple name.
+* **Anti-God-File Mandate:** Multi-class bundling or hiding secondary components inside another class's file to "save space" or "go faster" is strictly prohibited. It destroys package scannability and violates the Single Responsibility Principle.
+* **Anti-Bundling Rules:** Pooling tests for distinct production artifacts (e.g., `VideoRequest` and `VideoResponse`) under a single `@Nested` wrapper file is strictly prohibited. Each production class must have its own 1:1 dedicated test file container. `@Nested` may still be used *within* a single test class to organize behavioral groups.
+* **Automation:** Programmatically guarded by `one_top_level_class_per_file` evaluating both main and test classpaths across all modules. Any violation will actively fail the CI gateway.
+
+### 🪓 Global Nomenclature & Zero-Prefix Invariant [ERR-104]
+
+* **Monorepo-Wide Policy:** Prepending the project name `Orasaka` or `orasaka-` to any internal architectural artifact is strictly forbidden across **ALL** layers (Backend Java modules, Frontend React/Next.js apps, and CLI binary tools).
+* **Naming Standards:**
+  1. **Backend:** Rely exclusively on package topology (`com.orasaka.core..`) for ownership. Use `RagInterceptor` (not `OrasakaRagInterceptor`). Classes must carry standard behavioral suffixes (`*Interceptor`, `*Resolver`, `*Injector`).
+  2. **Frontend:** Core UI components must use clean domain tokens. Use `Sidebar` or `McpPanel`, never `OrasakaSidebar`.
+* **Whitelist:** Only `OrasakaCoreConfiguration` (Spring Boot `@Configuration` class) retains the prefix.
+* **Automation:** Enforced via ArchUnit `no_redundant_project_prefix` gateway on the backend and `no-restricted-syntax` ESLint rule on frontend/CLI spaces.
+
 ### B. The Bridge Pattern 2.0
 
 Direct exposure of external AI frameworks to the rest of the application is strictly forbidden:
 
-* **Encapsulation**: All third-party AI framework models, prompts, and options must be safely wrapped inside Orasaka-native abstractions (e.g., `OrasakaChatRequest`, `OrasakaOptions`).
-* **Facade Access**: External modules and clients must interact with the core engine exclusively through the unified `OrasakaAiClient` facade.
+* **Encapsulation**: All third-party AI framework models, prompts, and options must be safely wrapped inside Orasaka-native abstractions (e.g., `ChatRequest`, `Options`).
+* **Facade Access**: External modules and clients must interact with the core engine exclusively through the unified `AiClient` facade.
 
 ### C. Context-Matrix Orchestration Pipeline
 
