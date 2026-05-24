@@ -2,6 +2,7 @@ package com.orasaka.core.support;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Default record implementation of the {@link OrasakaOptions} configuration interface.
@@ -23,10 +24,10 @@ public record DefaultOrasakaOptions(
 
   public DefaultOrasakaOptions {
     extraOptions =
-        java.util.Optional.ofNullable(extraOptions)
+        Optional.ofNullable(extraOptions)
             .map(
                 m -> {
-                  var clean = new java.util.HashMap<String, Object>();
+                  var clean = new HashMap<String, Object>();
                   m.forEach(
                       (k, v) -> {
                         if (k != null && v != null) {

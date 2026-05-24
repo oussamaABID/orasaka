@@ -2,9 +2,9 @@ package com.orasaka.core.engine;
 
 import com.orasaka.core.pipeline.OrasakaContextInterceptor;
 import com.orasaka.core.pipeline.OrasakaOrchestrationPipeline;
+import com.orasaka.core.support.InternalChatRequest;
+import com.orasaka.core.support.InternalChatResponse;
 import com.orasaka.core.support.OrasakaChatCompletedEvent;
-import com.orasaka.core.support.OrasakaChatRequest;
-import com.orasaka.core.support.OrasakaChatResponse;
 import java.util.List;
 import java.util.Map;
 import org.springframework.context.ApplicationEventPublisher;
@@ -14,8 +14,8 @@ final class EngineStreamBridge {
 
   private EngineStreamBridge() {}
 
-  static Flux<OrasakaChatResponse> createStream(
-      OrasakaChatRequest request,
+  static Flux<InternalChatResponse> createStream(
+      InternalChatRequest request,
       OrasakaOrchestrationPipeline pipeline,
       EngineModelRegistry registry,
       List<OrasakaContextInterceptor> interceptors,
@@ -57,7 +57,7 @@ final class EngineStreamBridge {
                     if (chunk != null) {
                       responseBuilder.append(chunk);
                     }
-                    return new OrasakaChatResponse(
+                    return new InternalChatResponse(
                         chunk, context.conversationId(), Map.of("provider", context.provider()));
                   })
               .doOnComplete(
@@ -66,7 +66,7 @@ final class EngineStreamBridge {
                     interceptors.forEach(
                         i -> i.postProcess(request, context.promptText(), fullText));
                     var out =
-                        new OrasakaChatResponse(
+                        new InternalChatResponse(
                             fullText,
                             context.conversationId(),
                             Map.of("provider", context.provider()));

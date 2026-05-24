@@ -3,7 +3,7 @@ package com.orasaka.core.engine;
 import com.orasaka.core.pipeline.OrasakaContextInterceptor;
 import com.orasaka.core.pipeline.OrasakaOrchestrationPipeline;
 import com.orasaka.core.pipeline.PromptContext;
-import com.orasaka.core.support.OrasakaChatRequest;
+import com.orasaka.core.support.InternalChatRequest;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.ai.chat.messages.*;
@@ -18,7 +18,7 @@ final class EnginePipelineBridge {
   private EnginePipelineBridge() {}
 
   static EnginePipelineContext compileContext(
-      OrasakaChatRequest request,
+      InternalChatRequest request,
       OrasakaOrchestrationPipeline pipeline,
       EngineModelRegistry registry,
       List<OrasakaContextInterceptor> interceptors) {
@@ -57,7 +57,7 @@ final class EnginePipelineBridge {
     return new EnginePipelineContext(provider, conversationId, promptText, prompt);
   }
 
-  static Message mapMessage(OrasakaChatRequest.ChatMessage msg) {
+  static Message mapMessage(InternalChatRequest.ChatMessage msg) {
     return switch (msg.role().toLowerCase()) {
       case "system" -> new SystemMessage(msg.content());
       case "assistant" -> new AssistantMessage(msg.content());

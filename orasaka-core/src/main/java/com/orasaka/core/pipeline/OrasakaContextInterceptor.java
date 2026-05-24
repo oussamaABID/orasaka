@@ -1,6 +1,6 @@
 package com.orasaka.core.pipeline;
 
-import com.orasaka.core.support.OrasakaChatRequest;
+import com.orasaka.core.support.InternalChatRequest;
 import java.util.List;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.prompt.ChatOptions;
@@ -24,7 +24,7 @@ public interface OrasakaContextInterceptor {
    *     unchanged).
    */
   ChatOptions preProcess(
-      OrasakaChatRequest request, String promptText, List<Message> messages, ChatOptions options);
+      InternalChatRequest request, String promptText, List<Message> messages, ChatOptions options);
 
   /**
    * Invoked after the model execution completes successfully.
@@ -33,5 +33,5 @@ public interface OrasakaContextInterceptor {
    * @param promptText The (possibly refined) prompt text that was sent.
    * @param responseText The text response returned by the model.
    */
-  default void postProcess(OrasakaChatRequest request, String promptText, String responseText) {}
+  default void postProcess(InternalChatRequest request, String promptText, String responseText) {}
 }

@@ -1,7 +1,7 @@
 package com.orasaka.core.engine;
 
 import com.orasaka.core.support.DefaultOrasakaOptions;
-import com.orasaka.core.support.OrasakaImageRequest;
+import com.orasaka.core.support.InternalImageRequest;
 import com.orasaka.core.support.OrasakaOptions;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.DefaultChatOptions;
@@ -44,7 +44,7 @@ public final class OrasakaOptionsMapper {
   }
 
   /** Maps OrasakaImageRequest parameters to provider-specific Spring AI image options. */
-  public static ImageOptions mapImageOptions(OrasakaImageRequest request, String provider) {
+  public static ImageOptions mapImageOptions(InternalImageRequest request, String provider) {
     return switch (provider.toLowerCase()) {
       case "openai" ->
           OpenAiImageOptions.builder()

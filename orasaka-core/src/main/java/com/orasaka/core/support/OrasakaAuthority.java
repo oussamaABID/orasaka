@@ -1,4 +1,4 @@
-package com.orasaka.core.identity;
+package com.orasaka.core.support;
 
 /**
  * Immutable security role representation for the Orasaka ecosystem.

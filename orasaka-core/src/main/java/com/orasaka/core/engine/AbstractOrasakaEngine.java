@@ -42,7 +42,7 @@ public abstract sealed class AbstractOrasakaEngine permits OrasakaEngine {
     this.eventPublisher = publisher;
   }
 
-  public OrasakaChatResponse chat(OrasakaChatRequest request) {
+  public InternalChatResponse chat(InternalChatRequest request) {
     var context = EnginePipelineBridge.compileContext(request, pipeline, registry, interceptors);
     ChatResponse response;
     try {
@@ -61,61 +61,74 @@ public abstract sealed class AbstractOrasakaEngine permits OrasakaEngine {
 
     interceptors.forEach(i -> i.postProcess(request, context.promptText(), text));
     var out =
-        new OrasakaChatResponse(
+        new InternalChatResponse(
             text, context.conversationId(), Map.of("provider", context.provider()));
     eventPublisher.publishEvent(new OrasakaChatCompletedEvent(request, out));
     return out;
   }
 
-  public Flux<OrasakaChatResponse> stream(OrasakaChatRequest request) {
+  public Flux<InternalChatResponse> stream(InternalChatRequest request) {
     return EngineStreamBridge.createStream(
         request, pipeline, registry, interceptors, eventPublisher);
   }
 
-  public OrasakaImageResponse generateImage(OrasakaImageRequest request) {
+  public InternalImageResponse generateImage(InternalImageRequest request) {
     var model = registry.getActiveImageModel();
     OpenAiImageOptions executionOptions =
         OpenAiImageOptions.builder().model("stable-diffusion").N(1).height(512).width(512).build();
-    ImagePrompt prompt = new ImagePrompt(request.prompt(), executionOptions);
-    var response = model.call(prompt);
+    var response = model.call(new ImagePrompt(request.prompt(), executionOptions));
 
     var generation = response.getResult();
-    byte[] imageData = null;
-    String url = null;
-
-    if (generation != null && generation.getOutput() != null) {
-      var output = generation.getOutput();
-      url = output.getUrl();
-      String b64 = output.getB64Json();
-      if (b64 != null && !b64.isBlank()) {
-        try {
-          imageData = Base64.getDecoder().decode(b64.trim());
-        } catch (IllegalArgumentException e) {
-          logger.warn("Failed to decode base64 image data", e);
-        }
-      }
-
-      if (imageData == null) {
-        try {
-          var method = output.getClass().getMethod("getImage");
-          Object imgObj = method.invoke(output);
-          if (imgObj instanceof byte[] bytes) {
-            imageData = bytes;
-          }
-        } catch (Exception e) {
-          // Method getImage() does not exist or failed, ignore
-        }
-      }
-    }
+    byte[] imageData = extractImageData(generation);
+    String url = extractUrl(generation);
 
     if (imageData != null && url == null) {
-      url = "data:image/png;base64," + Base64.getEncoder().encodeToString(imageData);
+      url = buildImageDataUrl(imageData);
     }
-
-    return new OrasakaImageResponse(imageData, url, "png");
+    return new InternalImageResponse(imageData, url, "png");
   }
 
-  public byte[] generateSpeech(OrasakaSpeechRequest request) {
+  private byte[] extractImageData(org.springframework.ai.image.ImageGeneration generation) {
+    if (generation == null || generation.getOutput() == null) return null;
+
+    byte[] data = decodeBase64Image(generation.getOutput().getB64Json());
+    if (data == null) {
+      data = extractImageViaReflection(generation.getOutput());
+    }
+    return data;
+  }
+
+  private String extractUrl(org.springframework.ai.image.ImageGeneration generation) {
+    if (generation == null || generation.getOutput() == null) return null;
+    return generation.getOutput().getUrl();
+  }
+
+  private byte[] decodeBase64Image(String b64) {
+    if (b64 == null || b64.isBlank()) return null;
+    try {
+      return Base64.getDecoder().decode(b64.trim());
+    } catch (IllegalArgumentException e) {
+      logger.warn("Failed to decode base64 image data", e);
+      return null;
+    }
+  }
+
+  private byte[] extractImageViaReflection(Object output) {
+    try {
+      var method = output.getClass().getMethod("getImage");
+      Object imgObj = method.invoke(output);
+      if (imgObj instanceof byte[] bytes) return bytes;
+    } catch (Exception e) {
+      // Method getImage() does not exist or failed — ignore
+    }
+    return null;
+  }
+
+  private String buildImageDataUrl(byte[] imageData) {
+    return "data:image/png;base64," + Base64.getEncoder().encodeToString(imageData);
+  }
+
+  public byte[] generateSpeech(InternalSpeechRequest request) {
     var voice = MediaPayloadHandler.resolveVoicePreference(request.context());
     var response =
         registry.getActiveSpeechModel().call(MediaPayloadHandler.toSpeechPrompt(request, voice));

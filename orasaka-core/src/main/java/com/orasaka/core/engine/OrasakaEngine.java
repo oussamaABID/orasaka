@@ -8,7 +8,6 @@ import org.springframework.ai.audio.tts.TextToSpeechModel;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.image.ImageModel;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +22,6 @@ import org.springframework.stereotype.Component;
 public final class OrasakaEngine extends AbstractOrasakaEngine {
 
   /** Concrete constructor for OrasakaEngine. */
-  @Autowired
   public OrasakaEngine(
       Map<String, ChatModel> chatModels,
       Map<String, ImageModel> imageModels,

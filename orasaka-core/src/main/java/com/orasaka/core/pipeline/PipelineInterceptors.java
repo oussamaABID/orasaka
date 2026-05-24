@@ -1,8 +1,9 @@
 package com.orasaka.core.pipeline;
 
 import com.orasaka.core.engine.CoreProperties;
-import com.orasaka.core.support.OrasakaChatRequest;
+import com.orasaka.core.support.InternalChatRequest;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,7 +43,7 @@ class UserContextResolver implements PromptInterceptor {
     if (securityData.isEmpty()) {
       return context;
     }
-    var newUserMetadata = new java.util.HashMap<>(context.userMetadata());
+    var newUserMetadata = new HashMap<>(context.userMetadata());
     newUserMetadata.putAll(securityData);
     logger.debug(
         "Successfully enriched user metadata with security claims: {}", securityData.keySet());
@@ -67,7 +68,7 @@ class SystemContextInjector implements PromptInterceptor {
   @Override
   public PromptContext intercept(PromptContext context) {
     logger.debug("Injecting system context signals. Provider count: {}", providers.size());
-    var newSystemMetadata = new java.util.HashMap<>(context.systemMetadata());
+    var newSystemMetadata = new HashMap<>(context.systemMetadata());
 
     for (SystemContextProvider provider : providers) {
       try {
@@ -260,7 +261,7 @@ class OrasakaMemoryInterceptor implements OrasakaContextInterceptor {
 
   @Override
   public ChatOptions preProcess(
-      OrasakaChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
+      InternalChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
     String conversationId = resolveConversationId(request);
     if (conversationId != null && memoryResolver != null) {
       ChatMemory chatMemory = memoryResolver.resolve(conversationId);
@@ -273,7 +274,7 @@ class OrasakaMemoryInterceptor implements OrasakaContextInterceptor {
   }
 
   @Override
-  public void postProcess(OrasakaChatRequest request, String promptText, String responseText) {
+  public void postProcess(InternalChatRequest request, String promptText, String responseText) {
     String conversationId = resolveConversationId(request);
     if (conversationId != null && memoryResolver != null) {
       ChatMemory chatMemory = memoryResolver.resolve(conversationId);
@@ -284,7 +285,7 @@ class OrasakaMemoryInterceptor implements OrasakaContextInterceptor {
     }
   }
 
-  private String resolveConversationId(OrasakaChatRequest request) {
+  private String resolveConversationId(InternalChatRequest request) {
     return (request.context() != null
             && request.context().conversationId() != null
             && !request.context().conversationId().isBlank())
@@ -303,7 +304,7 @@ class OrasakaMcpInterceptor implements OrasakaContextInterceptor {
 
   @Override
   public ChatOptions preProcess(
-      OrasakaChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
+      InternalChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
     if (mcpOrchestrator != null) {
       String mcpContext = mcpOrchestrator.resolveExternalContext();
       if (mcpContext != null && !mcpContext.isBlank())
@@ -326,7 +327,7 @@ class OrasakaRagInterceptor implements OrasakaContextInterceptor {
 
   @Override
   public ChatOptions preProcess(
-      OrasakaChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
+      InternalChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
     if (properties.rag() != null && properties.rag().enabled() && knowledgeService != null) {
       String context = knowledgeService.retrieveContext(promptText, properties.rag().topK());
       if (context != null && !context.isBlank())
@@ -346,7 +347,7 @@ class OrasakaToolInterceptor implements OrasakaContextInterceptor {
 
   @Override
   public ChatOptions preProcess(
-      OrasakaChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
+      InternalChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
     if (toolRegistry == null || toolRegistry.getRegisteredTools().isEmpty()) return options;
 
     List<ToolCallback> demandedTools = collectDemandedTools(request, promptText);
@@ -355,7 +356,7 @@ class OrasakaToolInterceptor implements OrasakaContextInterceptor {
     return attachTools(options, demandedTools);
   }
 
-  private List<ToolCallback> collectDemandedTools(OrasakaChatRequest request, String promptText) {
+  private List<ToolCallback> collectDemandedTools(InternalChatRequest request, String promptText) {
     String lowerContext = extractFullText(request, promptText).toLowerCase();
     List<ToolCallback> demanded = new ArrayList<>();
 
@@ -370,7 +371,7 @@ class OrasakaToolInterceptor implements OrasakaContextInterceptor {
     return demanded;
   }
 
-  private String extractFullText(OrasakaChatRequest request, String promptText) {
+  private String extractFullText(InternalChatRequest request, String promptText) {
     StringBuilder text = new StringBuilder(promptText != null ? promptText : "");
     text.append(" ").append(request.prompt() != null ? request.prompt() : "");
     if (request.messages() != null) {

@@ -1,6 +1,7 @@
 package com.orasaka.core.pipeline;
 
 import com.orasaka.core.engine.CoreProperties;
+import com.orasaka.core.support.OrasakaAuthority;
 import com.orasaka.core.support.OrasakaContext;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -59,8 +60,9 @@ public class OrasakaOrchestrationPipeline {
       if (context.preferences() != null) {
         userMetadata.putAll(context.preferences());
       }
-      if (context.roles() != null) {
-        userMetadata.put("roles", context.roles());
+      if (context.authorities() != null) {
+        userMetadata.put(
+            "roles", context.authorities().stream().map(OrasakaAuthority::name).toList());
       }
     }
 

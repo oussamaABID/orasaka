@@ -1,8 +1,8 @@
 package com.orasaka.core.engine;
 
+import com.orasaka.core.support.InternalImageRequest;
+import com.orasaka.core.support.InternalSpeechRequest;
 import com.orasaka.core.support.OrasakaContext;
-import com.orasaka.core.support.OrasakaImageRequest;
-import com.orasaka.core.support.OrasakaSpeechRequest;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.ai.audio.tts.TextToSpeechPrompt;
@@ -22,11 +22,11 @@ final class MediaPayloadHandler {
         .orElse("alloy");
   }
 
-  static TextToSpeechPrompt toSpeechPrompt(OrasakaSpeechRequest request, String voice) {
+  static TextToSpeechPrompt toSpeechPrompt(InternalSpeechRequest request, String voice) {
     return new TextToSpeechPrompt(request.text());
   }
 
-  static ImagePrompt toImagePrompt(OrasakaImageRequest request, String provider) {
+  static ImagePrompt toImagePrompt(InternalImageRequest request, String provider) {
     ImageOptions springOptions = OrasakaOptionsMapper.mapImageOptions(request, provider);
     return new ImagePrompt(List.of(new ImageMessage(request.prompt())), springOptions);
   }

@@ -25,11 +25,7 @@ public class OrasakaVideoService {
   @SuppressWarnings("unchecked")
   public OrasakaVideoResponse generateVideo(OrasakaVideoRequest request) {
     Map<String, Object> payload =
-        Map.of(
-            "prompt",
-            request.prompt(),
-            "video_length",
-            request.durationSeconds() != null ? request.durationSeconds() : 4);
+        Map.of("prompt", request.prompt(), "video_length", request.durationSeconds());
 
     try {
       Map<String, Object> response =
