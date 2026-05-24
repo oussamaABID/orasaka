@@ -33,7 +33,10 @@ public class OrasakaCoreConfiguration {
     if (properties.overrides() != null) {
       CoreProperties.ProviderConfig localai = properties.overrides().get("localai");
       if (localai != null && localai.baseUrl() != null) {
-        String apiKey = "dummy-key";
+        String apiKey =
+            (localai.apiKey() != null && !localai.apiKey().isBlank())
+                ? localai.apiKey()
+                : "not-required";
         OpenAiImageApi api =
             OpenAiImageApi.builder().apiKey(apiKey).baseUrl(localai.baseUrl()).build();
         OpenAiImageOptions defaultOptions =

@@ -104,13 +104,15 @@ orasaka:
         extra:
           embedding-model: ${ORASAKA_OLLAMA_EMBEDDING_MODEL:nomic-embed-text:latest}
       localai:
-        base-url: "http://localhost:8085"
+        base-url: ${ORASAKA_LOCALAI_BASE_URL:http://localhost:8085}
+        api-key: ${ORASAKA_LOCALAI_API_KEY:not-required}
         model: "stable-diffusion"
       localai-video:
         base-url: ${ORASAKA_VIDEO_BASE_URL:http://localhost:8086}
         model: "ltx-video"
       openai:
         base-url: ${ORASAKA_OPENAI_BASE_URL:https://api.openai.com/v1}
+        api-key: ${OPENAI_API_KEY:}
         model: ${ORASAKA_OPENAI_MODEL:gpt-4o}
         temperature: ${ORASAKA_OPENAI_TEMPERATURE:0.7}
   tools:

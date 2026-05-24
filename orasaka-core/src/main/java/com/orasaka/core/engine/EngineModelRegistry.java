@@ -1,21 +1,12 @@
 package com.orasaka.core.engine;
 
 import com.orasaka.core.support.OrasakaException;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.springframework.ai.audio.tts.Speech;
 import org.springframework.ai.audio.tts.TextToSpeechModel;
-import org.springframework.ai.audio.tts.TextToSpeechPrompt;
-import org.springframework.ai.audio.tts.TextToSpeechResponse;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.ai.image.Image;
-import org.springframework.ai.image.ImageGeneration;
 import org.springframework.ai.image.ImageModel;
-import org.springframework.ai.image.ImagePrompt;
-import org.springframework.ai.image.ImageResponse;
-import reactor.core.publisher.Flux;
 
 class EngineModelRegistry {
   private final Map<String, ChatModel> chatModels;
@@ -70,44 +61,25 @@ class EngineModelRegistry {
 
   ImageModel getActiveImageModel() {
     String provider = getActiveProvider();
-    ImageModel model = imageModels.get(provider);
-    if (model == null) {
-      model = imageModels.get("openai");
-    }
-    if (model == null) {
-      model =
-          new ImageModel() {
-            @Override
-            public ImageResponse call(ImagePrompt prompt) {
-              var gen =
-                  new ImageGeneration(new Image("http://localhost:3000/placeholder.png", null));
-              return new ImageResponse(List.of(gen));
-            }
-          };
-    }
-    return model;
+    return Optional.ofNullable(imageModels.get(provider))
+        .or(() -> Optional.ofNullable(imageModels.get("openai")))
+        .orElseThrow(
+            () ->
+                new OrasakaException(
+                    "No ImageModel found for provider '"
+                        + provider
+                        + "'. Register an ImageModel bean or configure a valid provider."));
   }
 
   TextToSpeechModel getActiveSpeechModel() {
     String provider = getActiveProvider();
-    TextToSpeechModel model = speechModels.get(provider);
-    if (model == null) {
-      model = speechModels.get("openai");
-    }
-    if (model == null) {
-      model =
-          new TextToSpeechModel() {
-            @Override
-            public TextToSpeechResponse call(TextToSpeechPrompt prompt) {
-              return new TextToSpeechResponse(List.of(new Speech(new byte[0])));
-            }
-
-            @Override
-            public Flux<TextToSpeechResponse> stream(TextToSpeechPrompt prompt) {
-              return Flux.just(call(prompt));
-            }
-          };
-    }
-    return model;
+    return Optional.ofNullable(speechModels.get(provider))
+        .or(() -> Optional.ofNullable(speechModels.get("openai")))
+        .orElseThrow(
+            () ->
+                new OrasakaException(
+                    "No TextToSpeechModel found for provider '"
+                        + provider
+                        + "'. Register a TextToSpeechModel bean or configure a valid provider."));
   }
 }

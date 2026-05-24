@@ -134,10 +134,13 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    String allowedOrigins =
-        (gatewayProperties.cors() != null && gatewayProperties.cors().allowedOrigins() != null)
-            ? gatewayProperties.cors().allowedOrigins()
-            : "http://localhost:3000";
+    if (gatewayProperties.cors() == null
+        || gatewayProperties.cors().allowedOrigins() == null
+        || gatewayProperties.cors().allowedOrigins().isBlank()) {
+      throw new IllegalStateException(
+          "CORS allowed origins are unresolved. Configure orasaka.gateway.cors.allowed-origins.");
+    }
+    String allowedOrigins = gatewayProperties.cors().allowedOrigins();
     configuration.setAllowedOrigins(List.of(allowedOrigins.split(",")));
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(

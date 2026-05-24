@@ -1,5 +1,6 @@
 package com.orasaka.core.engine;
 
+import com.orasaka.core.support.OrasakaException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -25,7 +26,13 @@ final class ModelFactory {
 
     CoreProperties.ProviderConfig ollama = properties.overrides().get("ollama");
     if (ollama != null) {
-      String baseUrl = Optional.ofNullable(ollama.baseUrl()).orElse("http://localhost:11434");
+      String baseUrl =
+          Optional.ofNullable(ollama.baseUrl())
+              .filter(s -> !s.isBlank())
+              .orElseThrow(
+                  () ->
+                      new OrasakaException(
+                          "Missing required property: orasaka.core.overrides.ollama.base-url"));
       String model = Optional.ofNullable(ollama.model()).orElse("llama3:8b");
       OllamaApi api = OllamaApi.builder().baseUrl(baseUrl).build();
       OllamaChatOptions.Builder opts = OllamaChatOptions.builder().model(model);
@@ -36,7 +43,14 @@ final class ModelFactory {
 
     CoreProperties.ProviderConfig openai = properties.overrides().get("openai");
     if (openai != null && openai.baseUrl() != null) {
-      String apiKey = Optional.ofNullable(System.getenv("OPENAI_API_KEY")).orElse("dummy-key");
+      String apiKey =
+          Optional.ofNullable(openai.apiKey())
+              .filter(k -> !k.isBlank())
+              .orElseThrow(
+                  () ->
+                      new OrasakaException(
+                          "Critical Security Violation: OpenAI API Key is unresolved."
+                              + " Check orasaka.core.overrides.openai.api-key configuration."));
       OpenAiApi api = OpenAiApi.builder().apiKey(apiKey).baseUrl(openai.baseUrl()).build();
       models.put("openai", OpenAiChatModel.builder().openAiApi(api).build());
     }
@@ -49,7 +63,13 @@ final class ModelFactory {
 
     CoreProperties.ProviderConfig ollama = properties.overrides().get("ollama");
     if (ollama != null) {
-      String baseUrl = Optional.ofNullable(ollama.baseUrl()).orElse("http://localhost:11434");
+      String baseUrl =
+          Optional.ofNullable(ollama.baseUrl())
+              .filter(s -> !s.isBlank())
+              .orElseThrow(
+                  () ->
+                      new OrasakaException(
+                          "Missing required property: orasaka.core.overrides.ollama.base-url"));
       String model =
           Optional.ofNullable(ollama.extra())
               .map(e -> e.get("embedding-model"))
@@ -69,7 +89,14 @@ final class ModelFactory {
 
     CoreProperties.ProviderConfig openai = properties.overrides().get("openai");
     if (openai != null && openai.baseUrl() != null) {
-      String apiKey = Optional.ofNullable(System.getenv("OPENAI_API_KEY")).orElse("dummy-key");
+      String apiKey =
+          Optional.ofNullable(openai.apiKey())
+              .filter(k -> !k.isBlank())
+              .orElseThrow(
+                  () ->
+                      new OrasakaException(
+                          "Critical Security Violation: OpenAI API Key is unresolved."
+                              + " Check orasaka.core.overrides.openai.api-key configuration."));
       OpenAiImageApi api =
           OpenAiImageApi.builder().apiKey(apiKey).baseUrl(openai.baseUrl()).build();
       models.put("openai", new OpenAiImageModel(api));

@@ -105,9 +105,9 @@ class EngineModelRegistryTest {
           Map.of(
               "ollama",
               new CoreProperties.ProviderConfig(
-                  "llama3", "http://localhost:11434", null, null, null));
+                  "llama3", "http://test-host:11434", null, null, null, null));
       var registry = createRegistry(propsWithOverrides("ollama", overrides));
-      assertEquals("http://localhost:11434", registry.getBaseUrl());
+      assertEquals("http://test-host:11434", registry.getBaseUrl());
     }
 
     @Test
@@ -119,26 +119,26 @@ class EngineModelRegistryTest {
   }
 
   @Nested
-  @DisplayName("getActiveImageModel() fallback chain")
-  class ImageModelFallback {
+  @DisplayName("getActiveImageModel() fail-fast")
+  class ImageModelFailFast {
 
     @Test
-    @DisplayName("returns fallback placeholder model when no models registered")
-    void returnsFallbackModel() {
+    @DisplayName("throws OrasakaException when no image models registered")
+    void throwsWhenNoImageModel() {
       var registry = createRegistry(props("ollama"));
-      assertNotNull(registry.getActiveImageModel());
+      assertThrows(OrasakaException.class, registry::getActiveImageModel);
     }
   }
 
   @Nested
-  @DisplayName("getActiveSpeechModel() fallback chain")
-  class SpeechModelFallback {
+  @DisplayName("getActiveSpeechModel() fail-fast")
+  class SpeechModelFailFast {
 
     @Test
-    @DisplayName("returns fallback no-op model when no models registered")
-    void returnsFallbackModel() {
+    @DisplayName("throws OrasakaException when no speech models registered")
+    void throwsWhenNoSpeechModel() {
       var registry = createRegistry(props("ollama"));
-      assertNotNull(registry.getActiveSpeechModel());
+      assertThrows(OrasakaException.class, registry::getActiveSpeechModel);
     }
   }
 

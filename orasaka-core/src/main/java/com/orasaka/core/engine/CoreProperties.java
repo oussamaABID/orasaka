@@ -29,7 +29,8 @@ public record CoreProperties(
    * Configuration for a specific AI provider.
    *
    * @param model The specific LLM model name (e.g., "llama3", "gpt-4o").
-   * @param baseUrl The endpoint URL for the provider (e.g., "http://localhost:11434").
+   * @param baseUrl The endpoint URL for the provider (resolved via application.yml placeholders).
+   * @param apiKey The API key for the provider (resolved via application.yml env binding).
    * @param temperature Sampling temperature (0.0 to 1.0).
    * @param maxTokens Maximum number of tokens to generate.
    * @param extra Provider-specific additional parameters.
@@ -37,6 +38,7 @@ public record CoreProperties(
   public record ProviderConfig(
       String model,
       String baseUrl,
+      String apiKey,
       Double temperature,
       Integer maxTokens,
       Map<String, Object> extra) {}
