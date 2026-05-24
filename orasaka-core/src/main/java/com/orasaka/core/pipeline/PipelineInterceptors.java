@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -30,6 +32,15 @@ import org.springframework.stereotype.Component;
 
 public final class PipelineInterceptors {
   private PipelineInterceptors() {}
+
+  static Optional<String> extractResponseText(ChatResponse response) {
+    return Optional.ofNullable(response)
+        .map(ChatResponse::getResult)
+        .map(result -> result.getOutput())
+        .map(output -> output.getText())
+        .map(String::strip)
+        .filter(text -> !text.isBlank());
+  }
 }
 
 @Component
@@ -62,7 +73,7 @@ class SystemContextInjector implements PromptInterceptor {
   private final List<SystemContextProvider> providers;
 
   public SystemContextInjector(List<SystemContextProvider> providers) {
-    this.providers = providers != null ? List.copyOf(providers) : List.of();
+    this.providers = List.copyOf(Objects.requireNonNullElse(providers, List.of()));
   }
 
   @Override
@@ -101,8 +112,8 @@ class RefinerInterceptor implements PromptInterceptor {
   private Resource contextEnvelopeResource;
 
   public RefinerInterceptor(Map<String, ChatModel> chatModels, CoreProperties properties) {
-    this.chatModels = chatModels != null ? Map.copyOf(chatModels) : Map.of();
-    this.properties = properties;
+    this.chatModels = Map.copyOf(Objects.requireNonNullElse(chatModels, Map.of()));
+    this.properties = Objects.requireNonNull(properties, "CoreProperties must not be null");
   }
 
   @Override
@@ -121,13 +132,17 @@ class RefinerInterceptor implements PromptInterceptor {
   }
 
   private boolean isRefinementEnabled() {
-    var opt = properties.orchestration() != null ? properties.orchestration().refiner() : null;
-    return opt != null && opt.enabled();
+    return Optional.ofNullable(properties.orchestration())
+        .map(CoreProperties.OrchestrationConfig::refiner)
+        .map(CoreProperties.InterceptorConfig::enabled)
+        .orElse(false);
   }
 
   private String resolveProvider() {
-    var opt = properties.orchestration().refiner();
-    return opt.provider() != null ? opt.provider() : properties.defaultProvider();
+    return Optional.ofNullable(properties.orchestration())
+        .map(CoreProperties.OrchestrationConfig::refiner)
+        .map(CoreProperties.InterceptorConfig::provider)
+        .orElse(properties.defaultProvider());
   }
 
   private Prompt buildRefinementPrompt(String provider, PromptContext context) {
@@ -147,20 +162,17 @@ class RefinerInterceptor implements PromptInterceptor {
 
   private PromptContext executeRefinement(ChatModel model, Prompt prompt, PromptContext context) {
     try {
-      ChatResponse response = model.call(prompt);
-      if (response != null
-          && response.getResult() != null
-          && response.getResult().getOutput() != null) {
-        String refined = response.getResult().getOutput().getText().strip();
-        if (!refined.isBlank()) {
-          logger.debug("Refinement generated: {}", refined);
-          return context.withRefinedPrompt(refined);
-        }
-      }
+      return extractResponseText(model.call(prompt))
+          .filter(refined -> !refined.isBlank())
+          .map(refined -> {
+            logger.debug("Refinement generated: {}", refined);
+            return context.withRefinedPrompt(refined);
+          })
+          .orElse(context);
     } catch (Exception e) {
       logger.error("Failed to refine prompt.", e);
+      return context;
     }
-    return context;
   }
 
   @Override
@@ -180,8 +192,8 @@ class RouterInterceptor implements PromptInterceptor {
   private Resource systemRouterResource;
 
   public RouterInterceptor(Map<String, ChatModel> chatModels, CoreProperties properties) {
-    this.chatModels = chatModels != null ? Map.copyOf(chatModels) : Map.of();
-    this.properties = properties;
+    this.chatModels = Map.copyOf(Objects.requireNonNullElse(chatModels, Map.of()));
+    this.properties = Objects.requireNonNull(properties, "CoreProperties must not be null");
   }
 
   @Override
@@ -200,13 +212,17 @@ class RouterInterceptor implements PromptInterceptor {
   }
 
   private boolean isRouterEnabled() {
-    var opt = properties.orchestration() != null ? properties.orchestration().router() : null;
-    return opt != null && opt.enabled();
+    return Optional.ofNullable(properties.orchestration())
+        .map(CoreProperties.OrchestrationConfig::router)
+        .map(CoreProperties.InterceptorConfig::enabled)
+        .orElse(false);
   }
 
   private String resolveProvider() {
-    var opt = properties.orchestration().router();
-    return opt.provider() != null ? opt.provider() : properties.defaultProvider();
+    return Optional.ofNullable(properties.orchestration())
+        .map(CoreProperties.OrchestrationConfig::router)
+        .map(CoreProperties.InterceptorConfig::provider)
+        .orElse(properties.defaultProvider());
   }
 
   private Prompt buildRouterPrompt(String provider, PromptContext context) {
@@ -219,19 +235,15 @@ class RouterInterceptor implements PromptInterceptor {
 
   private PromptContext executeRouting(ChatModel model, Prompt prompt, PromptContext context) {
     try {
-      ChatResponse response = model.call(prompt);
-      if (response != null
-          && response.getResult() != null
-          && response.getResult().getOutput() != null) {
-        String routed = response.getResult().getOutput().getText().strip().toLowerCase();
-        if (chatModels.containsKey(routed)) {
-          return context.withRoutedProvider(routed);
-        }
-      }
+      return extractResponseText(model.call(prompt))
+          .map(String::toLowerCase)
+          .filter(chatModels::containsKey)
+          .map(context::withRoutedProvider)
+          .orElse(context);
     } catch (Exception e) {
       logger.error("Failed to dynamically route prompt.", e);
+      return context;
     }
-    return context;
   }
 
   @Override
@@ -256,41 +268,34 @@ class OrasakaMemoryInterceptor implements OrasakaContextInterceptor {
   private final OrasakaMemoryResolver memoryResolver;
 
   public OrasakaMemoryInterceptor(OrasakaMemoryResolver memoryResolver) {
-    this.memoryResolver = memoryResolver;
+    this.memoryResolver = Objects.requireNonNull(memoryResolver, "OrasakaMemoryResolver must not be null");
   }
 
   @Override
   public ChatOptions preProcess(
       InternalChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
-    String conversationId = resolveConversationId(request);
-    if (conversationId != null && memoryResolver != null) {
-      ChatMemory chatMemory = memoryResolver.resolve(conversationId);
-      List<Message> history = chatMemory.get(conversationId);
-      if (history != null && !history.isEmpty()) {
-        messages.addAll(0, history);
-      }
-    }
+    resolveConversationId(request).ifPresent(convId -> {
+      List<Message> history = memoryResolver.resolve(convId).get(convId);
+      if (!history.isEmpty()) messages.addAll(0, history);
+    });
     return options;
   }
 
   @Override
   public void postProcess(InternalChatRequest request, String promptText, String responseText) {
-    String conversationId = resolveConversationId(request);
-    if (conversationId != null && memoryResolver != null) {
-      ChatMemory chatMemory = memoryResolver.resolve(conversationId);
+    resolveConversationId(request).ifPresent(convId -> {
+      ChatMemory chatMemory = memoryResolver.resolve(convId);
       List<Message> newMessages = new ArrayList<>();
       if (promptText != null && !promptText.isBlank()) newMessages.add(new UserMessage(promptText));
       newMessages.add(new AssistantMessage(responseText));
-      chatMemory.add(conversationId, newMessages);
-    }
+      chatMemory.add(convId, newMessages);
+    });
   }
 
-  private String resolveConversationId(InternalChatRequest request) {
-    return (request.context() != null
-            && request.context().conversationId() != null
-            && !request.context().conversationId().isBlank())
-        ? request.context().conversationId()
-        : null;
+  private Optional<String> resolveConversationId(InternalChatRequest request) {
+    return Optional.ofNullable(request.context())
+        .map(ctx -> ctx.conversationId())
+        .filter(id -> !id.isBlank());
   }
 }
 
@@ -299,17 +304,15 @@ class OrasakaMcpInterceptor implements OrasakaContextInterceptor {
   private final McpOrchestrator mcpOrchestrator;
 
   public OrasakaMcpInterceptor(McpOrchestrator mcpOrchestrator) {
-    this.mcpOrchestrator = mcpOrchestrator;
+    this.mcpOrchestrator = Objects.requireNonNull(mcpOrchestrator, "McpOrchestrator must not be null");
   }
 
   @Override
   public ChatOptions preProcess(
       InternalChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
-    if (mcpOrchestrator != null) {
-      String mcpContext = mcpOrchestrator.resolveExternalContext();
-      if (mcpContext != null && !mcpContext.isBlank())
-        messages.add(new SystemMessage("MCP Context: " + mcpContext));
-    }
+    Optional.of(mcpOrchestrator.resolveExternalContext())
+        .filter(ctx -> !ctx.isBlank())
+        .ifPresent(ctx -> messages.add(new SystemMessage("MCP Context: " + ctx)));
     return options;
   }
 }
@@ -321,18 +324,20 @@ class OrasakaRagInterceptor implements OrasakaContextInterceptor {
 
   public OrasakaRagInterceptor(
       CoreProperties properties, OrasakaKnowledgeService knowledgeService) {
-    this.properties = properties;
-    this.knowledgeService = knowledgeService;
+    this.properties = Objects.requireNonNull(properties, "CoreProperties must not be null");
+    this.knowledgeService = Objects.requireNonNull(knowledgeService, "OrasakaKnowledgeService must not be null");
   }
 
   @Override
   public ChatOptions preProcess(
       InternalChatRequest request, String promptText, List<Message> messages, ChatOptions options) {
-    if (properties.rag() != null && properties.rag().enabled() && knowledgeService != null) {
-      String context = knowledgeService.retrieveContext(promptText, properties.rag().topK());
-      if (context != null && !context.isBlank())
-        messages.add(new SystemMessage("RAG Context: \n" + context));
-    }
+    Optional.ofNullable(properties.rag())
+        .filter(CoreProperties.RagConfig::enabled)
+        .ifPresent(rag -> {
+          String context = knowledgeService.retrieveContext(promptText, rag.topK());
+          if (context != null && !context.isBlank())
+            messages.add(new SystemMessage("RAG Context: \n" + context));
+        });
     return options;
   }
 }

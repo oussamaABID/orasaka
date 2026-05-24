@@ -42,40 +42,14 @@ public enum OrasakaChunkingStrategies implements OrasakaChunker {
   },
 
   JSON_ARRAY {
-    private final ObjectMapper jsonMapper = new ObjectMapper();
-
     @Override
     public List<Document> chunk(String content, Map<String, Object> metadata) {
       if (content == null || content.isBlank()) {
         return Collections.emptyList();
       }
-      try {
-        List<Object> list = jsonMapper.readValue(content, new TypeReference<List<Object>>() {});
-        return list.stream()
-            .filter(Objects::nonNull)
-            .map(
-                item -> {
-                  Map<String, Object> itemMeta = new HashMap<>(metadata);
-                  String docText;
-                  if (item instanceof Map) {
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> mapItem = (Map<String, Object>) item;
-                    try {
-                      docText = jsonMapper.writeValueAsString(mapItem);
-                    } catch (Exception e) {
-                      throw new RuntimeException(e);
-                    }
-                    mapItem.forEach(
-                        (k, v) -> Optional.ofNullable(v).ifPresent(val -> itemMeta.put(k, val)));
-                  } else {
-                    docText = item.toString();
-                  }
-                  return new Document(docText, itemMeta);
-                })
-            .toList();
-      } catch (Exception e) {
-        return PLAIN_TEXT.chunk(content, metadata);
-      }
+      return JsonChunkMapper.parseJsonArray(content)
+          .map(list -> list.stream().filter(Objects::nonNull).map(item -> JsonChunkMapper.toDocument(item, metadata)).toList())
+          .orElseGet(() -> PLAIN_TEXT.chunk(content, metadata));
     }
   };
 
@@ -93,6 +67,47 @@ public enum OrasakaChunkingStrategies implements OrasakaChunker {
       return valueOf(strategyName.toUpperCase().trim());
     } catch (IllegalArgumentException e) {
       return PLAIN_TEXT;
+    }
+  }
+}
+
+/** Package-private JSON serialization utility for chunking pipeline. */
+final class JsonChunkMapper {
+
+  private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+
+  private JsonChunkMapper() {}
+
+  static Optional<List<Object>> parseJsonArray(String content) {
+    try {
+      return Optional.of(JSON_MAPPER.readValue(content, new TypeReference<List<Object>>() {}));
+    } catch (Exception e) {
+      return Optional.empty();
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  static Document toDocument(Object item, Map<String, Object> metadata) {
+    Map<String, Object> itemMeta = new HashMap<>(metadata);
+    String docText = serializeItem(item, itemMeta);
+    return new Document(docText, itemMeta);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static String serializeItem(Object item, Map<String, Object> itemMeta) {
+    if (!(item instanceof Map)) {
+      return item.toString();
+    }
+    Map<String, Object> mapItem = (Map<String, Object>) item;
+    mapItem.forEach((k, v) -> Optional.ofNullable(v).ifPresent(val -> itemMeta.put(k, val)));
+    return writeJson(mapItem).orElseGet(mapItem::toString);
+  }
+
+  private static Optional<String> writeJson(Object value) {
+    try {
+      return Optional.of(JSON_MAPPER.writeValueAsString(value));
+    } catch (Exception e) {
+      return Optional.empty();
     }
   }
 }

@@ -1,6 +1,8 @@
 package com.orasaka.core.pipeline;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * State machine context holding user and system matrices for prompt refinement and routing.
@@ -23,10 +25,10 @@ public record PromptContext(
   /** Compact constructor enforcing immutability and defensive copying. */
   public PromptContext {
     userMetadata =
-        java.util.Optional.ofNullable(userMetadata)
+        Optional.ofNullable(userMetadata)
             .map(
                 m -> {
-                  var clean = new java.util.HashMap<String, Object>();
+                  var clean = new HashMap<String, Object>();
                   m.forEach(
                       (k, v) -> {
                         if (k != null && v != null) {
@@ -37,10 +39,10 @@ public record PromptContext(
                 })
             .orElseGet(Map::of);
     systemMetadata =
-        java.util.Optional.ofNullable(systemMetadata)
+        Optional.ofNullable(systemMetadata)
             .map(
                 m -> {
-                  var clean = new java.util.HashMap<String, Object>();
+                  var clean = new HashMap<String, Object>();
                   m.forEach(
                       (k, v) -> {
                         if (k != null && v != null) {
