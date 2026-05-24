@@ -1,6 +1,8 @@
 package com.orasaka.core.architecture;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.domain.JavaField;
@@ -9,9 +11,14 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,6 +68,109 @@ class GovernanceTest {
             "Collection fields must be private final for immutability [ADR-007, ADR-008]."
                 + " Use Map.copyOf()/List.copyOf() in constructors.")
         .check(coreClasses);
+  }
+
+  @Test
+  @DisplayName("[GOV-001] No anonymous classes in production source (enums/TypeRef exempt)")
+  void noAnonymousClassesInProduction() {
+    classes()
+        .that()
+        .resideInAPackage("com.orasaka.core..")
+        .should()
+        .notBeAnonymousClasses()
+        .orShould(beEnumConstantOrTypeReference())
+        .because(
+            "Anonymous classes are banned in production — use explicit named implementations"
+                + " or lambda expressions [Governance Mandate]."
+                + " Enum constants and Jackson TypeReferences are exempt.")
+        .check(coreClasses);
+  }
+
+  private static ArchCondition<com.tngtech.archunit.core.domain.JavaClass>
+      beEnumConstantOrTypeReference() {
+    return new ArchCondition<>("be an enum constant body or TypeReference") {
+      @Override
+      public void check(
+          com.tngtech.archunit.core.domain.JavaClass javaClass, ConditionEvents events) {
+        boolean isEnumBody =
+            javaClass.getEnclosingClass().isPresent()
+                && javaClass.getEnclosingClass().get().isEnum();
+        boolean isTypeRef =
+            javaClass.getSuperclass().isPresent()
+                && javaClass.getSuperclass().get().getName().contains("TypeReference");
+        if (!isEnumBody && !isTypeRef) {
+          events.add(
+              SimpleConditionEvent.violated(
+                  javaClass, "Anonymous class <" + javaClass.getName() + "> is not exempt"));
+        }
+      }
+    };
+  }
+
+  @Test
+  @DisplayName("[GOV-002] Engine integration gates must be public (EngineModelRegistry exempt)")
+  void integrationGatesMustBePublic() {
+    classes()
+        .that()
+        .resideInAPackage("com.orasaka.core.engine..")
+        .and()
+        .haveSimpleNameEndingWith("Engine")
+        .should()
+        .bePublic()
+        .because(
+            "Engine integration gates (OrasakaEngine, AbstractOrasakaEngine) must be public."
+                + " EngineModelRegistry is package-private per ADR-009.")
+        .check(coreClasses);
+  }
+
+  @Test
+  @DisplayName(
+      "[GOV-003] No hardcoded localhost, dummy keys, or System.getenv in production source")
+  void noHardcodedLocalhostInProductionSource() throws IOException {
+    Path sourceRoot = Path.of("orasaka-core/src/main/java");
+    if (!Files.exists(sourceRoot)) {
+      sourceRoot = Path.of("src/main/java");
+    }
+
+    List<String> violations = new ArrayList<>();
+    try (Stream<Path> paths = Files.walk(sourceRoot)) {
+      paths
+          .filter(p -> p.toString().endsWith(".java"))
+          .forEach(
+              path -> {
+                try {
+                  List<String> lines = Files.readAllLines(path);
+                  for (int i = 0; i < lines.size(); i++) {
+                    String line = lines.get(i).trim();
+                    // Skip comments and javadoc
+                    if (line.startsWith("//") || line.startsWith("*") || line.startsWith("/*")) {
+                      continue;
+                    }
+                    if (line.contains("localhost:") || line.contains("127.0.0.1")) {
+                      violations.add(path.getFileName() + ":" + (i + 1) + " -> " + line);
+                    }
+                    if (line.contains("dummy-key") || line.contains("\"dummy")) {
+                      violations.add(
+                          path.getFileName() + ":" + (i + 1) + " -> hardcoded credential: " + line);
+                    }
+                    if (line.contains("System.getenv(")) {
+                      violations.add(
+                          path.getFileName()
+                              + ":"
+                              + (i + 1)
+                              + " -> raw env access (use typed CoreProperties): "
+                              + line);
+                    }
+                  }
+                } catch (IOException e) {
+                  throw new RuntimeException(e);
+                }
+              });
+    }
+
+    assertTrue(
+        violations.isEmpty(),
+        "Production source contains banned literals:\n" + String.join("\n", violations));
   }
 
   private static ArchCondition<JavaField> bePrivateAndFinal() {
