@@ -57,7 +57,7 @@ graph TD
 |:---|:---|:---|
 | **orasaka-core** | Stateless AI engine library. Holds pure abstractions and strictly locks Spring AI to `1.1.6`. Zero web dependencies. | `client/` — `AiClient` facade · `engine/` — `AbstractEngine`, `CoreProperties`, `GraphEngine` · `pipeline/` — interceptors, tool/knowledge/MCP abstractions · `ingest/` — media pre-processor ports · `support/` — public data records |
 | **orasaka-tools** | Concrete tool execution, multi-tier cache (Caffeine → PostgreSQL), and MCP integrations. Implements interfaces defined in core. | `functions/` — `DefaultToolRegistry`, `CachingToolCallback` · `mcp/` — `DefaultMcpOrchestrator` · `config/` — `ToolsProperties` |
-| **orasaka-identity** | User authentication, BCrypt hashing, sealed-interface RBAC, email verification, and the interception/feedback engine. | `domain/` — `User`, `Role` sealed interface · `service/` — `IdentityService` · `repository/` — JPA repositories |
+| **orasaka-identity** | User authentication, BCrypt hashing, sealed-interface RBAC, email verification, and the interception/feedback engine. | `domain/` — `User`, `Role` sealed interface, `ExtractedProfile` · `service/` — `IdentityService` (port), `IdentityServiceImpl`, `IdentityReconciliationService` · `service/` — `UserMapper`, `VerificationTokenMapper` (package-private) · `repository/` — JPA repositories · `federation/` — `OAuth2ProviderVerifier` strategy |
 | **orasaka-gateway** | Backend-for-Frontend orchestrator. Handles GraphQL, REST, SSE streaming, virtual threads, and security context assembly. | `endpoint/` — `AiController`, `AuthController`, `ChatStreamController` · `config/` — security filters, CORS |
 | **orasaka-ui** | Next.js 16 web frontend. Chat canvas, operation graph renderer, BFF proxy layer. | `app/` — pages · `api/` — BFF proxy routes · `components/` — React UI |
 | **orasaka-cli** | TypeScript terminal client. JWT auth, GraphQL mutations, SSE streams, multi-modal output. | `src/` — command handlers, SSE client |
@@ -297,5 +297,5 @@ Templates are loaded via Spring's `ResourceLoader` and resolved at runtime durin
 |:---|:---|
 | [API Reference](API_REFERENCE.md) | Public types, facades, endpoints, and data models |
 | [Glossary](GLOSSARY.md) | Ecosystem terms, patterns, and environment variables |
-| [ADR Log](CONTEXT.md) | 22 Architectural Decision Records |
+| [ADR Log](CONTEXT.md) | 24 Architectural Decision Records |
 | [Business Guide](BUSINESS_IMPLEMENTATION.md) | Step-by-step feature implementation blueprint |

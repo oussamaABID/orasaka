@@ -24,6 +24,7 @@
 | **Context-Matrix Pipeline** | 4-stage ordered interceptor chain processing every request | Enables modular prompt enrichment without engine modification |
 | **Passive Multi-Tier Caching** | Configuration-driven cache wrapping (Caffeine → PostgreSQL) | Reduces LLM costs, cuts response latency, enables cross-node sharing |
 | **Server-Driven UI (SDUI)** | `OperationGraph` compiled by `GraphEngine` with polymorphic `NodeState` | Backend controls exactly what the frontend renders |
+| **Mapper Isolation (ERR-107)** | Package-private static `*Mapper` utility classes isolate entity construction boilerplate from services/controllers | Keeps business methods as pure orchestration; blocks setter-chain pollution |
 
 ---
 
@@ -43,6 +44,9 @@
 | **Virtual Thread Executor** | `newVirtualThreadPerTaskExecutor()` | Runs heavy I/O and AI calls with near-zero memory footprint |
 | **StringTemplate (.st)** | Externalized template format | Separates prompt instructions from Java source code |
 | **Media Pre-Processor Ports** | `AudioPreProcessor`, `ImagePreProcessor`, `VideoPreProcessor` | Port interfaces defining media ingestion contracts |
+| **ExtractedProfile** | `ExtractedProfile` record | Canonical bridge between external identity systems and internal user provisioning |
+| **UserMapper** | `UserMapper` (package-private) | Static mapper isolating `UserEntity` construction from `IdentityServiceImpl` and `IdentityReconciliationServiceImpl` |
+| **VerificationTokenMapper** | `VerificationTokenMapper` (package-private) | Static mapper isolating `VerificationTokenEntity` construction from registration flows |
 
 ---
 
@@ -161,5 +165,5 @@
 |:---|:---|
 | [Architecture Reference](ARCHITECTURE.md) | System topology, module boundaries, execution flows |
 | [API Reference](API_REFERENCE.md) | Public types, facades, endpoints, data models |
-| [ADR Log](CONTEXT.md) | 22 Architectural Decision Records |
+| [ADR Log](CONTEXT.md) | 24 Architectural Decision Records |
 | [Business Guide](BUSINESS_IMPLEMENTATION.md) | Step-by-step feature implementation blueprint |

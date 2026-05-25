@@ -134,8 +134,8 @@ graph TD
 git clone https://github.com/your-org/orasaka.git
 cd orasaka
 
-# Bootstrap environment (validates JDK, pulls Ollama models, starts containers)
-./ops/scripts/setup.sh
+# Bootstrap environment (validates JDK, pulls Ollama models, starts infrastructure)
+./ops/scripts/start.sh
 ```
 
 ### 2. Build Everything
@@ -377,7 +377,7 @@ orasaka/
 │   ├── docker/docker-compose.yml
 │   ├── http/orasaka.http       # REST/GraphQL test files
 │   ├── postgres/init/          # Schema and seed SQL
-│   └── scripts/                # setup.sh, start.sh, stop.sh
+│   └── scripts/                # start.sh, stop.sh
 ├── orasaka-core/               # Pure AI Engine (Bridge Pattern 2.0)
 ├── orasaka-gateway/            # Spring Boot BFF + GraphQL + Streaming
 ├── orasaka-identity/           # Authentication & Identity Domain
@@ -395,9 +395,10 @@ orasaka/
 | Document | Description |
 |:---|:---|
 | [Architecture Reference](docs/ARCHITECTURE.md) | System topology, cognitive engine flows, module boundaries |
+| [Authentication Guide](docs/AUTH.md) | Local credentials, OAuth2 federation, provider extensibility |
 | [API Reference](docs/API_REFERENCE.md) | Public types, facades, engine abstractions, endpoint specs |
 | [Glossary](docs/GLOSSARY.md) | Ecosystem terms, patterns, and environment variables |
-| [ADR Log](docs/CONTEXT.md) | 22 Architectural Decision Records with rationale |
+| [ADR Log](docs/CONTEXT.md) | 23 Architectural Decision Records with rationale |
 | [Business Guide](docs/BUSINESS_IMPLEMENTATION.md) | Step-by-step vertical feature implementation blueprint |
 | [Aggregate Javadoc](docs/apidocs/) | Auto-generated cross-module API documentation |
 

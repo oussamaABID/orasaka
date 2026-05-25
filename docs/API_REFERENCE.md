@@ -188,11 +188,11 @@ Sealed interface RBAC hierarchy (Java 21):
 
 | Method | Description |
 |:---|:---|
+| `getUser(userId)` | Resolves a `User` by UUID string, returns `null` if not found |
 | `authenticate(email, password)` | Verifies credentials, returns user profile |
 | `register(username, email, password, language)` | Self-service registration with optional verification tokens |
 | `updatePreferences(userId, preferences)` | Merges preferences, returns updated `User` from in-memory mapping |
 | `verifyToken(token)` | Validates email verification hashes |
-| `triggerInterception(userId, type, schemaId)` | Registers active interceptions (onboarding, feedback) |
 | `resolveInterception(userId, type, schemaId, responses)` | Merges responses into preferences, clears the interception |
 
 ---
@@ -355,5 +355,5 @@ mvn javadoc:aggregate
 |:---|:---|
 | [Architecture Reference](ARCHITECTURE.md) | System topology, module boundaries, execution flows |
 | [Glossary](GLOSSARY.md) | Ecosystem terms, patterns, environment variables |
-| [ADR Log](CONTEXT.md) | 22 Architectural Decision Records |
+| [ADR Log](CONTEXT.md) | 24 Architectural Decision Records |
 | [Business Guide](BUSINESS_IMPLEMENTATION.md) | Step-by-step feature implementation blueprint |

@@ -504,4 +504,4 @@ Use this checklist every time you build a new vertical on Orasaka:
 | [Architecture Reference](ARCHITECTURE.md) | System topology, module boundaries, execution flows |
 | [API Reference](API_REFERENCE.md) | Public types, facades, endpoints, data models |
 | [Glossary](GLOSSARY.md) | Ecosystem terms, patterns, environment variables |
-| [ADR Log](CONTEXT.md) | 22 Architectural Decision Records |
+| [ADR Log](CONTEXT.md) | 24 Architectural Decision Records |

@@ -40,6 +40,26 @@
 * **Whitelist:** Only `OrasakaCoreConfiguration` (Spring Boot `@Configuration` class) retains the prefix.
 * **Automation:** Enforced via ArchUnit `no_redundant_project_prefix` gateway on the backend and `no-restricted-syntax` ESLint rule on frontend/CLI spaces.
 
+### 🪓 Identity Federation Invariant [ERR-105]
+
+* **The Token-Exchange Rule:** The identity module handles external providers via stateless token validation strategies. Spring Security filters must not maintain stateful provider sessions. The frontend (NextAuth) performs OAuth2 protocol negotiation; the backend acts purely as an identity verifier and reconciler.
+* **Open-Closed Extensibility:** Adding a new authentication provider (e.g., Apple, Facebook) requires creating a single isolated class implementing `OAuth2ProviderVerifier` guarded by its respective config property flag. No existing code modifications are required.
+* **Provider Isolation:** Each `OAuth2ProviderVerifier` implementation is conditionally loaded via `@ConditionalOnProperty`. Disabled providers produce zero bean allocations and zero startup overhead.
+
+### 🪓 Invariant Validation & Record Enforcement [ERR-106]
+
+* **Self-Validating Records:** All request, response, and domain records must enforce validation invariants inside their compact constructors. Null or blank required fields must throw `InvalidRequestException` (for request DTOs) or `NullPointerException` via `Objects.requireNonNull` (for response/domain DTOs) at construction time, never at consumption time.
+* **Null-Return Prohibition:** Service methods that resolve identity (e.g., `authenticate`) must throw explicit unchecked exceptions (e.g., `BadCredentialsException`) instead of returning `null`. Procedural `if (result == null)` blocks in controllers are strictly forbidden.
+* **DTO Domain Blindness:** The `com.orasaka.gateway.dto` package must have zero compile-time dependencies on `com.orasaka.identity.domain`. Domain-to-DTO mapping must occur exclusively at the controller call site boundary, never inside the DTO record itself.
+* **ArchUnit Omnipresence:** Every module (`core`, `identity`, `tools`, `gateway`) must contain at least one dedicated `*BoundaryTest.java` class enforcing its own local isolation invariants. Missing boundary tests constitute a CI-blocking violation.
+
+### 🪓 Mapper Isolation Invariant [ERR-107]
+
+* **Anti-Inline-Mapping Rule:** Repetitive, field-by-field entity-to-domain or domain-to-DTO mapping code (setter chains, manual constructor calls with 5+ arguments) is strictly forbidden inside controllers (`*Controller.java`), services (`*Service.java`, `*ServiceImpl.java`), and engines (`*Engine.java`). These layers must remain pure orchestration logic.
+* **Dedicated Mapper Classes:** All entity/domain/DTO mapping boilerplate must be extracted into dedicated, package-private `final class *Mapper` utility classes with `static` methods and a private constructor. Mappers live in the same package as the service they support (e.g., `com.orasaka.identity.service.UserMapper`).
+* **Single-Line Call Site:** The service or controller call site must reduce to a single, highly readable mapper invocation (e.g., `UserMapper.toEntity(profile, userId, provider, "free")`). Multi-line setter blocks at the call site are a CI-blocking violation.
+* **Visibility Constraint:** Mapper classes must never be `public`. They are package-private implementation details, not part of the module's public API surface.
+
 ### B. The Bridge Pattern 2.0
 
 Direct exposure of external AI frameworks to the rest of the application is strictly forbidden:
@@ -95,5 +115,5 @@ When internal contracts, schema definitions, or module dependencies evolve, the 
 > generation or architectural review task. The following ADR identifiers are
 > currently active and enforceable:
 >
-> ADR-001 through ADR-022 — see [`docs/CONTEXT.md`](docs/CONTEXT.md) for full
+> ADR-001 through ADR-024 — see [`docs/CONTEXT.md`](docs/CONTEXT.md) for full
 > context, rationale, and approval status.

@@ -36,6 +36,8 @@
 | 020 | Code locality & file density | 📏 Standards |
 | 021 | Local sovereign image generation | 🎨 Media |
 | 022 | Local sovereign video generation | 🎬 Media |
+| 023 | Agnostic OAuth2 token-exchange federation | 🔒 Security |
+| 024 | Mapper isolation invariant (ERR-107) | 🏠️ Architecture |
 
 ---
 
@@ -136,6 +138,14 @@
 | **Decision** | Store active user interruptions (onboarding, reviews) in the database and load them directly into JWT/session contexts. |
 | **Rationale** | Eliminates polling overhead by checking interception status during Gateway token verification, ensuring high-performance session state resolution. |
 | **Status** | ✅ Approved (2026-05-22) |
+
+### ADR-023: Agnostic OAuth2 Token-Exchange Federation
+
+| | |
+|:---|:---|
+| **Decision** | Implement OAuth2 provider verification via a stateless Strategy Pattern within `orasaka-identity`. NextAuth handles protocol negotiation; the backend verifies tokens and reconciles identities via `IdentityReconciliationService`. |
+| **Rationale** | Avoids coupling to heavyweight Spring Security OAuth2 Client filters. Enables Open-Closed extensibility — new providers require only a single class implementing `OAuth2ProviderVerifier` and a config property flag. Each provider bean is conditionally loaded via `@ConditionalOnProperty`, producing zero overhead when disabled. |
+| **Status** | ✅ Approved (2026-05-24) |
 
 ---
 
@@ -244,6 +254,19 @@
 | **Decision** | Integrate bare-metal `sd-server` video runner on port `8086` with quantized LTX-Video, exposing a dedicated `/api/v1/ai/video` REST endpoint returning RFC 2397 Data URLs. |
 | **Rationale** | Provides high-performance local video rendering without cloud dependencies, isolates heavy video traffic on a separate port, and returns browser-parseable Data URL format. |
 | **Status** | ✅ Approved (2026-05-24) |
+
+---
+
+## 🏛️ Architecture (continued)
+
+### ADR-024: Mapper Isolation Invariant (ERR-107)
+
+| | |
+|:---|:---|
+| **Decision** | All repetitive, field-by-field entity-to-domain or domain-to-DTO mapping code (setter chains, manual constructor calls with 5+ arguments) must be extracted into dedicated, package-private `final class *Mapper` utility classes with `static` methods and a private constructor. Controllers, services, and engines must reduce mapping call sites to single-line mapper invocations. |
+| **Rationale** | Inline setter blocks of 5+ lines pollute business orchestration methods, obscure the intended flow, and duplicate mapping logic across creation paths. Isolating construction boilerplate into dedicated mappers enforces Single Responsibility, improves readability, and enables centralized validation changes. |
+| **Enforcement** | `review_architect.md` Gate 18 (ERR-114) rejects any PR containing inline setter chains of 5+ lines in controllers or services. ArchUnit boundary tests enforce that mapper classes remain package-private. |
+| **Status** | ✅ Approved (2026-05-25) |
 
 ---
 

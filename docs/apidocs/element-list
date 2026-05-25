@@ -8,6 +8,7 @@ com.orasaka.core.pipeline
 com.orasaka.core.support
 com.orasaka.gateway
 com.orasaka.gateway.config
+com.orasaka.gateway.dto
 com.orasaka.gateway.endpoint
 com.orasaka.gateway.service
 com.orasaka.gateway.support
@@ -17,6 +18,7 @@ com.orasaka.identity.entity
 com.orasaka.identity.entity.converter
 com.orasaka.identity.event
 com.orasaka.identity.exception
+com.orasaka.identity.federation
 com.orasaka.identity.repository
 com.orasaka.identity.service
 com.orasaka.tools.config
