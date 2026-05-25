@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { format } from "date-fns";
+import { fr, enUS } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -95,12 +97,9 @@ export default function HomePage() {
 
   const formatDate = (timestamp: number) => {
     try {
-      return new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-US", {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }).format(new Date(timestamp));
+      return format(new Date(timestamp), "MMM d, HH:mm", {
+        locale: locale === "fr" ? fr : enUS,
+      });
     } catch {
       return "";
     }

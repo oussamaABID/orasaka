@@ -97,8 +97,7 @@ const updateSettings = async (
   }
 
   return (
-    (result.data?.updatePreferences?.preferences as Partial<Settings>) ||
-    {}
+    (result.data?.updatePreferences?.preferences as Partial<Settings>) || {}
   );
 };
 
@@ -120,26 +119,23 @@ export function useSettings() {
     mutationFn: updateSettings,
     onSuccess: (updatedPrefs) => {
       // Optimistically update the settings query cache
-      queryClient.setQueryData(
-        ["settings"],
-        (old: Settings | undefined) => {
-          if (!old) return old;
-          return {
-            ...old,
-            language: updatedPrefs.language || old.language,
-            autoSave:
-              updatedPrefs.autoSave !== undefined
-                ? updatedPrefs.autoSave
-                : old.autoSave,
-            aiPersona: updatedPrefs.aiPersona || old.aiPersona,
-            themeName: updatedPrefs.themeName || old.themeName,
-            themeTagline: updatedPrefs.themeTagline || old.themeTagline,
-            themeAccent: updatedPrefs.themeAccent || old.themeAccent,
-            themeLayout: updatedPrefs.themeLayout || old.themeLayout,
-            tenantId: updatedPrefs.tenantId || old.tenantId,
-          };
-        },
-      );
+      queryClient.setQueryData(["settings"], (old: Settings | undefined) => {
+        if (!old) return old;
+        return {
+          ...old,
+          language: updatedPrefs.language || old.language,
+          autoSave:
+            updatedPrefs.autoSave !== undefined
+              ? updatedPrefs.autoSave
+              : old.autoSave,
+          aiPersona: updatedPrefs.aiPersona || old.aiPersona,
+          themeName: updatedPrefs.themeName || old.themeName,
+          themeTagline: updatedPrefs.themeTagline || old.themeTagline,
+          themeAccent: updatedPrefs.themeAccent || old.themeAccent,
+          themeLayout: updatedPrefs.themeLayout || old.themeLayout,
+          tenantId: updatedPrefs.tenantId || old.tenantId,
+        };
+      });
     },
   });
 

@@ -1,4 +1,5 @@
 import React from "react";
+import { format } from "date-fns";
 import { ChatThread } from "@/features/chat-session/types/chat.types";
 import { useTranslation } from "@/core/context/LocaleContext";
 
@@ -79,7 +80,7 @@ export const ThreadList: React.FC<Props> = ({
             >
               <div className="truncate">{thread.title}</div>
               <div className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
-                {new Date(thread.updatedAt).toLocaleDateString()}
+                {format(new Date(thread.updatedAt), "yyyy-MM-dd")}
               </div>
             </button>
           );

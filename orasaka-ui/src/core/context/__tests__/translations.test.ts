@@ -28,8 +28,12 @@ describe("translations", () => {
   });
 
   test("en and fr have the same key structure", () => {
-    const enKeys = collectKeys(translations.en as unknown as Record<string, unknown>).sort();
-    const frKeys = collectKeys(translations.fr as unknown as Record<string, unknown>).sort();
+    const enKeys = collectKeys(
+      translations.en as unknown as Record<string, unknown>,
+    ).sort();
+    const frKeys = collectKeys(
+      translations.fr as unknown as Record<string, unknown>,
+    ).sort();
     expect(enKeys).toEqual(frKeys);
   });
 
@@ -46,7 +50,13 @@ describe("translations", () => {
   });
 
   test("sidebar section has all required keys", () => {
-    const required = ["dashboard", "chatSessions", "logout", "memoryBlocks", "playground"];
+    const required = [
+      "dashboard",
+      "chatSessions",
+      "logout",
+      "memoryBlocks",
+      "playground",
+    ];
     for (const key of required) {
       expect(translations.en.sidebar).toHaveProperty(key);
       expect(translations.fr.sidebar).toHaveProperty(key);

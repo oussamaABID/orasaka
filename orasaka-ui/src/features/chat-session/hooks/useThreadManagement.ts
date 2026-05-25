@@ -59,7 +59,11 @@ export function useThreadManagement() {
         ? crypto.randomUUID()
         : `thread-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-    const newThread: ChatThread = { conversationId: newId, title: "New Memory Block", updatedAt: Date.now() };
+    const newThread: ChatThread = {
+      conversationId: newId,
+      title: "New Memory Block",
+      updatedAt: Date.now(),
+    };
 
     const updatedThreads = [newThread, ...getStoredThreads()];
     saveStoredThreads(updatedThreads);

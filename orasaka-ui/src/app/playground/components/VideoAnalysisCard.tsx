@@ -57,7 +57,9 @@ export function VideoAnalysisCard() {
       });
       setState("success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred.",
+      );
       setState("error");
     }
   };
@@ -85,12 +87,16 @@ export function VideoAnalysisCard() {
     <article
       className={`
         relative rounded-xl border p-6 transition-all duration-200
-        ${dragOver
-          ? "border-violet-500 bg-violet-50 dark:bg-violet-950/30"
-          : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/50"
+        ${
+          dragOver
+            ? "border-violet-500 bg-violet-50 dark:bg-violet-950/30"
+            : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/50"
         }
       `}
-      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragOver(true);
+      }}
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
     >
@@ -129,7 +135,9 @@ export function VideoAnalysisCard() {
         <section className="flex flex-col items-center gap-3 py-8">
           <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
           <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
-            {state === "uploading" ? "Uploading video…" : "Extracting keyframes & transcript…"}
+            {state === "uploading"
+              ? "Uploading video…"
+              : "Extracting keyframes & transcript…"}
           </p>
         </section>
       )}
@@ -142,7 +150,9 @@ export function VideoAnalysisCard() {
           </p>
           <dl className="grid grid-cols-2 gap-2 text-sm">
             <dt className="text-zinc-500 dark:text-zinc-400">Keyframes</dt>
-            <dd className="font-mono text-zinc-900 dark:text-zinc-100">{result.keyframeCount}</dd>
+            <dd className="font-mono text-zinc-900 dark:text-zinc-100">
+              {result.keyframeCount}
+            </dd>
             <dt className="text-zinc-500 dark:text-zinc-400">Transcript</dt>
             <dd className="font-mono text-zinc-900 dark:text-zinc-100 truncate">
               {result.transcript || "—"}
@@ -161,7 +171,9 @@ export function VideoAnalysisCard() {
       {state === "error" && (
         <section className="flex flex-col items-center gap-3 py-6">
           <AlertCircle className="h-6 w-6 text-red-500" />
-          <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
+          <p className="text-sm text-red-600 dark:text-red-400 text-center">
+            {error}
+          </p>
           <button
             type="button"
             onClick={reset}

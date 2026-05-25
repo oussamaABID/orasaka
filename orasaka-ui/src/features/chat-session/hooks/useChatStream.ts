@@ -6,9 +6,19 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChatMessage, ChatResponse } from "@/features/chat-session/types/chat.types";
-import { useThreadManagement, getStoredThreads, saveStoredThreads } from "@/features/chat-session/hooks/useThreadManagement";
-import { useMessageHistory, saveStoredMessages } from "@/features/chat-session/hooks/useMessageHistory";
+import {
+  ChatMessage,
+  ChatResponse,
+} from "@/features/chat-session/types/chat.types";
+import {
+  useThreadManagement,
+  getStoredThreads,
+  saveStoredThreads,
+} from "@/features/chat-session/hooks/useThreadManagement";
+import {
+  useMessageHistory,
+  saveStoredMessages,
+} from "@/features/chat-session/hooks/useMessageHistory";
 
 // ── GraphQL BFF API ─────────────────────────────────────────────────────────
 
@@ -41,10 +51,12 @@ const postChatMessage = async (variables: {
     body: JSON.stringify({ query: SEND_CHAT_MUTATION, variables }),
   });
 
-  if (!response.ok) throw new Error("Failed to post message to Orasaka Gateway");
+  if (!response.ok)
+    throw new Error("Failed to post message to Orasaka Gateway");
 
   const result = await response.json();
-  if (result.errors?.length > 0) throw new Error(result.errors[0].message ?? "GraphQL Mutation failed");
+  if (result.errors?.length > 0)
+    throw new Error(result.errors[0].message ?? "GraphQL Mutation failed");
 
   return result.data.chat;
 };
@@ -92,7 +104,8 @@ export function useChatStream(conversationId: string) {
   const queryClient = useQueryClient();
 
   const { threads, isLoadingThreads, createThread } = useThreadManagement();
-  const { messages, isLoadingMessages, queryKey } = useMessageHistory(conversationId);
+  const { messages, isLoadingMessages, queryKey } =
+    useMessageHistory(conversationId);
 
   const [isStreaming, setIsStreaming] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -112,7 +125,9 @@ export function useChatStream(conversationId: string) {
     const assistantMsgId = generateAssistantMsgId();
     let accumulatedContent = "";
 
-    const eventSource = new EventSource(`/api/chat/stream/${convId}?prompt=${encodeURIComponent(prompt)}`);
+    const eventSource = new EventSource(
+      `/api/chat/stream/${convId}?prompt=${encodeURIComponent(prompt)}`,
+    );
     eventSourceRef.current = eventSource;
 
     eventSource.onmessage = (event) => {
@@ -124,8 +139,20 @@ export function useChatStream(conversationId: string) {
         const lastMsg = old[old.length - 1];
         const updated: ChatMessage[] =
           lastMsg?.role === "assistant"
-            ? [...old.slice(0, -1), { ...lastMsg, content: accumulatedContent, kind: "text" }]
-            : [...old, { id: assistantMsgId, role: "assistant", content: accumulatedContent, timestamp: Date.now(), kind: "text" }];
+            ? [
+                ...old.slice(0, -1),
+                { ...lastMsg, content: accumulatedContent, kind: "text" },
+              ]
+            : [
+                ...old,
+                {
+                  id: assistantMsgId,
+                  role: "assistant",
+                  content: accumulatedContent,
+                  timestamp: Date.now(),
+                  kind: "text",
+                },
+              ];
         saveStoredMessages(convId, updated);
         return updated;
       });
@@ -153,7 +180,8 @@ export function useChatStream(conversationId: string) {
     mutationFn: postChatMessage,
     onMutate: async ({ prompt }) => {
       await queryClient.cancelQueries({ queryKey });
-      const previousMessages = queryClient.getQueryData<ChatMessage[]>(queryKey) ?? [];
+      const previousMessages =
+        queryClient.getQueryData<ChatMessage[]>(queryKey) ?? [];
       const updated = [...previousMessages, createUserMessage(prompt)];
       queryClient.setQueryData(queryKey, updated);
       saveStoredMessages(conversationId, updated);
@@ -167,11 +195,14 @@ export function useChatStream(conversationId: string) {
     },
     onSuccess: (data, variables) => {
       const convId = data?.conversationId ?? variables.conversationId;
-      const content = data?.content ?? (data as unknown as { text?: string }).text ?? "";
+      const content =
+        data?.content ?? (data as unknown as { text?: string }).text ?? "";
 
       if (content) {
         queryClient.setQueryData<ChatMessage[]>(queryKey, (old = []) => {
-          const exists = old.some((m) => m.role === "assistant" && m.content === content);
+          const exists = old.some(
+            (m) => m.role === "assistant" && m.content === content,
+          );
           if (exists) return old;
           const updated = [...old, createAssistantMessage(content)];
           saveStoredMessages(convId, updated);
@@ -189,7 +220,8 @@ export function useChatStream(conversationId: string) {
     isLoadingThreads,
     messages,
     isLoadingMessages,
-    sendMessage: (prompt: string) => mutation.mutate({ prompt, conversationId }),
+    sendMessage: (prompt: string) =>
+      mutation.mutate({ prompt, conversationId }),
     isSending: mutation.isPending,
     isStreaming,
     isGenerating: mutation.isPending || isStreaming,

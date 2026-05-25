@@ -1,4 +1,5 @@
 import React from "react";
+import { format } from "date-fns";
 import { ChatMessage } from "@/features/chat-session/types/chat.types";
 
 interface Props {
@@ -36,10 +37,7 @@ export const MessageBubble: React.FC<Props> = ({ message }) => {
         >
           <p className="whitespace-pre-wrap">{message.content}</p>
           <span className="text-[10px] text-zinc-400 dark:text-zinc-500 block mt-2 text-right">
-            {new Date(message.timestamp).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
+            {format(new Date(message.timestamp), "HH:mm")}
           </span>
         </div>
       </div>

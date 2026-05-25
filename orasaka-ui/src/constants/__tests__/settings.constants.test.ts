@@ -50,7 +50,9 @@ describe("Settings Constants", () => {
     test("THEME_ACCENT_LABELS covers all accents", () => {
       for (const accent of THEME_ACCENTS) {
         expect(THEME_ACCENT_LABELS[accent as ThemeAccent]).toBeDefined();
-        expect(THEME_ACCENT_LABELS[accent as ThemeAccent]).toMatch(/^settings\./);
+        expect(THEME_ACCENT_LABELS[accent as ThemeAccent]).toMatch(
+          /^settings\./,
+        );
       }
     });
   });
@@ -68,7 +70,9 @@ describe("Settings Constants", () => {
     test("THEME_LAYOUT_LABELS covers all layouts", () => {
       for (const layout of THEME_LAYOUTS) {
         expect(THEME_LAYOUT_LABELS[layout as ThemeLayout]).toBeDefined();
-        expect(THEME_LAYOUT_LABELS[layout as ThemeLayout]).toMatch(/^settings\./);
+        expect(THEME_LAYOUT_LABELS[layout as ThemeLayout]).toMatch(
+          /^settings\./,
+        );
       }
     });
   });

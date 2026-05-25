@@ -56,8 +56,7 @@ export function SettingsForm() {
   const [themeName, setThemeName] = React.useState("");
   const [themeTagline, setThemeTagline] = React.useState("");
   const [themeAccent, setThemeAccent] = React.useState<ThemeAccent>("zinc");
-  const [themeLayout, setThemeLayout] =
-    React.useState<ThemeLayout>("standard");
+  const [themeLayout, setThemeLayout] = React.useState<ThemeLayout>("standard");
   const [tenantId, setTenantId] = React.useState("");
 
   // Sync state once loaded
@@ -130,7 +129,13 @@ export function SettingsForm() {
             >
               {AI_PERSONAS.map((p) => (
                 <option key={p} value={p}>
-                  {t.settings[AI_PERSONA_LABELS[p].split(".")[1] as keyof typeof t.settings]}
+                  {
+                    t.settings[
+                      AI_PERSONA_LABELS[p].split(
+                        ".",
+                      )[1] as keyof typeof t.settings
+                    ]
+                  }
                 </option>
               ))}
             </select>
@@ -181,13 +186,17 @@ export function SettingsForm() {
               <select
                 className={selectClass}
                 value={themeAccent}
-                onChange={(e) =>
-                  setThemeAccent(e.target.value as ThemeAccent)
-                }
+                onChange={(e) => setThemeAccent(e.target.value as ThemeAccent)}
               >
                 {THEME_ACCENTS.map((a) => (
                   <option key={a} value={a}>
-                    {t.settings[THEME_ACCENT_LABELS[a].split(".")[1] as keyof typeof t.settings]}
+                    {
+                      t.settings[
+                        THEME_ACCENT_LABELS[a].split(
+                          ".",
+                        )[1] as keyof typeof t.settings
+                      ]
+                    }
                   </option>
                 ))}
               </select>
@@ -198,13 +207,17 @@ export function SettingsForm() {
               <select
                 className={selectClass}
                 value={themeLayout}
-                onChange={(e) =>
-                  setThemeLayout(e.target.value as ThemeLayout)
-                }
+                onChange={(e) => setThemeLayout(e.target.value as ThemeLayout)}
               >
                 {THEME_LAYOUTS.map((l) => (
                   <option key={l} value={l}>
-                    {t.settings[THEME_LAYOUT_LABELS[l].split(".")[1] as keyof typeof t.settings]}
+                    {
+                      t.settings[
+                        THEME_LAYOUT_LABELS[l].split(
+                          ".",
+                        )[1] as keyof typeof t.settings
+                      ]
+                    }
                   </option>
                 ))}
               </select>

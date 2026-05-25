@@ -1,5 +1,6 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
+import { format } from "date-fns";
 import { ChatMessage as ChatMessageType } from "@/features/chat-session/types/chat.types";
 import { useTranslation } from "@/core/context/LocaleContext";
 
@@ -140,10 +141,7 @@ export const ChatMessage: React.FC<Props> = ({ message }) => {
         >
           {renderContent()}
           <span className="text-[10px] text-zinc-400 dark:text-zinc-500 block mt-2 text-right">
-            {new Date(message.timestamp).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
+            {format(new Date(message.timestamp), "HH:mm")}
           </span>
         </div>
       </div>

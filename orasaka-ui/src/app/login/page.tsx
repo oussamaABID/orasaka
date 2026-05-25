@@ -132,14 +132,21 @@ export default function LoginPage() {
           </form>
 
           {/* ── OAuth divider ─────────────────────────────────────────── */}
-          <div className="relative" role="separator" aria-orientation="horizontal">
+          <div
+            className="relative"
+            role="separator"
+            aria-orientation="horizontal"
+          >
             <hr className="border-t border-zinc-200 dark:border-zinc-800" />
             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs uppercase text-zinc-400 dark:bg-zinc-950">
               Or continue with
             </span>
           </div>
 
-          <nav className="grid grid-cols-2 gap-4" aria-label="Social login options">
+          <nav
+            className="grid grid-cols-2 gap-4"
+            aria-label="Social login options"
+          >
             <Button id="btn-github" variant="outline" onClick={loginWithGithub}>
               GitHub
             </Button>

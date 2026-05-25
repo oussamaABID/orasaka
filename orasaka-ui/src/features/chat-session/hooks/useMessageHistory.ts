@@ -43,9 +43,15 @@ export const getStoredMessages = (conversationId: string): ChatMessage[] => {
  * @param {string} conversationId - The target conversation thread ID.
  * @param {ChatMessage[]} messages - The messages to serialize and save.
  */
-export const saveStoredMessages = (conversationId: string, messages: ChatMessage[]): void => {
+export const saveStoredMessages = (
+  conversationId: string,
+  messages: ChatMessage[],
+): void => {
   if (!conversationId || typeof window === "undefined") return;
-  localStorage.setItem(`orasaka_messages_${conversationId}`, JSON.stringify(messages));
+  localStorage.setItem(
+    `orasaka_messages_${conversationId}`,
+    JSON.stringify(messages),
+  );
 };
 
 /**
