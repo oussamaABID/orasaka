@@ -17,7 +17,7 @@ export function ChatHeader({
   t,
 }: ChatHeaderProps) {
   return (
-    <div className="p-4 border-b border-zinc-200/80 dark:border-zinc-800/60 bg-white/40 dark:bg-zinc-900/20 backdrop-blur-sm flex items-center justify-between">
+    <header className="p-4 border-b border-zinc-200/80 dark:border-zinc-800/60 bg-white/40 dark:bg-zinc-900/20 backdrop-blur-sm flex items-center justify-between">
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -47,6 +47,6 @@ export function ChatHeader({
           </span>
         </div>
       </div>
-    </div>
+    </header>
   );
 }

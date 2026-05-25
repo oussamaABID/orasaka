@@ -115,7 +115,7 @@ export function ProfileView() {
   })();
 
   return (
-    <div className="space-y-6 max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <section className="space-y-6 max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-300">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
           {t.profile.title}
@@ -140,7 +140,7 @@ export function ProfileView() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid gap-6 sm:grid-cols-2">
+          <section className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-1">
               <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                 {t.profile.userId}
@@ -180,10 +180,10 @@ export function ProfileView() {
                 {profile.email}
               </p>
             </div>
-          </div>
+          </section>
 
           <div className="border-t border-zinc-100 dark:border-zinc-800/80 pt-6">
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-450 dark:text-zinc-500">
               {t.profile.assignedAuth}
             </span>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -221,6 +221,6 @@ export function ProfileView() {
           </pre>
         </CardContent>
       </Card>
-    </div>
+    </section>
   );
 }

@@ -61,9 +61,9 @@ export function RecentSessions({
             </Button>
           </div>
         ) : (
-          <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
+          <ul className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
             {recentThreads.map((thread) => (
-              <div
+              <li
                 key={thread.conversationId}
                 onClick={() => onResumeSession(thread.conversationId)}
                 className="flex items-center justify-between py-3.5 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/20 px-2 rounded-xl cursor-pointer transition-all duration-150 group"
@@ -89,9 +89,9 @@ export function RecentSessions({
                   </span>
                   <ArrowRight className="h-3.5 w-3.5 transform group-hover:translate-x-0.5 transition-transform" />
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </Card>
     </div>

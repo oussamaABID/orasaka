@@ -9,7 +9,7 @@ export const MessageBubble: React.FC<Props> = ({ message }) => {
   const isUser = message.role === "user";
 
   return (
-    <div
+    <article
       className={`flex w-full mb-4 ${isUser ? "justify-end" : "justify-start"}`}
     >
       <div
@@ -43,6 +43,6 @@ export const MessageBubble: React.FC<Props> = ({ message }) => {
           </span>
         </div>
       </div>
-    </div>
+    </article>
   );
 };

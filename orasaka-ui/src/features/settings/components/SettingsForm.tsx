@@ -140,7 +140,7 @@ export function SettingsForm() {
         <hr className="border-zinc-200 dark:border-zinc-800/80" />
 
         {/* Dynamic Tenant Branding Configuration */}
-        <div className="space-y-4">
+        <section className="space-y-4">
           <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
             {t.settings.tenantBranding}
           </h3>
@@ -210,7 +210,7 @@ export function SettingsForm() {
               </select>
             </div>
           </div>
-        </div>
+        </section>
       </CardContent>
       <CardFooter className="border-t border-zinc-100 dark:border-zinc-800/80 pt-6">
         <Button

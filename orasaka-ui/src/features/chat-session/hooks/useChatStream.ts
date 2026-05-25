@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChatMessage, ChatResponse } from "@/features/chat-session/types/chat.types";
 import { useThreadManagement, getStoredThreads, saveStoredThreads } from "@/features/chat-session/hooks/useThreadManagement";
-import { useMessageHistory, getStoredMessages, saveStoredMessages } from "@/features/chat-session/hooks/useMessageHistory";
+import { useMessageHistory, saveStoredMessages } from "@/features/chat-session/hooks/useMessageHistory";
 
 // ── GraphQL BFF API ─────────────────────────────────────────────────────────
 
@@ -67,6 +67,8 @@ const createAssistantMessage = (content: string): ChatMessage => ({
   kind: "text",
 });
 
+const generateAssistantMsgId = (): string => `assistant-${Date.now()}`;
+
 // ── SSE Stream ───────────────────────────────────────────────────────────────
 
 const parseChunk = (eventData: string): string => {
@@ -107,7 +109,7 @@ export function useChatStream(conversationId: string) {
     eventSourceRef.current?.close();
     setIsStreaming(true);
 
-    const assistantMsgId = `assistant-${Date.now()}`;
+    const assistantMsgId = generateAssistantMsgId();
     let accumulatedContent = "";
 
     const eventSource = new EventSource(`/api/chat/stream/${convId}?prompt=${encodeURIComponent(prompt)}`);

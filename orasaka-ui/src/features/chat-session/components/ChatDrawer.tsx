@@ -30,7 +30,7 @@ export function ChatDrawer({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 md:hidden flex">
+    <aside className="fixed inset-0 z-50 md:hidden flex">
       <div
         className="fixed inset-0 bg-zinc-950/60 backdrop-blur-sm"
         onClick={onClose}
@@ -75,6 +75,6 @@ export function ChatDrawer({
           />
         </div>
       </div>
-    </div>
+    </aside>
   );
 }

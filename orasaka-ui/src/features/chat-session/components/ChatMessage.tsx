@@ -115,7 +115,7 @@ export const ChatMessage: React.FC<Props> = ({ message }) => {
   };
 
   return (
-    <div
+    <article
       className={`flex w-full mb-4 ${isUser ? "justify-end" : "justify-start"}`}
     >
       <div
@@ -147,6 +147,6 @@ export const ChatMessage: React.FC<Props> = ({ message }) => {
           </span>
         </div>
       </div>
-    </div>
+    </article>
   );
 };
