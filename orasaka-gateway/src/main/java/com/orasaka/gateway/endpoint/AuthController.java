@@ -1,7 +1,11 @@
 package com.orasaka.gateway.endpoint;
 
+import com.orasaka.gateway.dto.AuthContracts;
+import com.orasaka.gateway.dto.AuthResponse;
 import com.orasaka.identity.config.IdentityInfrastructureProperties;
 import com.orasaka.identity.domain.User;
+import com.orasaka.identity.exception.BadCredentialsException;
+import com.orasaka.identity.service.IdentityReconciliationService;
 import com.orasaka.identity.service.IdentityService;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -13,6 +17,9 @@ import org.springframework.web.bind.annotation.*;
 /**
  * Package-private REST controller exposing authentication endpoints, including login, registration,
  * email verification, and OAuth2 credential provision.
+ *
+ * <p>Returns strongly-typed {@link AuthResponse} DTOs instead of raw {@code Map.of()} responses
+ * (ERR-106). Authentication failures are handled via exception catching, not null-checking.
  */
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -21,17 +28,22 @@ class AuthController {
   private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
   private final IdentityService identityService;
+  private final IdentityReconciliationService reconciliationService;
   private final IdentityInfrastructureProperties identityProperties;
 
   /**
    * Constructs the controller.
    *
-   * @param identityService The identity service.
+   * @param identityService The identity service interface.
+   * @param reconciliationService The OAuth2 identity reconciliation service interface.
    * @param identityProperties The identity config properties.
    */
   public AuthController(
-      IdentityService identityService, IdentityInfrastructureProperties identityProperties) {
+      IdentityService identityService,
+      IdentityReconciliationService reconciliationService,
+      IdentityInfrastructureProperties identityProperties) {
     this.identityService = identityService;
+    this.reconciliationService = reconciliationService;
     this.identityProperties = identityProperties;
   }
 
@@ -39,60 +51,57 @@ class AuthController {
    * Login endpoint.
    *
    * @param loginRequest Credentials.
-   * @return Auth response token.
+   * @return Auth response token or 401 error.
    */
   @PostMapping("/login")
   public ResponseEntity<?> login(@RequestBody AuthContracts.LoginRequest loginRequest) {
     logger.debug("Received login request for email: {}", loginRequest.email());
-    User user = identityService.authenticate(loginRequest.email(), loginRequest.password());
-    if (user == null) {
+    try {
+      User user = identityService.authenticate(loginRequest.email(), loginRequest.password());
+      logger.debug("User with email {} authenticated successfully", loginRequest.email());
+      return ResponseEntity.ok(
+          new AuthResponse(
+              user.id().toString(), user.username(), user.activeInterceptions()));
+    } catch (BadCredentialsException ex) {
       logger.warn("Authentication failed for email: {}", loginRequest.email());
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
           .body(Map.of("error", "Invalid email or password"));
     }
-    logger.debug("User with email {} authenticated successfully", loginRequest.email());
-    return ResponseEntity.ok(
-        Map.of(
-            "token", user.id().toString(),
-            "username", user.username(),
-            "active_interceptions", user.activeInterceptions()));
   }
 
   /**
-   * OAuth login endpoint.
+   * OAuth2 Token-Exchange login endpoint.
    *
-   * @param req OAuth properties.
-   * @return Auth response token.
+   * <p>Receives an external identity token from the frontend (NextAuth), delegates verification
+   * to the matching provider strategy, and reconciles the identity in the local database.
+   *
+   * @param req Token-exchange payload containing provider and idToken.
+   * @return Auth response token or 401 error.
    */
   @PostMapping("/oauth")
   public ResponseEntity<?> oauthLogin(@RequestBody AuthContracts.OAuthRequest req) {
-    logger.debug("Received OAuth2 login request for email: {}", req.email());
-    String username = req.username();
-    if (username == null || username.isBlank()) {
-      username = req.email().split("@")[0];
-    }
+    logger.debug("Received OAuth2 token-exchange request for provider: {}", req.provider());
 
-    User user = identityService.provisionOrAuthenticateOAuth(req.email(), username);
-    if (user == null) {
-      logger.warn("OAuth2 login failed for email: {}", req.email());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(Map.of("error", "Failed to authenticate or provision OAuth user"));
+    try {
+      User user = reconciliationService.reconcile(req.provider(), req.idToken());
+      logger.debug(
+          "OAuth2 user reconciled successfully: provider={}, id={}",
+          req.provider(), user.id());
+      return ResponseEntity.ok(
+          new AuthResponse(
+              user.id().toString(), user.username(), user.activeInterceptions()));
+    } catch (IllegalArgumentException ex) {
+      logger.warn("OAuth2 token-exchange failed for provider={}: {}", req.provider(), ex.getMessage());
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+          .body(Map.of("error", ex.getMessage()));
     }
-
-    logger.debug(
-        "OAuth2 user with email {} authenticated successfully with id: {}", req.email(), user.id());
-    return ResponseEntity.ok(
-        Map.of(
-            "token", user.id().toString(),
-            "username", user.username(),
-            "active_interceptions", user.activeInterceptions()));
   }
 
   /**
    * Register endpoint.
    *
    * @param req Registration payload.
-   * @return Registration response status.
+   * @return Registration response status with {@link AuthResponse} or verification info.
    */
   @PostMapping("/register")
   public ResponseEntity<?> register(@RequestBody AuthContracts.RegisterRequest req) {
@@ -113,10 +122,8 @@ class AuthController {
 
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(
-            Map.of(
-                "token", created.id().toString(),
-                "username", created.username(),
-                "active_interceptions", created.activeInterceptions()));
+            new AuthResponse(
+                created.id().toString(), created.username(), created.activeInterceptions()));
   }
 
   /**

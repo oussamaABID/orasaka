@@ -1,9 +1,13 @@
-package com.orasaka.gateway.endpoint;
+package com.orasaka.gateway.dto;
 
-import com.orasaka.identity.domain.User;
 import com.orasaka.identity.exception.InvalidRequestException;
 
-/** Group of immutable authentication data contracts. */
+/**
+ * Group of immutable authentication data contracts for the REST ingress layer.
+ *
+ * <p>All records use compact constructors for fail-fast validation (ERR-106). This container is
+ * domain-blind — it must never import {@code com.orasaka.identity.domain.*}.
+ */
 public final class AuthContracts {
 
   private AuthContracts() {}
@@ -24,16 +28,24 @@ public final class AuthContracts {
   }
 
   /**
-   * Request data containing OAuth profile details.
+   * Request data containing an external OAuth2 identity token for the Token-Exchange pattern.
    *
-   * @param email The user's email address.
-   * @param username The user's screen name or display handle.
+   * <p>The frontend (NextAuth) performs the OAuth2 protocol negotiation and forwards the
+   * resulting identity token to the backend for verification and reconciliation.
+   *
+   * @param provider The identity provider identifier (e.g., "google", "github").
+   * @param idToken The raw identity token or access token issued by the external provider.
+   * @param email Optional email hint for logging (actual email is extracted from the token).
+   * @param username Optional username hint (fallback to provider profile name if blank).
    */
-  public record OAuthRequest(String email, String username) {
-    /** Compact constructor validating OAuth email. */
+  public record OAuthRequest(String provider, String idToken, String email, String username) {
+    /** Compact constructor validating required fields. */
     public OAuthRequest {
-      if (email == null || email.isBlank()) {
-        throw new InvalidRequestException("Email is required for OAuth login");
+      if (provider == null || provider.isBlank()) {
+        throw new InvalidRequestException("Provider is required for OAuth login");
+      }
+      if (idToken == null || idToken.isBlank()) {
+        throw new InvalidRequestException("Identity token is required for OAuth login");
       }
     }
   }
@@ -71,34 +83,6 @@ public final class AuthContracts {
           || password.isBlank()) {
         throw new InvalidRequestException("username, email, and password are required");
       }
-    }
-  }
-
-  /**
-   * Result of registration indicating either success or failure.
-   *
-   * @param user The created user.
-   * @param error The error message.
-   */
-  public record RegisterResult(User user, String error) {
-    /**
-     * Creates a successful result.
-     *
-     * @param user The created user.
-     * @return Success result containing user.
-     */
-    public static RegisterResult success(User user) {
-      return new RegisterResult(user, null);
-    }
-
-    /**
-     * Creates a failure result.
-     *
-     * @param error The failure message.
-     * @return Failure result containing error.
-     */
-    public static RegisterResult failure(String error) {
-      return new RegisterResult(null, error);
     }
   }
 }

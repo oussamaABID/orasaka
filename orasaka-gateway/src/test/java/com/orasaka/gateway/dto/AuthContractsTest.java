@@ -1,15 +1,15 @@
-package com.orasaka.gateway.endpoint;
+package com.orasaka.gateway.dto;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.orasaka.identity.domain.User;
 import com.orasaka.identity.exception.InvalidRequestException;
-import java.util.UUID;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/** Unit tests for {@link AuthContracts} — all nested request/result records. */
+/** Unit tests for {@link AuthContracts}, {@link RegisterResponse}, and {@link UserDescriptor}. */
 class AuthContractsTest {
 
   @Nested
@@ -62,22 +62,42 @@ class AuthContractsTest {
     @Test
     @DisplayName("valid OAuth request accepted")
     void validOAuth() {
-      var req = new AuthContracts.OAuthRequest("user@test.com", "display");
+      var req = new AuthContracts.OAuthRequest("google", "token-123", "user@test.com", "display");
+      assertEquals("google", req.provider());
+      assertEquals("token-123", req.idToken());
       assertEquals("user@test.com", req.email());
     }
 
     @Test
-    @DisplayName("null email throws InvalidRequestException")
-    void nullEmail() {
+    @DisplayName("null provider throws InvalidRequestException")
+    void nullProvider() {
       assertThrows(
-          InvalidRequestException.class, () -> new AuthContracts.OAuthRequest(null, "display"));
+          InvalidRequestException.class,
+          () -> new AuthContracts.OAuthRequest(null, "token", "e@t.com", "name"));
     }
 
     @Test
-    @DisplayName("blank email throws InvalidRequestException")
-    void blankEmail() {
+    @DisplayName("blank provider throws InvalidRequestException")
+    void blankProvider() {
       assertThrows(
-          InvalidRequestException.class, () -> new AuthContracts.OAuthRequest("  ", "display"));
+          InvalidRequestException.class,
+          () -> new AuthContracts.OAuthRequest("  ", "token", "e@t.com", "name"));
+    }
+
+    @Test
+    @DisplayName("null idToken throws InvalidRequestException")
+    void nullIdToken() {
+      assertThrows(
+          InvalidRequestException.class,
+          () -> new AuthContracts.OAuthRequest("google", null, "e@t.com", "name"));
+    }
+
+    @Test
+    @DisplayName("blank idToken throws InvalidRequestException")
+    void blankIdToken() {
+      assertThrows(
+          InvalidRequestException.class,
+          () -> new AuthContracts.OAuthRequest("google", "  ", "e@t.com", "name"));
     }
   }
 
@@ -145,24 +165,97 @@ class AuthContractsTest {
   }
 
   @Nested
-  @DisplayName("RegisterResult")
-  class RegisterResultTests {
+  @DisplayName("RegisterResponse")
+  class RegisterResponseTests {
 
     @Test
-    @DisplayName("success factory sets user, null error")
+    @DisplayName("success factory sets user descriptor, null error")
     void successFactory() {
-      var user = new User(UUID.randomUUID(), "admin", "a@b.com", true, null, null);
-      var result = AuthContracts.RegisterResult.success(user);
-      assertSame(user, result.user());
+      var descriptor =
+          new UserDescriptor(
+              "550e8400-e29b-41d4-a716-446655440000",
+              "admin",
+              "a@b.com",
+              List.of("ROLE_USER"),
+              Map.of("language", "en"));
+      var result = RegisterResponse.success(descriptor);
+      assertSame(descriptor, result.user());
       assertNull(result.error());
     }
 
     @Test
     @DisplayName("failure factory sets error, null user")
     void failureFactory() {
-      var result = AuthContracts.RegisterResult.failure("duplicate email");
+      var result = RegisterResponse.failure("duplicate email");
       assertNull(result.user());
       assertEquals("duplicate email", result.error());
+    }
+  }
+
+  @Nested
+  @DisplayName("UserDescriptor")
+  class UserDescriptorTests {
+
+    @Test
+    @DisplayName("valid descriptor accepted")
+    void validDescriptor() {
+      var desc =
+          new UserDescriptor(
+              "id-123", "admin", "a@b.com", List.of("ROLE_USER"), Map.of("lang", "en"));
+      assertEquals("id-123", desc.id());
+      assertEquals("admin", desc.username());
+      assertEquals(List.of("ROLE_USER"), desc.authorities());
+    }
+
+    @Test
+    @DisplayName("null id throws NullPointerException")
+    void nullId() {
+      assertThrows(
+          NullPointerException.class,
+          () -> new UserDescriptor(null, "name", "e@t.com", null, null));
+    }
+
+    @Test
+    @DisplayName("null username throws NullPointerException")
+    void nullUsername() {
+      assertThrows(
+          NullPointerException.class,
+          () -> new UserDescriptor("id", null, "e@t.com", null, null));
+    }
+
+    @Test
+    @DisplayName("null authorities defaults to empty list")
+    void nullAuthorities() {
+      var desc = new UserDescriptor("id", "name", "e@t.com", null, null);
+      assertEquals(List.of(), desc.authorities());
+    }
+  }
+
+  @Nested
+  @DisplayName("AuthResponse")
+  class AuthResponseTests {
+
+    @Test
+    @DisplayName("valid response accepted")
+    void validResponse() {
+      var resp = new AuthResponse("token-123", "admin", List.of("onboarding"));
+      assertEquals("token-123", resp.token());
+      assertEquals("admin", resp.username());
+      assertEquals(List.of("onboarding"), resp.activeInterceptions());
+    }
+
+    @Test
+    @DisplayName("null token throws NullPointerException")
+    void nullToken() {
+      assertThrows(
+          NullPointerException.class, () -> new AuthResponse(null, "admin", List.of()));
+    }
+
+    @Test
+    @DisplayName("null activeInterceptions defaults to empty list")
+    void nullInterceptions() {
+      var resp = new AuthResponse("token", "admin", null);
+      assertEquals(List.of(), resp.activeInterceptions());
     }
   }
 }

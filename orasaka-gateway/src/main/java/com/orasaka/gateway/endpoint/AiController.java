@@ -1,5 +1,7 @@
 package com.orasaka.gateway.endpoint;
 
+import com.orasaka.gateway.dto.RegisterResponse;
+import com.orasaka.gateway.dto.UserDescriptor;
 import com.orasaka.core.client.AiClient;
 import com.orasaka.core.engine.GraphEngine;
 import com.orasaka.core.engine.NodeState;
@@ -17,6 +19,7 @@ import com.orasaka.core.support.SpeechRequest;
 import com.orasaka.gateway.service.ChatStreamService;
 import com.orasaka.identity.config.IdentityInfrastructureProperties;
 import com.orasaka.identity.domain.User;
+import com.orasaka.identity.exception.UserAlreadyExistsException;
 import com.orasaka.identity.service.IdentityService;
 import java.io.IOException;
 import java.io.InputStream;
@@ -190,7 +193,7 @@ public class AiController {
    * @return The registration result.
    */
   @MutationMapping
-  public CompletableFuture<AuthContracts.RegisterResult> register(
+  public CompletableFuture<RegisterResponse> register(
       @Argument String username,
       @Argument String email,
       @Argument String password,
@@ -198,14 +201,21 @@ public class AiController {
     logger.debug("GraphQL register mutation invoked for email: {}", email);
     return CompletableFuture.supplyAsync(
         () -> {
-          User created = identityService.register(username, email, password, language);
-          if (created == null) {
+          try {
+            User created = identityService.register(username, email, password, language);
+            logger.debug("User registered successfully: {} ({})", username, created.id());
+            UserDescriptor descriptor =
+                new UserDescriptor(
+                    created.id().toString(),
+                    created.username(),
+                    created.email(),
+                    List.copyOf(created.authorities()),
+                    created.preferences());
+            return RegisterResponse.success(descriptor);
+          } catch (UserAlreadyExistsException ex) {
             logger.warn("Registration rejected — email already in use: {}", email);
-            return AuthContracts.RegisterResult.failure(
-                "An account with this email already exists.");
+            return RegisterResponse.failure(ex.getMessage());
           }
-          logger.debug("User registered successfully: {} ({})", username, created.id());
-          return AuthContracts.RegisterResult.success(created);
         },
         virtualThreadExecutor);
   }
