@@ -6,6 +6,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { format } from 'date-fns';
 import type { TimelineMessage } from './types';
 
 const DATA_URL_REGEX = /^data:([^;]+);base64,(.+)$/;
@@ -63,7 +64,7 @@ function writeToDisk(buffer: Buffer, savePath: string): void {
  * @returns A filename string.
  */
 function autoFileName(prefix: string, ext: string): string {
-  const ts = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+  const ts = format(new Date(), "yyyy-MM-dd'T'HH-mm-ss");
   return `${prefix}-${ts}${ext}`;
 }
 

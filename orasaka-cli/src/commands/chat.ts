@@ -6,6 +6,7 @@
  */
 
 import * as fs from 'fs';
+import { format } from 'date-fns';
 import { CliClient } from '../client';
 import {
   requireAuth,
@@ -318,7 +319,7 @@ function handleThreadCommand(input: string, config: CliConfig): string {
       console.log(`\n\x1b[1m\x1b[36m--- Conversation Threads ---\x1b[0m`);
       for (const t of threads) {
         const active = t.conversationId === config.activeThreadId ? ' \x1b[32m← active\x1b[0m' : '';
-        const date = new Date(t.updatedAt).toLocaleString();
+        const date = format(new Date(t.updatedAt), 'yyyy-MM-dd HH:mm:ss');
         console.log(`  \x1b[33m${t.conversationId.substring(0, 8)}\x1b[0m  ${t.title.padEnd(30)}  \x1b[90m${date}\x1b[0m${active}`);
       }
       console.log();
