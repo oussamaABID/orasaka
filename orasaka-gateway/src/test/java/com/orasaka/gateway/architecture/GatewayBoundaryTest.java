@@ -75,4 +75,32 @@ class GatewayBoundaryTest {
             "Field injection is prohibited. Constructor-based DI is mandatory [ADR-012, AGENTS.md]")
         .check(gatewayClasses);
   }
+
+  @Test
+  @DisplayName("[ERR-106] Gateway DTO package must not depend on identity domain types")
+  void gatewayDtoIsDomainBlind() {
+    noClasses()
+        .that()
+        .resideInAPackage("com.orasaka.gateway.dto..")
+        .should()
+        .dependOnClassesThat()
+        .resideInAPackage("com.orasaka.identity.domain..")
+        .because(
+            "DTO layer must be domain-blind — domain-to-DTO mapping happens at factory boundary [ERR-106]")
+        .check(gatewayClasses);
+  }
+
+  @Test
+  @DisplayName("[ERR-102] Gateway endpoints must not import identity entities")
+  void gatewayEndpointsDoNotLeakEntities() {
+    noClasses()
+        .that()
+        .resideInAPackage("com.orasaka.gateway.endpoint..")
+        .should()
+        .dependOnClassesThat()
+        .resideInAPackage("com.orasaka.identity.entity..")
+        .because(
+            "Endpoints must interact with identity only through service interfaces and DTOs [ERR-102]")
+        .check(gatewayClasses);
+  }
 }

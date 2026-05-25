@@ -138,4 +138,18 @@ class LayerBoundaryTest {
             "Engine must be blind to concrete infrastructure tools and media libraries [ERR-101]")
         .check(coreClasses);
   }
+
+  @Test
+  @DisplayName("[ERR-102] Core must not depend on tools")
+  void coreDoesNotDependOnTools() {
+    noClasses()
+        .that()
+        .resideInAPackage("com.orasaka.core..")
+        .should()
+        .dependOnClassesThat()
+        .resideInAPackage("com.orasaka.tools..")
+        .because(
+            "orasaka-core must remain tools-agnostic — reverse dependency direction prohibited [ERR-102]")
+        .check(coreClasses);
+  }
 }
