@@ -10,13 +10,13 @@ import org.springframework.stereotype.Component;
  * OAuth2 provider verifier for Google identity tokens.
  *
  * <p>Conditionally loaded only when {@code orasaka.identity.auth.oauth2.google.enabled=true}.
- * Verifies Google-issued ID tokens and extracts a canonical {@link ExtractedProfile} for
- * downstream identity reconciliation.
+ * Verifies Google-issued ID tokens and extracts a canonical {@link ExtractedProfile} for downstream
+ * identity reconciliation.
  *
  * <p><strong>Extension point:</strong> This skeleton implementation validates token structure.
- * Production deployments should extend this to verify the JWT signature against Google's
- * public JWKS endpoint ({@code https://www.googleapis.com/oauth2/v3/certs}) or call the
- * {@code tokeninfo} endpoint.
+ * Production deployments should extend this to verify the JWT signature against Google's public
+ * JWKS endpoint ({@code https://www.googleapis.com/oauth2/v3/certs}) or call the {@code tokeninfo}
+ * endpoint.
  *
  * @see OAuth2ProviderVerifier
  * @see ExtractedProfile
@@ -50,8 +50,8 @@ class GoogleProviderVerifier implements OAuth2ProviderVerifier {
    * {@inheritDoc}
    *
    * <p>Validates the Google ID token and extracts user profile attributes. This skeleton
-   * implementation parses the JWT payload without cryptographic signature verification.
-   * Production deployments must add JWKS-based signature validation.
+   * implementation parses the JWT payload without cryptographic signature verification. Production
+   * deployments must add JWKS-based signature validation.
    *
    * @throws IllegalArgumentException if the token is null, empty, or malformed.
    */

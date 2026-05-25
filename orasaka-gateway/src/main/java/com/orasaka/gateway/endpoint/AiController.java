@@ -1,7 +1,5 @@
 package com.orasaka.gateway.endpoint;
 
-import com.orasaka.gateway.dto.RegisterResponse;
-import com.orasaka.gateway.dto.UserDescriptor;
 import com.orasaka.core.client.AiClient;
 import com.orasaka.core.engine.GraphEngine;
 import com.orasaka.core.engine.NodeState;
@@ -16,6 +14,8 @@ import com.orasaka.core.support.Context;
 import com.orasaka.core.support.ImageRequest;
 import com.orasaka.core.support.ImageResponse;
 import com.orasaka.core.support.SpeechRequest;
+import com.orasaka.gateway.dto.RegisterResponse;
+import com.orasaka.gateway.dto.UserDescriptor;
 import com.orasaka.gateway.service.ChatStreamService;
 import com.orasaka.identity.config.IdentityInfrastructureProperties;
 import com.orasaka.identity.domain.User;

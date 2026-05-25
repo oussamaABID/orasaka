@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 /**
  * ArchUnit boundary enforcement for the orasaka-identity module.
  *
- * <p>Validates that identity remains a pure domain hexagon with no outward dependencies on
- * gateway, core, or tools modules (ERR-102, §1.A).
+ * <p>Validates that identity remains a pure domain hexagon with no outward dependencies on gateway,
+ * core, or tools modules (ERR-102, §1.A).
  */
 class IdentityBoundaryTest {
 

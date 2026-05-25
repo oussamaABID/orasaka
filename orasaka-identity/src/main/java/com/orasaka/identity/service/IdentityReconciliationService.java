@@ -6,8 +6,8 @@ import com.orasaka.identity.domain.User;
  * Port interface defining the OAuth2 identity federation and reconciliation contract.
  *
  * <p>The gateway binds exclusively to this interface via constructor injection. The concrete
- * implementation ({@code IdentityReconciliationServiceImpl}) is package-private within
- * {@code orasaka-identity} and discovered by Spring component scanning.
+ * implementation ({@code IdentityReconciliationServiceImpl}) is package-private within {@code
+ * orasaka-identity} and discovered by Spring component scanning.
  *
  * @see com.orasaka.identity.federation.OAuth2ProviderVerifier
  * @see com.orasaka.identity.domain.ExtractedProfile
@@ -23,8 +23,8 @@ public interface IdentityReconciliationService {
    * @param provider The provider identifier (e.g., "google", "github").
    * @param idToken The raw identity token issued by the external provider.
    * @return The fully resolved domain {@link User} record.
-   * @throws IllegalArgumentException if no verifier supports the given provider, or if the token
-   *     is invalid.
+   * @throws IllegalArgumentException if no verifier supports the given provider, or if the token is
+   *     invalid.
    */
   User reconcile(String provider, String idToken);
 }

@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
  * ArchUnit boundary enforcement for the orasaka-tools module.
  *
  * <p>Validates that tools remain identity-blind and gateway-blind, communicating only through
- * core-defined ports (ERR-102, §1.A). Tools may implement interfaces defined in
- * {@code orasaka-core.pipeline.*} but must never import from identity or gateway.
+ * core-defined ports (ERR-102, §1.A). Tools may implement interfaces defined in {@code
+ * orasaka-core.pipeline.*} but must never import from identity or gateway.
  */
 class ToolsBoundaryTest {
 

@@ -30,8 +30,8 @@ public final class AuthContracts {
   /**
    * Request data containing an external OAuth2 identity token for the Token-Exchange pattern.
    *
-   * <p>The frontend (NextAuth) performs the OAuth2 protocol negotiation and forwards the
-   * resulting identity token to the backend for verification and reconciliation.
+   * <p>The frontend (NextAuth) performs the OAuth2 protocol negotiation and forwards the resulting
+   * identity token to the backend for verification and reconciliation.
    *
    * @param provider The identity provider identifier (e.g., "google", "github").
    * @param idToken The raw identity token or access token issued by the external provider.

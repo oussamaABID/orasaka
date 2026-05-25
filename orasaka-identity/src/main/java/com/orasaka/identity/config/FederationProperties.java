@@ -7,9 +7,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * <p>Maps properties under the prefix {@code orasaka.identity.auth}, controlling which
  * authentication strategies are active at runtime:
+ *
  * <ul>
- *   <li>{@code local} — Traditional email/password credential authentication.</li>
- *   <li>{@code oauth2} — External identity providers (Google, GitHub, etc.).</li>
+ *   <li>{@code local} — Traditional email/password credential authentication.
+ *   <li>{@code oauth2} — External identity providers (Google, GitHub, etc.).
  * </ul>
  *
  * <p>All sensitive values (client IDs, secrets) must be injected via environment variables.

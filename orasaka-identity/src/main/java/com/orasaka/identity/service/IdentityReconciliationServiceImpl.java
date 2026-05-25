@@ -26,11 +26,12 @@ import org.springframework.transaction.annotation.Transactional;
  * based on configuration flags) and performs identity verification and reconciliation.
  *
  * <p><strong>Architectural invariants:</strong>
+ *
  * <ul>
- *   <li>No read-before-write pattern — race conditions handled via
- *       {@link DataIntegrityViolationException} (per naming_conventions.md §4).</li>
- *   <li>In-memory domain mapping — no redundant database reads (per ERR-200).</li>
- *   <li>Stateless verification — no session state maintained (per ERR-105).</li>
+ *   <li>No read-before-write pattern — race conditions handled via {@link
+ *       DataIntegrityViolationException} (per naming_conventions.md §4).
+ *   <li>In-memory domain mapping — no redundant database reads (per ERR-200).
+ *   <li>Stateless verification — no session state maintained (per ERR-105).
  * </ul>
  *
  * @see IdentityReconciliationService
@@ -50,8 +51,8 @@ class IdentityReconciliationServiceImpl implements IdentityReconciliationService
   /**
    * Constructs the reconciliation service with all active provider verifiers and repositories.
    *
-   * @param verifiers The auto-aggregated list of active {@link OAuth2ProviderVerifier} beans.
-   *     May be empty if no providers are enabled.
+   * @param verifiers The auto-aggregated list of active {@link OAuth2ProviderVerifier} beans. May
+   *     be empty if no providers are enabled.
    * @param userRepository The user repository for persistence operations.
    * @param authorityRepository The authority repository for role assignment.
    */
@@ -73,15 +74,16 @@ class IdentityReconciliationServiceImpl implements IdentityReconciliationService
     OAuth2ProviderVerifier verifier = resolveVerifier(provider);
     ExtractedProfile profile = verifier.verifyAndExtract(idToken);
 
-    logger.debug(
-        "Token verified for provider={}, extractedEmail={}", provider, profile.email());
+    logger.debug("Token verified for provider={}, extractedEmail={}", provider, profile.email());
 
     Optional<UserEntity> existingUser =
         userRepository.findByProviderAndProviderId(provider, profile.providerId());
 
     if (existingUser.isPresent()) {
-      logger.debug("Existing federated user found for provider={}, providerId={}",
-          provider, profile.providerId());
+      logger.debug(
+          "Existing federated user found for provider={}, providerId={}",
+          provider,
+          profile.providerId());
       return mapToUserDomain(existingUser.get());
     }
 
@@ -91,8 +93,8 @@ class IdentityReconciliationServiceImpl implements IdentityReconciliationService
   /**
    * Provisions a new federated user in the database with no password hash.
    *
-   * <p>Handles race conditions via {@link DataIntegrityViolationException} from the
-   * {@code unique_provider_user} database constraint rather than read-before-write checks.
+   * <p>Handles race conditions via {@link DataIntegrityViolationException} from the {@code
+   * unique_provider_user} database constraint rather than read-before-write checks.
    */
   private User provisionFederatedUser(String provider, ExtractedProfile profile) {
     String userId = UUID.randomUUID().toString();
@@ -105,12 +107,15 @@ class IdentityReconciliationServiceImpl implements IdentityReconciliationService
       logger.warn(
           "Concurrent federated user creation detected for provider={}, providerId={}. "
               + "Falling back to lookup.",
-          provider, profile.providerId());
+          provider,
+          profile.providerId());
       return userRepository
           .findByProviderAndProviderId(provider, profile.providerId())
           .map(this::mapToUserDomain)
-          .orElseThrow(() -> new IllegalStateException(
-              "Failed to provision or resolve federated user for provider=" + provider));
+          .orElseThrow(
+              () ->
+                  new IllegalStateException(
+                      "Failed to provision or resolve federated user for provider=" + provider));
     }
 
     AuthorityEntity authorityEntity = new AuthorityEntity();
@@ -120,7 +125,9 @@ class IdentityReconciliationServiceImpl implements IdentityReconciliationService
 
     logger.info(
         "Provisioned new federated user: provider={}, email={}, id={}",
-        provider, profile.email(), userId);
+        provider,
+        profile.email(),
+        userId);
 
     Set<String> authorities = Set.of("ROLE_USER");
     return new User(

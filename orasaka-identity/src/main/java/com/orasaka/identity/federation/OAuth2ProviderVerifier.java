@@ -5,14 +5,15 @@ import com.orasaka.identity.domain.ExtractedProfile;
 /**
  * Strategy interface for verifying external OAuth2 identity tokens and extracting user profiles.
  *
- * <p>Each concrete implementation handles a specific identity provider (e.g., Google, GitHub)
- * and is conditionally loaded based on configuration properties. This follows the Open-Closed
+ * <p>Each concrete implementation handles a specific identity provider (e.g., Google, GitHub) and
+ * is conditionally loaded based on configuration properties. This follows the Open-Closed
  * Principle: adding a new provider requires only a new implementation class and its config flag.
  *
  * <p><strong>Contract:</strong>
+ *
  * <ul>
- *   <li>{@link #supports(String)} — Checks if this verifier handles the given provider identifier.</li>
- *   <li>{@link #verifyAndExtract(String)} — Validates the token and extracts a canonical profile.</li>
+ *   <li>{@link #supports(String)} — Checks if this verifier handles the given provider identifier.
+ *   <li>{@link #verifyAndExtract(String)} — Validates the token and extracts a canonical profile.
  * </ul>
  *
  * @see ExtractedProfile

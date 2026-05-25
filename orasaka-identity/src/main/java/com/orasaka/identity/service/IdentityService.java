@@ -12,10 +12,11 @@ import java.util.UUID;
  * and discovered by Spring component scanning.
  *
  * <p>Architectural invariants:
+ *
  * <ul>
- *   <li>Gateway has zero compile-time awareness of the implementation class [ERR-102]</li>
- *   <li>All methods return domain records, never entities [§2.A Model Separation]</li>
- *   <li>Authentication failures throw explicit exceptions, never return null [ERR-106]</li>
+ *   <li>Gateway has zero compile-time awareness of the implementation class [ERR-102]
+ *   <li>All methods return domain records, never entities [§2.A Model Separation]
+ *   <li>Authentication failures throw explicit exceptions, never return null [ERR-106]
  * </ul>
  *
  * @see User

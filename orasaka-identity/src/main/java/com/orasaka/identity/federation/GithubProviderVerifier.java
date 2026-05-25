@@ -14,9 +14,9 @@ import org.springframework.stereotype.Component;
  * downstream identity reconciliation.
  *
  * <p><strong>Extension point:</strong> This skeleton implementation validates token structure.
- * Production deployments should extend this to call the GitHub User API
- * ({@code https://api.github.com/user}) with the provided access token to retrieve verified
- * profile attributes.
+ * Production deployments should extend this to call the GitHub User API ({@code
+ * https://api.github.com/user}) with the provided access token to retrieve verified profile
+ * attributes.
  *
  * @see OAuth2ProviderVerifier
  * @see ExtractedProfile

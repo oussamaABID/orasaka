@@ -219,8 +219,7 @@ class AuthContractsTest {
     @DisplayName("null username throws NullPointerException")
     void nullUsername() {
       assertThrows(
-          NullPointerException.class,
-          () -> new UserDescriptor("id", null, "e@t.com", null, null));
+          NullPointerException.class, () -> new UserDescriptor("id", null, "e@t.com", null, null));
     }
 
     @Test
@@ -247,8 +246,7 @@ class AuthContractsTest {
     @Test
     @DisplayName("null token throws NullPointerException")
     void nullToken() {
-      assertThrows(
-          NullPointerException.class, () -> new AuthResponse(null, "admin", List.of()));
+      assertThrows(NullPointerException.class, () -> new AuthResponse(null, "admin", List.of()));
     }
 
     @Test

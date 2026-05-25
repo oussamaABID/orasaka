@@ -60,8 +60,7 @@ class AuthController {
       User user = identityService.authenticate(loginRequest.email(), loginRequest.password());
       logger.debug("User with email {} authenticated successfully", loginRequest.email());
       return ResponseEntity.ok(
-          new AuthResponse(
-              user.id().toString(), user.username(), user.activeInterceptions()));
+          new AuthResponse(user.id().toString(), user.username(), user.activeInterceptions()));
     } catch (BadCredentialsException ex) {
       logger.warn("Authentication failed for email: {}", loginRequest.email());
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -72,8 +71,8 @@ class AuthController {
   /**
    * OAuth2 Token-Exchange login endpoint.
    *
-   * <p>Receives an external identity token from the frontend (NextAuth), delegates verification
-   * to the matching provider strategy, and reconciles the identity in the local database.
+   * <p>Receives an external identity token from the frontend (NextAuth), delegates verification to
+   * the matching provider strategy, and reconciles the identity in the local database.
    *
    * @param req Token-exchange payload containing provider and idToken.
    * @return Auth response token or 401 error.
@@ -85,15 +84,13 @@ class AuthController {
     try {
       User user = reconciliationService.reconcile(req.provider(), req.idToken());
       logger.debug(
-          "OAuth2 user reconciled successfully: provider={}, id={}",
-          req.provider(), user.id());
+          "OAuth2 user reconciled successfully: provider={}, id={}", req.provider(), user.id());
       return ResponseEntity.ok(
-          new AuthResponse(
-              user.id().toString(), user.username(), user.activeInterceptions()));
+          new AuthResponse(user.id().toString(), user.username(), user.activeInterceptions()));
     } catch (IllegalArgumentException ex) {
-      logger.warn("OAuth2 token-exchange failed for provider={}: {}", req.provider(), ex.getMessage());
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-          .body(Map.of("error", ex.getMessage()));
+      logger.warn(
+          "OAuth2 token-exchange failed for provider={}: {}", req.provider(), ex.getMessage());
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", ex.getMessage()));
     }
   }
 
