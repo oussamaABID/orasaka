@@ -31,7 +31,7 @@ public class UserEntity {
   @Column(name = "username", unique = true, nullable = false, length = 100)
   private String username;
 
-  @Column(name = "password_hash", nullable = false, length = 255)
+  @Column(name = "password_hash", nullable = true, length = 255)
   private String passwordHash;
 
   @Column(name = "email", nullable = false, length = 255)
@@ -51,6 +51,12 @@ public class UserEntity {
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
   private Set<UserInterceptionEntity> interceptions = new HashSet<>();
+
+  @Column(name = "provider", nullable = false, length = 50)
+  private String provider = "local";
+
+  @Column(name = "provider_id", length = 255)
+  private String providerId;
 
   @Column(name = "rate_limit_tier", length = 50)
   private String rateLimitTier;
@@ -239,5 +245,41 @@ public class UserEntity {
    */
   public void setCreatedAt(Instant createdAt) {
     this.createdAt = createdAt;
+  }
+
+  /**
+   * Gets the authentication provider name (e.g., "local", "google", "github").
+   *
+   * @return The provider name.
+   */
+  public String getProvider() {
+    return provider;
+  }
+
+  /**
+   * Sets the authentication provider name.
+   *
+   * @param provider The provider name.
+   */
+  public void setProvider(String provider) {
+    this.provider = provider;
+  }
+
+  /**
+   * Gets the external provider's unique user identifier.
+   *
+   * @return The provider-specific user ID, or {@code null} for local accounts.
+   */
+  public String getProviderId() {
+    return providerId;
+  }
+
+  /**
+   * Sets the external provider's unique user identifier.
+   *
+   * @param providerId The provider-specific user ID.
+   */
+  public void setProviderId(String providerId) {
+    this.providerId = providerId;
   }
 }

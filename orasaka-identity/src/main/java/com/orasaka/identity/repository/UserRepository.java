@@ -47,4 +47,13 @@ public interface UserRepository extends JpaRepository<UserEntity, String> {
    * @return The count of matching users.
    */
   long countByEmail(String email);
+
+  /**
+   * Resolves a user by their external identity provider and provider-specific user identifier.
+   *
+   * @param provider The authentication provider name (e.g., "google", "github").
+   * @param providerId The unique user identifier assigned by the external provider.
+   * @return An Optional containing the matched user entity, if any.
+   */
+  Optional<UserEntity> findByProviderAndProviderId(String provider, String providerId);
 }
