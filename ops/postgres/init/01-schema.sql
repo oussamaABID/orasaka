@@ -26,12 +26,15 @@ CREATE TABLE orasaka_rate_limit_tiers (
 CREATE TABLE orasaka_users (
     id VARCHAR(255) PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255),
     email VARCHAR(255) NOT NULL,
     enabled BOOLEAN DEFAULT TRUE,
     preferences TEXT,
+    provider VARCHAR(50) DEFAULT 'local' NOT NULL,
+    provider_id VARCHAR(255) DEFAULT NULL,
     rate_limit_tier VARCHAR(50) REFERENCES orasaka_rate_limit_tiers(id) ON DELETE SET NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_provider_user UNIQUE (provider, provider_id)
 );
 
 -- Rôles et Autorisations

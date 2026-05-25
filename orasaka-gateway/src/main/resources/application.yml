@@ -127,6 +127,16 @@ orasaka:
           source-table: orasaka_tools_rag_source
   infrastructure:
     identity:
+      auth:
+        local:
+          enabled: true
+        oauth2:
+          google:
+            enabled: ${ORASAKA_OAUTH2_GOOGLE_ENABLED:false}
+            client-id: ${GOOGLE_CLIENT_ID:}
+          github:
+            enabled: ${ORASAKA_OAUTH2_GITHUB_ENABLED:false}
+            client-id: ${GITHUB_CLIENT_ID:}
       email-verification:
         enabled: ${ORASAKA_EMAIL_VERIFICATION_ENABLED:true}
       interceptions:
