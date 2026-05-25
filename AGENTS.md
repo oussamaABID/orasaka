@@ -60,6 +60,12 @@
 * **Single-Line Call Site:** The service or controller call site must reduce to a single, highly readable mapper invocation (e.g., `UserMapper.toEntity(profile, userId, provider, "free")`). Multi-line setter blocks at the call site are a CI-blocking violation.
 * **Visibility Constraint:** Mapper classes must never be `public`. They are package-private implementation details, not part of the module's public API surface.
 
+### 🪓 Immutable Time Invariant [ERR-108]
+
+* **Native Date Mutation Ban:** Mutating native JavaScript `Date` instances via side-effect methods is strictly forbidden. It violates our state predictability principles.
+* **Functional Time Operations:** All time calculations, formatting, and deltas must be executed using functional, immutable utilities from `date-fns`.
+* **Wire Format:** The universal language for timestamp exchange across the framework boundaries is raw ISO-8601 UTC strings.
+
 ### B. The Bridge Pattern 2.0
 
 Direct exposure of external AI frameworks to the rest of the application is strictly forbidden:
