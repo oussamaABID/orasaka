@@ -1,0 +1,21 @@
+{
+  "name": "orasaka-ui-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "orasaka-web-client",
+    "orasaka-web-admin",
+    "orasaka-mobile-client",
+    "orasaka-cli",
+    "orasaka-shared",
+    "krizaka-com"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=orasaka-web-client",
+    "dev:admin": "npm run dev --workspace=orasaka-web-admin",
+    "dev:krizaka": "npm run dev --workspace=krizaka-com -- -p 3002",
+    "build:shared": "npm run build --workspace=orasaka-shared",
+    "validate:cli": "npm run validate --workspace=orasaka-cli",
+    "validate:web": "npm run validate --workspace=orasaka-web-client"
+  }
+}

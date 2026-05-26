@@ -1,0 +1,470 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.orasaka</groupId>
+    <artifactId>orasaka-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>orasaka-parent</name>
+    <description>Orasaka Domain-Driven Monorepo Root</description>
+
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Versions -->
+        <spring-boot.version>3.5.0-SNAPSHOT</spring-boot.version> <!-- Using snapshot/milestone as
+        requested -->
+        <spring-ai.version>1.1.6</spring-ai.version>
+        <graphql-spring-boot.version>15.0.0</graphql-spring-boot.version>
+        <archunit.version>1.3.0</archunit.version>
+        <jacoco.version>0.8.12</jacoco.version>
+        <frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
+        <node.version>v24.11.1</node.version>
+
+        <!-- SonarQube Cloud -->
+        <sonar.organization>oa</sonar.organization>
+        <sonar.projectKey>oussamaABID_orasaka</sonar.projectKey>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.java.source>21</sonar.java.source>
+        <sonar.coverage.jacoco.xmlReportPaths>**/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+
+        <!-- Python and TS/JS Coverage -->
+        <sonar.python.coverage.reportPaths>orasaka-apps/orasaka-workers/video/coverage.xml</sonar.python.coverage.reportPaths>
+        <sonar.javascript.lcov.reportPaths>
+            orasaka-apps/orasaka-ui/orasaka-web-client/coverage/lcov.info,orasaka-apps/orasaka-ui/orasaka-cli/coverage/lcov.info</sonar.javascript.lcov.reportPaths>
+        <sonar.typescript.lcov.reportPaths>
+            orasaka-apps/orasaka-ui/orasaka-web-client/coverage/lcov.info,orasaka-apps/orasaka-ui/orasaka-cli/coverage/lcov.info</sonar.typescript.lcov.reportPaths>
+        <!-- 🔑 Token injected from env on CI or from .env locally -->
+        <sonar.token>${env.SONAR_TOKEN}</sonar.token>
+
+        <!-- 🌿 Branch detection: auto-resolved from git or overridden via -Dsonar.branch.name -->
+        <sonar.branch.name></sonar.branch.name>
+
+        <!-- 🚫 Exclusions: scratch files, test fixtures, generated code -->
+        <sonar.exclusions>
+            scratch/**/*,
+            **/node_modules/**/*,
+            **/dist/**/*,
+            **/.next/**/*,
+            **/target/**/*,
+            orasaka-apps/orasaka-ui/krizaka-com/**/*
+        </sonar.exclusions>
+
+        <!-- 📊 Coverage exclusions: boilerplate not requiring test coverage -->
+        <sonar.coverage.exclusions>
+            **/entity/**,
+            **/converter/**,
+            **/config/**,
+            **/domain/model/**,
+            **/*Application.java,
+            **/Mapper.java,
+            **/*Mapper.java,
+            **/*Controller.java,
+            **/core/infrastructure/**
+        </sonar.coverage.exclusions>
+    </properties>
+
+    <modules>
+        <!-- Framework: Core Libraries & Tools -->
+        <module>orasaka-framework/orasaka-test-support</module>
+        <module>orasaka-framework/orasaka-persistence</module>
+        <module>orasaka-framework/orasaka-core</module>
+        <module>orasaka-framework/orasaka-interceptors</module>
+        <module>orasaka-framework/orasaka-business</module>
+        <module>orasaka-framework/orasaka-identity</module>
+        <module>orasaka-framework/orasaka-tools</module>
+        <module>orasaka-apps/orasaka-gateway</module>
+        <module>orasaka-apps/orasaka-workers</module>
+        <module>orasaka-end2end</module>
+        <!-- EXCLUDE orasaka-workers/video per mandate (Python project) -->
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Internal Modules -->
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-identity</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-tools</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-persistence-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-persistence-identity</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-interceptor-translation</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-interceptor-validation</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-interceptor-reformulation</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-interceptor-context</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-interceptor-enrichment</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-interceptor-tooling</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-business</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- Shared Test Support -->
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-test-support</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <!-- Architectural Testing -->
+            <dependency>
+                <groupId>com.tngtech.archunit</groupId>
+                <artifactId>archunit-junit5</artifactId>
+                <version>${archunit.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <repositories>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>spring-snapshots</id>
+            <name>Spring Snapshots</name>
+            <url>https://repo.spring.io/snapshot</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+    </repositories>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- ─── Maven Clean Shield: NEVER follow krizaka-com symlink ─── -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>3.4.0</version>
+                    <configuration>
+                        <followSymLinks>false</followSymLinks>
+                        <excludeDefaultDirectories>false</excludeDefaultDirectories>
+                        <filesets>
+                            <fileset>
+                                <directory>orasaka-apps/orasaka-ui/krizaka-com</directory>
+                                <followSymLinks>false</followSymLinks>
+                                <useDefaultExcludes>true</useDefaultExcludes>
+                            </fileset>
+                        </filesets>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.5.3</version>
+                    <configuration>
+                        <!-- Append JaCoCo agent args set by prepare-agent -->
+                        <argLine>${argLine}</argLine>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>4.0.0.4121</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <version>1.2.1</version>
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>read-project-properties</goal>
+                        </goals>
+                        <configuration>
+                            <files>
+                                <file>${maven.multiModuleProjectDirectory}/.env</file>
+                            </files>
+                            <quiet>true</quiet>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <!-- Honour -DskipTests for polyglot test executions -->
+                    <skip>${skipTests}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>validate-ui</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>npm</executable>
+                            <workingDirectory>${project.basedir}/orasaka-apps/orasaka-ui/orasaka-web-client</workingDirectory>
+                            <arguments>
+                                <argument>run</argument>
+                                <argument>validate</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>validate-cli</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>npm</executable>
+                            <workingDirectory>${project.basedir}/orasaka-apps/orasaka-ui/orasaka-cli</workingDirectory>
+                            <arguments>
+                                <argument>run</argument>
+                                <argument>validate</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>validate-video</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>python3</executable>
+                            <workingDirectory>${project.basedir}/orasaka-apps/orasaka-workers/video</workingDirectory>
+                            <arguments>
+                                <argument>-m</argument>
+                                <argument>coverage</argument>
+                                <argument>run</argument>
+                                <argument>test_main.py</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>coverage-report-video</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>python3</executable>
+                            <workingDirectory>${project.basedir}/orasaka-apps/orasaka-workers/video</workingDirectory>
+                            <arguments>
+                                <argument>-m</argument>
+                                <argument>coverage</argument>
+                                <argument>xml</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <inherited>false</inherited>
+                <configuration>
+                    <properties>
+                        <sonar.sources>pom.xml,orasaka-apps/orasaka-ui/orasaka-web-client,orasaka-apps/orasaka-ui/orasaka-cli,orasaka-apps/orasaka-workers/video</sonar.sources>
+                        <sonar.test.inclusions>
+                            **/__tests__/**,**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx,**/test_main.py</sonar.test.inclusions>
+                        <sonar.exclusions>${sonar.exclusions}</sonar.exclusions>
+                        <sonar.coverage.exclusions>${sonar.coverage.exclusions}</sonar.coverage.exclusions>
+                        <sonar.javascript.lcov.reportPaths>${sonar.javascript.lcov.reportPaths}</sonar.javascript.lcov.reportPaths>
+                        <sonar.typescript.lcov.reportPaths>${sonar.typescript.lcov.reportPaths}</sonar.typescript.lcov.reportPaths>
+                        <sonar.python.coverage.reportPaths>${sonar.python.coverage.reportPaths}</sonar.python.coverage.reportPaths>
+                    </properties>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <parameters>true</parameters>
+                    <compilerArgs>
+                        <arg>-Xlint:all</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.43.0</version>
+                <configuration>
+                    <java>
+                        <googleJavaFormat>
+                            <version>1.22.0</version>
+                            <style>GOOGLE</style>
+                        </googleJavaFormat>
+                    </java>
+                </configuration>
+            </plugin>
+
+            <!-- JaCoCo — instruments tests and generates XML coverage reports for SonarCloud -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- ─── Frontend Maven Plugin — workspace web builds (mobile excluded) ─── -->
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>${frontend-maven-plugin.version}</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <workingDirectory>${project.basedir}/orasaka-apps/orasaka-ui</workingDirectory>
+                    <installDirectory>${project.build.directory}/node</installDirectory>
+                    <skip>${skipTests}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>install-node</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <configuration>
+                            <nodeVersion>${node.version}</nodeVersion>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-install-workspace</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>ci --legacy-peer-deps</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-build-web</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Build web targets only — explicitly bypass mobile to save JVM overhead -->
+                            <arguments>run build --workspaces --if-present --ignore=orasaka-mobile-client --ignore=krizaka-com</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- ====================================================================
+         ADR-040: Hermetic E2E Testing Profile — Version Properties Hub
+         Activated via: ./mvnw clean verify -P e2e-tests
+         Execution plugins live in orasaka-apps/orasaka-end2end/pom.xml.
+         ==================================================================== -->
+    <profiles>
+        <profile>
+            <id>e2e-tests</id>
+            <properties>
+                <docker-maven-plugin.version>0.45.1</docker-maven-plugin.version>
+                <frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
+                <node.version>v24.11.1</node.version>
+            </properties>
+        </profile>
+    </profiles>
+
+</project>

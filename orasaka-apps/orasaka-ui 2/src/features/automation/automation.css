@@ -1,0 +1,401 @@
+/* ═══════════════════════════════════════════════════
+   AUTOMATION — Connector Catalogue & Live Job Grid
+   Glassmorphic enterprise integration dashboard
+   ═══════════════════════════════════════════════════ */
+
+/* ───────── Connector Catalogue ───────── */
+
+.connector-catalogue {
+  padding: 2rem 0;
+}
+
+.connector-catalogue-header {
+  margin-bottom: 1.5rem;
+}
+
+.connector-catalogue-title {
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.connector-catalogue-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.connector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.connector-card {
+  padding: 1.25rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.connector-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.connector-card-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.connector-card-icon {
+  font-size: 1.25rem;
+}
+
+.connector-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.connector-card-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.connector-card-description {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.connector-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+/* Status Badge */
+.connector-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.connector-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-connected {
+  background: var(--status-success);
+  box-shadow: 0 0 6px var(--status-success);
+}
+
+.status-disconnected {
+  background: var(--text-muted);
+}
+
+.status-pending {
+  background: var(--status-warning);
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+
+.connector-status-label {
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Toggle Button */
+.connector-toggle-btn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: 1px solid var(--border-default);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.connector-toggle-btn:hover {
+  background: var(--surface-3);
+  border-color: var(--accent);
+}
+
+.connector-toggle-active {
+  background: color-mix(in srgb, var(--status-error) 15%, transparent);
+  border-color: var(--status-error);
+  color: var(--status-error);
+}
+
+.connector-toggle-active:hover {
+  background: color-mix(in srgb, var(--status-error) 25%, transparent);
+}
+
+.connector-config-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border-default);
+  background: var(--surface-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 200ms ease;
+}
+
+.connector-config-btn:hover {
+  background: var(--surface-3);
+  border-color: var(--accent);
+}
+
+/* Config Panel */
+.connector-config-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-subtle);
+  animation: fade-up 200ms ease;
+}
+
+.connector-config-input {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-default);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.connector-save-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #000;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 200ms ease;
+}
+
+.connector-save-btn:hover {
+  background: var(--accent-hover);
+}
+
+/* ───────── Live Job Grid ───────── */
+
+.live-job-grid {
+  padding: 2rem 0;
+}
+
+.live-job-grid-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.live-job-grid-title {
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.live-job-grid-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.live-job-grid-stats {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.live-job-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.live-job-stat-pending {
+  color: var(--status-warning) !important;
+}
+
+.live-job-stat-running {
+  color: var(--accent) !important;
+}
+
+.live-job-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.live-job-card {
+  padding: 1.25rem;
+  border-radius: 12px;
+}
+
+.live-job-card-pending {
+  border-color: color-mix(in srgb, var(--status-warning) 30%, var(--border-subtle)) !important;
+}
+
+.live-job-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.live-job-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.live-job-card-action {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* Status Chip */
+.job-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--chip-color) 12%, transparent);
+  color: var(--chip-color);
+  border: 1px solid color-mix(in srgb, var(--chip-color) 20%, transparent);
+}
+
+.job-status-chip-icon {
+  font-size: 0.8125rem;
+}
+
+/* Payload Display */
+.live-job-card-payload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.live-job-card-code {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+/* Footer */
+.live-job-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.live-job-card-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Approval Actions */
+.job-approval-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.job-approve-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.4375rem 0.875rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--status-success) 15%, transparent);
+  color: var(--status-success);
+  border: 1px solid color-mix(in srgb, var(--status-success) 30%, transparent);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.job-approve-btn:hover {
+  background: color-mix(in srgb, var(--status-success) 25%, transparent);
+  transform: translateY(-1px);
+}
+
+.job-approve-btn-icon {
+  font-size: 0.6875rem;
+}
+
+.job-revoke-btn {
+  padding: 0.4375rem 0.875rem;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.job-revoke-btn:hover {
+  color: var(--status-error);
+  border-color: var(--status-error);
+  background: color-mix(in srgb, var(--status-error) 10%, transparent);
+}
+
+/* Empty State */
+.live-job-empty {
+  padding: 2rem;
+  text-align: center;
+  border-radius: 12px;
+}
+
+.live-job-empty p {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
