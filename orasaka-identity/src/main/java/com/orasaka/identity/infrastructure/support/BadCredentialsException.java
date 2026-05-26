@@ -1,0 +1,14 @@
+package com.orasaka.identity.infrastructure.support;
+
+/**
+ * Thrown when credential-based authentication fails due to invalid email or password.
+ *
+ * <p>Replaces the legacy null-return pattern in {@code IdentityService.authenticate()} with an
+ * explicit, fail-fast exception as mandated by ERR-106.
+ */
+public class BadCredentialsException extends RuntimeException {
+
+  public BadCredentialsException(String message) {
+    super(message);
+  }
+}

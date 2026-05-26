@@ -1,0 +1,629 @@
+# ==============================================================================
+# ORASAKA SYSTEM HTTP CLIENT WORKSPACE
+# Supports: IntelliJ HTTP Client, VS Code REST Client, and CLI tools
+# ==============================================================================
+
+@gatewayUrl = http://localhost:8080
+@bffUrl = http://localhost:3000
+@adminToken = 550e8400-e29b-41d4-a716-446655440001
+@userToken = 550e8400-e29b-41d4-a716-446655440002
+@guestToken = 550e8400-e29b-41d4-a716-446655440003
+
+# ------------------------------------------------------------------------------
+# PART 1: AUTHENTICATION (Port 8080)
+# Full auth lifecycle: login, register, verify, forgot, reset
+# ------------------------------------------------------------------------------
+
+### 1.1 REST Auth: Login with admin credentials
+POST {{gatewayUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin"
+}
+
+### 1.2 REST Auth: Login with standard user credentials
+POST {{gatewayUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "user",
+  "password": "user"
+}
+
+### 1.3 REST Auth: Register a new user
+POST {{gatewayUrl}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "username": "e2e_testuser",
+  "email": "e2e_testuser@orasaka.com",
+  "password": "TestPass123!",
+  "language": "en"
+}
+
+### 1.4 REST Auth: Verify account (email verification token)
+POST {{gatewayUrl}}/api/v1/auth/verify
+Content-Type: application/json
+
+{
+  "token": "verification-token-placeholder"
+}
+
+### 1.5 REST Auth: Forgot password (request reset email)
+POST {{gatewayUrl}}/api/v1/auth/forgot
+Content-Type: application/json
+
+{
+  "email": "user@orasaka.com"
+}
+
+### 1.6 REST Auth: Reset password (with token from email)
+POST {{gatewayUrl}}/api/v1/auth/reset
+Content-Type: application/json
+
+{
+  "token": "reset-token-placeholder",
+  "newPassword": "NewSecurePass456!"
+}
+
+### 1.7 REST Auth: OAuth callback (GitHub/Google flow)
+POST {{gatewayUrl}}/api/v1/auth/oauth
+Content-Type: application/json
+
+{
+  "provider": "github",
+  "code": "oauth-code-placeholder",
+  "state": "oauth-state-placeholder"
+}
+
+
+# ------------------------------------------------------------------------------
+# PART 2: USER PROFILE & GRAPHQL (Port 8080)
+# Profile queries, preference mutations, credential management
+# ------------------------------------------------------------------------------
+
+### 2.1 GraphQL: Get Current User Profile (Admin)
+POST {{gatewayUrl}}/graphql
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "query": "query { me { id username preferences } }"
+}
+
+### 2.2 GraphQL: Get Current User Profile (Standard User)
+POST {{gatewayUrl}}/graphql
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "query": "query { me { id username preferences } }"
+}
+
+### 2.3 GraphQL: Update User Preferences
+POST {{gatewayUrl}}/graphql
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "query": "mutation($prefs: Map!) { updatePreferences(preferences: $prefs) { id username preferences } }",
+  "variables": {
+    "prefs": {
+      "language": "ja",
+      "tts-voice": "nova",
+      "image-aspect-ratio": "16:9",
+      "chat-temperature": 0.7
+    }
+  }
+}
+
+
+# ------------------------------------------------------------------------------
+# PART 3: USER CREDENTIALS (Port 8080)
+# API key management for external AI providers
+# ------------------------------------------------------------------------------
+
+### 3.1 REST: Get user credentials
+GET {{gatewayUrl}}/api/v1/credentials
+Authorization: Bearer {{userToken}}
+
+### 3.2 REST: Save a new credential
+POST {{gatewayUrl}}/api/v1/credentials
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "providerName": "openai",
+  "apiKey": "sk-test-placeholder-key"
+}
+
+### 3.3 REST: Delete a credential by provider
+DELETE {{gatewayUrl}}/api/v1/credentials/openai
+Authorization: Bearer {{userToken}}
+
+
+# ------------------------------------------------------------------------------
+# PART 4: CHAT SESSIONS (Port 8080)
+# CRUD operations on chat sessions/threads
+# ------------------------------------------------------------------------------
+
+### 4.1 REST: List chat sessions
+GET {{gatewayUrl}}/api/v1/sessions
+Authorization: Bearer {{userToken}}
+
+### 4.2 REST: Create a new chat session
+POST {{gatewayUrl}}/api/v1/sessions
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "title": "E2E Test Session"
+}
+
+### 4.3 REST: Update a chat session title
+PATCH {{gatewayUrl}}/api/v1/sessions/conv-http-123
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "title": "Updated E2E Test Session"
+}
+
+### 4.4 REST: Delete a chat session
+DELETE {{gatewayUrl}}/api/v1/sessions/conv-http-123
+Authorization: Bearer {{userToken}}
+
+
+# ------------------------------------------------------------------------------
+# PART 5: CHAT STREAMING (Port 8080)
+# Real-time SSE chat with GraphQL and REST
+# ------------------------------------------------------------------------------
+
+### 5.1 GraphQL: Execute Chat Mutation (Single-turn)
+POST {{gatewayUrl}}/graphql
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "query": "mutation { chat(prompt: \"Hello Orasaka! Explain what a virtual thread is in one short sentence.\", conversationId: \"conv-http-123\") { content conversationId metadata } }"
+}
+
+### 5.2 REST SSE: Real-Time Chat Streaming (Server-Sent Events)
+GET {{gatewayUrl}}/api/v1/chat/stream/conv-http-123?prompt=Explain%20Virtual%20Threads%20in%203%20words.
+Authorization: Bearer {{userToken}}
+Accept: text/event-stream
+
+
+# ------------------------------------------------------------------------------
+# PART 6: MODEL CATALOG (Port 8080)
+# Read-only model catalog queries
+# ------------------------------------------------------------------------------
+
+### 6.1 REST: List all models
+GET {{gatewayUrl}}/api/v1/models
+Authorization: Bearer {{userToken}}
+
+### 6.2 REST: List supported models
+GET {{gatewayUrl}}/api/v1/models/supported
+Authorization: Bearer {{userToken}}
+
+### 6.3 REST: Get full model catalog
+GET {{gatewayUrl}}/api/v1/models/catalog
+Authorization: Bearer {{userToken}}
+
+### 6.4 REST: List AI providers
+GET {{gatewayUrl}}/api/v1/models/providers
+Authorization: Bearer {{userToken}}
+
+
+# ------------------------------------------------------------------------------
+# PART 7: MEDIA & IMAGE GENERATION (Port 8080)
+# File upload and AI image generation
+# ------------------------------------------------------------------------------
+
+### 7.1 REST: Generate AI Image
+POST {{gatewayUrl}}/api/v1/ai/image
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "prompt": "A serene Japanese garden at sunset with cherry blossoms",
+  "model": "v1-5-pruned-emaonly",
+  "width": 512,
+  "height": 512
+}
+
+### 7.2 REST: Upload media file (multipart)
+# Note: Replace the file path with an actual file on your system
+POST {{gatewayUrl}}/api/v1/upload
+Content-Type: multipart/form-data; boundary=---FormBoundary
+Authorization: Bearer {{userToken}}
+
+-----FormBoundary
+Content-Disposition: form-data; name="file"; filename="test.txt"
+Content-Type: text/plain
+
+Hello World test content
+-----FormBoundary--
+
+
+# ------------------------------------------------------------------------------
+# PART 8: CODE SCAFFOLD STREAMING (Port 8080)
+# Server-Sent Events for code generation
+# ------------------------------------------------------------------------------
+
+### 8.1 REST SSE: Stream code scaffold generation
+POST {{gatewayUrl}}/api/v1/code/scaffold/stream
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+Accept: text/event-stream
+
+{
+  "prompt": "Create a simple REST controller in Spring Boot for user management",
+  "model": "llama3.2:3b",
+  "conversationId": "conv-code-001"
+}
+
+
+# ------------------------------------------------------------------------------
+# PART 9: OPERATION GRAPH & BOOTSTRAP (Port 8080)
+# System metadata endpoints
+# ------------------------------------------------------------------------------
+
+### 9.1 REST: Get operation graph (SIM-DAG)
+GET {{gatewayUrl}}/api/v1/operations/graph
+Authorization: Bearer {{userToken}}
+
+### 9.2 REST: Get bootstrap features
+GET {{gatewayUrl}}/api/v1/features
+Authorization: Bearer {{userToken}}
+
+
+# ------------------------------------------------------------------------------
+# PART 10: JOBS (Port 8080)
+# Async job lifecycle — create, list, status, progress, stream
+# ------------------------------------------------------------------------------
+
+### 10.1 REST: Create a new job
+POST {{gatewayUrl}}/api/v1/jobs
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "type": "VIDEO_GENERATION",
+  "payload": {
+    "prompt": "A sunrise over mountain lake",
+    "steps": 8,
+    "fps": 12
+  }
+}
+
+### 10.2 REST: List all jobs
+GET {{gatewayUrl}}/api/v1/jobs
+Authorization: Bearer {{userToken}}
+
+### 10.3 REST: Get job by ID
+GET {{gatewayUrl}}/api/v1/jobs/job-test-001
+Authorization: Bearer {{userToken}}
+
+### 10.4 REST: Update job progress
+POST {{gatewayUrl}}/api/v1/jobs/job-test-001/progress
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "progress": 50,
+  "message": "Processing frame 4 of 8"
+}
+
+### 10.5 REST SSE: Stream job events
+GET {{gatewayUrl}}/api/v1/jobs/stream
+Authorization: Bearer {{userToken}}
+Accept: text/event-stream
+
+
+# ------------------------------------------------------------------------------
+# PART 11: AUTOMATION JOBS (Port 8080)
+# Approve/revoke automation job state transitions
+# ------------------------------------------------------------------------------
+
+### 11.1 REST: Approve an automation job
+POST {{gatewayUrl}}/api/v1/automation/jobs/job-auto-001/approve
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+### 11.2 REST: Revoke an automation job
+POST {{gatewayUrl}}/api/v1/automation/jobs/job-auto-001/revoke
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+
+# ------------------------------------------------------------------------------
+# PART 12: ADMIN — MODEL MANAGEMENT (Port 8080)
+# CRUD operations on the model registry (admin only)
+# ------------------------------------------------------------------------------
+
+### 12.1 REST: Create a new model entry
+POST {{gatewayUrl}}/api/v1/admin/models
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "modelId": "e2e-test-model",
+  "displayName": "E2E Test Model",
+  "provider": "ollama",
+  "endpoint": "http://localhost:11434",
+  "modelType": "TEXT",
+  "tags": ["test", "e2e"],
+  "enabled": true
+}
+
+### 12.2 REST: Update a model entry
+PUT {{gatewayUrl}}/api/v1/admin/models/1
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "displayName": "Updated E2E Test Model",
+  "enabled": false
+}
+
+### 12.3 REST: Delete a model entry
+DELETE {{gatewayUrl}}/api/v1/admin/models/99
+Authorization: Bearer {{adminToken}}
+
+
+# ------------------------------------------------------------------------------
+# PART 13: ADMIN — FEATURE FLAGS (Port 8080)
+# Read and toggle platform feature flags
+# ------------------------------------------------------------------------------
+
+### 13.1 REST: Get all feature flags
+GET {{gatewayUrl}}/api/v1/admin/features
+Authorization: Bearer {{adminToken}}
+
+### 13.2 REST: Toggle a feature flag
+PUT {{gatewayUrl}}/api/v1/admin/features/video_generation
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "enabled": true
+}
+
+
+# ------------------------------------------------------------------------------
+# PART 14: ADMIN — PIPELINE CONFIGURATION (Port 8080)
+# Get, update, and reset the dynamic pipeline
+# ------------------------------------------------------------------------------
+
+### 14.1 REST: Get pipeline configuration
+GET {{gatewayUrl}}/api/v1/admin/pipeline
+Authorization: Bearer {{adminToken}}
+
+### 14.2 REST: Update pipeline configuration
+PUT {{gatewayUrl}}/api/v1/admin/pipeline
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "pipelines": {
+    "default": {
+      "interceptors": [
+        "UserContextResolver",
+        "SystemContextInjector",
+        "RagInterceptor",
+        "MemoryInterceptor",
+        "RouterInterceptor",
+        "ToolInterceptor"
+      ],
+      "enabled": true
+    }
+  }
+}
+
+### 14.3 REST: Reset pipeline to defaults
+POST {{gatewayUrl}}/api/v1/admin/pipeline/reset
+Authorization: Bearer {{adminToken}}
+
+
+# ------------------------------------------------------------------------------
+# PART 15: ADMIN — JOBS & CONNECTIONS (Port 8080)
+# Purge jobs and inspect active SSE connections
+# ------------------------------------------------------------------------------
+
+### 15.1 REST: Purge completed/failed jobs
+POST {{gatewayUrl}}/api/v1/admin/jobs/purge
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+### 15.2 REST: Get active SSE connections count
+GET {{gatewayUrl}}/api/v1/admin/jobs/active-connections
+Authorization: Bearer {{adminToken}}
+
+
+# ------------------------------------------------------------------------------
+# PART 16: TWO-PHASE PIPELINE & HARDWARE-OPTIMIZED MODELS (Port 8080)
+# Tests the pipelineId routing, Early-Ack SSE, and MLX model paths
+# ------------------------------------------------------------------------------
+
+### 16.1 REST SSE: Chat Stream with pipelineId (Two-Phase Pipeline)
+POST {{gatewayUrl}}/api/v1/chat/stream/conv-pipeline-001
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+Accept: text/event-stream
+
+{
+  "prompt": "Explain the difference between virtual threads and platform threads in Java 21.",
+  "assetIds": [],
+  "model": "llama3.2:3b",
+  "pipelineId": "default"
+}
+
+### 16.2 REST SSE: Chat Stream targeting MLX Native AnimateDiff model
+POST {{gatewayUrl}}/api/v1/chat/stream/conv-mlx-video-001
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+Accept: text/event-stream
+
+{
+  "prompt": "Generate a short video of a sunrise over a mountain lake.",
+  "assetIds": [],
+  "model": "mlx-animatediff-lightning",
+  "videoSteps": 8,
+  "videoFps": 12,
+  "pipelineId": "default"
+}
+
+### 16.3 REST SSE: Chat Stream targeting v1-5-pruned SD image model
+POST {{gatewayUrl}}/api/v1/chat/stream/conv-sd15-img-001
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+Accept: text/event-stream
+
+{
+  "prompt": "Generate a cyberpunk cityscape at night with neon lights reflecting on wet streets.",
+  "assetIds": [],
+  "model": "v1-5-pruned-emaonly",
+  "pipelineId": "default"
+}
+
+### 16.4 REST SSE: GET stream with pipelineId query parameter
+GET {{gatewayUrl}}/api/v1/chat/stream/conv-pipeline-get-001?prompt=What%20is%20semantic%20routing?&pipelineId=default
+Authorization: Bearer {{userToken}}
+Accept: text/event-stream
+
+
+# ------------------------------------------------------------------------------
+# PART 17: NEXT.JS BFF CLIENT PROXY API (Port 3000)
+# Browser-facing routes conforming to the BFF Topology Directive
+# ------------------------------------------------------------------------------
+
+### 17.1 BFF GraphQL: Get Current User Profile via Next.js Proxy
+POST {{bffUrl}}/api/graphql
+Content-Type: application/json
+
+{
+  "query": "query { me { id username preferences } }"
+}
+
+### 17.2 BFF GraphQL: Update User Preferences via Next.js Proxy
+POST {{bffUrl}}/api/graphql
+Content-Type: application/json
+
+{
+  "query": "mutation($prefs: Map!) { updatePreferences(preferences: $prefs) { id username preferences } }",
+  "variables": {
+    "prefs": {
+      "language": "en",
+      "tts-voice": "alloy",
+      "image-aspect-ratio": "1:1",
+      "chat-temperature": 0.5
+    }
+  }
+}
+
+### 17.3 BFF GraphQL: Execute Chat Mutation via Next.js Proxy
+POST {{bffUrl}}/api/graphql
+Content-Type: application/json
+
+{
+  "query": "mutation { chat(prompt: \"State the primary directive of Orasaka in five words.\", conversationId: \"conv-bff-123\") { content conversationId metadata } }"
+}
+
+### 17.4 BFF REST SSE: Real-Time Chat Streaming via Next.js Proxy
+GET {{bffUrl}}/api/chat/stream/conv-bff-123?prompt=What%20is%20your%20primary%20directive?
+Accept: text/event-stream
+
+# ------------------------------------------------------------------------------
+# PART 18: MLX MODEL EXPANSION TESTS (FLUX.1 Schnell + AnimateDiff-Lightning)
+# Direct video worker tests (port 8188) and backend E2E job submission
+# ------------------------------------------------------------------------------
+
+### 18.1 Video Worker: FLUX.1 Schnell 4-bit (MLX Image Generation)
+POST http://localhost:8188/v1/videos/generations
+Content-Type: application/json
+
+{
+  "prompt": "A neon cyberpunk cityscape at night with rain reflections",
+  "model": "argmaxinc/mlx-FLUX.1-schnell-4bit-quantized",
+  "durationSeconds": 2
+}
+
+### 18.2 Video Worker: AnimateDiff-Lightning (ByteDance MLX Video)
+POST http://localhost:8188/v1/videos/generations
+Content-Type: application/json
+
+{
+  "prompt": "A butterfly emerging from a golden cocoon in a sunlit forest",
+  "model": "ByteDance/AnimateDiff-Lightning",
+  "durationSeconds": 3
+}
+
+### 18.3 Video Worker: FLUX.1 Schnell with custom seed
+POST http://localhost:8188/v1/videos/generations
+Content-Type: application/json
+
+{
+  "prompt": "A serene Japanese garden with cherry blossoms and a koi pond",
+  "model": "argmaxinc/mlx-FLUX.1-schnell-4bit-quantized",
+  "durationSeconds": 2,
+  "seed": 42
+}
+
+### 18.4 Backend E2E: Submit FLUX.1 Video Job via Gateway
+POST {{gatewayUrl}}/api/v1/ai/video
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "prompt": "A futuristic space station orbiting Earth with aurora borealis visible",
+  "durationSeconds": 3,
+  "model": "argmaxinc/mlx-FLUX.1-schnell-4bit-quantized"
+}
+
+### 18.5 Backend E2E: Submit AnimateDiff-Lightning Job via Gateway
+POST {{gatewayUrl}}/api/v1/ai/video
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+
+{
+  "prompt": "Time-lapse of clouds rolling over misty mountain peaks at dawn",
+  "durationSeconds": 3,
+  "model": "ByteDance/AnimateDiff-Lightning"
+}
+
+### 18.6 REST SSE: Chat Stream with FLUX.1 model
+POST {{gatewayUrl}}/api/v1/chat/stream/conv-flux-img-001
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+Accept: text/event-stream
+
+{
+  "prompt": "Generate an image of a steampunk clocktower at midnight.",
+  "assetIds": [],
+  "model": "argmaxinc/mlx-FLUX.1-schnell-4bit-quantized",
+  "pipelineId": "default"
+}
+
+### 18.7 REST SSE: Chat Stream with AnimateDiff-Lightning model
+POST {{gatewayUrl}}/api/v1/chat/stream/conv-adl-vid-001
+Content-Type: application/json
+Authorization: Bearer {{userToken}}
+Accept: text/event-stream
+
+{
+  "prompt": "Create a short animation of ocean waves at sunset.",
+  "assetIds": [],
+  "model": "ByteDance/AnimateDiff-Lightning",
+  "videoSteps": 8,
+  "videoFps": 12,
+  "pipelineId": "default"
+}
+
+### 18.8 Admin: Verify MLX Models in Catalog
+GET {{gatewayUrl}}/api/v1/admin/models?hardware=APPLE_SILICON_MLX
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}

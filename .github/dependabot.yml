@@ -1,0 +1,13 @@
+version: 2
+updates:
+  # ☕ Suivi du Backend Maven
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  # 📦 Suivi du Frontend npm (orasaka-ui)
+  - package-ecosystem: "npm"
+    directory: "/orasaka-ui"
+    schedule:
+      interval: "weekly"

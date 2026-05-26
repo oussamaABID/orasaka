@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.orasaka</groupId>
+        <artifactId>orasaka-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>orasaka-workers</artifactId>
+    <packaging>pom</packaging>
+    <name>orasaka-workers</name>
+    <description>Aggregator POM for Orasaka worker modules (Java automation + Python video)</description>
+
+    <modules>
+        <!-- Only Java modules declared — Python video worker is excluded from Maven build chain -->
+        <module>automation</module>
+    </modules>
+
+</project>

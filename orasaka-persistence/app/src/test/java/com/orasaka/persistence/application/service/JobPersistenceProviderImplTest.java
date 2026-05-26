@@ -1,0 +1,195 @@
+package com.orasaka.persistence.application.service;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+import com.orasaka.persistence.domain.model.JobDto;
+import com.orasaka.persistence.infrastructure.adapter.persistence.entity.JobEntity;
+import com.orasaka.persistence.infrastructure.adapter.persistence.repository.JobRepository;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import static com.orasaka.test.TestConstants.*;
+
+/** Unit tests for {@link JobPersistenceProviderImpl}. */
+@ExtendWith(MockitoExtension.class)
+class JobPersistenceProviderImplTest {
+
+  @Mock private JobRepository repository;
+  @Mock private ApplicationEventPublisher eventPublisher;
+
+  private JobPersistenceProviderImpl provider;
+
+  @BeforeEach
+  void setUp() {
+    provider = new JobPersistenceProviderImpl(repository, eventPublisher);
+  }
+
+  private static JobEntity buildEntity(String id, String userId, String featureKey, String status) {
+    Instant now = Instant.now();
+    JobEntity entity = new JobEntity();
+    entity.setId(id);
+    entity.setUserId(userId);
+    entity.setFeatureKey(featureKey);
+    entity.setStatus(status);
+    entity.setPayload(Map.of());
+    entity.setCreatedAt(now);
+    entity.setUpdatedAt(now);
+    return entity;
+  }
+
+  @Test
+  void createJob_withNullId_generatesUuid() {
+    when(repository.save(any(JobEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    String id = provider.createJob(null, USER_1, IMAGE, Map.of("prompt", "test"));
+
+    assertNotNull(id);
+    assertFalse(id.isBlank());
+    verify(repository).save(any(JobEntity.class));
+    verify(eventPublisher).publishEvent(any(Object.class));
+  }
+
+  @Test
+  void createJob_withExplicitId_usesProvidedId() {
+    when(repository.save(any(JobEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    String id = provider.createJob("my-id", USER_1, "speech", Map.of());
+
+    assertEquals("my-id", id);
+  }
+
+  @Test
+  void createJob_noIdOverload_delegatesToFull() {
+    when(repository.save(any(JobEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    String id = provider.createJob(USER_1, IMAGE, Map.of());
+
+    assertNotNull(id);
+  }
+
+  @Test
+  void createJob_nullFeatureKey_throwsNpe() {
+    assertThrows(
+        NullPointerException.class,
+        () -> {
+          provider.createJob(USER_1, null, Map.of());
+        });
+  }
+
+  @Test
+  void updateJobStatus_existingJob_updatesFields() {
+    JobEntity entity = buildEntity(JOB_1, USER_1, IMAGE, "PENDING");
+    when(repository.findById(JOB_1)).thenReturn(Optional.of(entity));
+    when(repository.save(any(JobEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    provider.updateJobStatus(JOB_1, STATUS_COMPLETED, Map.of(URL, "/result"), null);
+
+    assertEquals(STATUS_COMPLETED, entity.getStatus());
+    assertEquals("/result", entity.getResult().get(URL));
+    verify(eventPublisher).publishEvent(any(Object.class));
+  }
+
+  @Test
+  void updateJobStatus_nonexistentJob_throwsException() {
+    when(repository.findById("nope")).thenReturn(Optional.empty());
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> provider.updateJobStatus("nope", STATUS_COMPLETED, null, null));
+  }
+
+  @Test
+  void updateJobStatus_nullJobId_throwsNpe() {
+    assertThrows(
+        NullPointerException.class, () -> provider.updateJobStatus(null, "OK", null, null));
+  }
+
+  @Test
+  void updateJobStatus_nullStatus_throwsNpe() {
+    assertThrows(
+        NullPointerException.class, () -> provider.updateJobStatus("id", null, null, null));
+  }
+
+  @Test
+  void updateJobStatus_withErrorMessage_setsError() {
+    JobEntity entity = buildEntity("job-err", USER_1, IMAGE, "RUNNING");
+    when(repository.findById("job-err")).thenReturn(Optional.of(entity));
+    when(repository.save(any(JobEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    provider.updateJobStatus("job-err", "FAILED", null, "Timeout exceeded");
+
+    assertEquals("FAILED", entity.getStatus());
+    assertEquals("Timeout exceeded", entity.getErrorMessage());
+  }
+
+  @Test
+  void getJob_existing_returnsDto() {
+    JobEntity entity = buildEntity(JOB_1, USER_1, IMAGE, STATUS_COMPLETED);
+    entity.setResult(Map.of(URL, "/img.png"));
+    when(repository.findById(JOB_1)).thenReturn(Optional.of(entity));
+
+    Optional<JobDto> result = provider.getJob(JOB_1);
+
+    assertTrue(result.isPresent());
+    assertEquals(JOB_1, result.get().id());
+    assertEquals(STATUS_COMPLETED, result.get().status());
+  }
+
+  @Test
+  void getJob_nonexistent_returnsEmpty() {
+    when(repository.findById("none")).thenReturn(Optional.empty());
+
+    assertTrue(provider.getJob("none").isEmpty());
+  }
+
+  @Test
+  void getJob_nullId_throwsNpe() {
+    assertThrows(NullPointerException.class, () -> provider.getJob(null));
+  }
+
+  @Test
+  void getJobsByUserId_returnsPage() {
+    JobEntity entity = buildEntity("j1", USER_1, IMAGE, "PENDING");
+    Pageable pageable = PageRequest.of(0, 10);
+    when(repository.findByUserId(USER_1, pageable)).thenReturn(new PageImpl<>(List.of(entity)));
+
+    Page<JobDto> result = provider.getJobsByUserId(USER_1, pageable);
+
+    assertEquals(1, result.getTotalElements());
+  }
+
+  @Test
+  void getAllJobs_returnsPage() {
+    Pageable pageable = PageRequest.of(0, 20);
+    when(repository.findAll(pageable)).thenReturn(new PageImpl<>(List.of()));
+
+    Page<JobDto> result = provider.getAllJobs(pageable);
+
+    assertEquals(0, result.getTotalElements());
+  }
+
+  @Test
+  void purgeJobsByUserId_delegatesToRepository() {
+    provider.purgeJobsByUserId(USER_1);
+
+    verify(repository).deleteByUserId(USER_1);
+  }
+
+  @Test
+  void purgeJobsByUserId_nullUserId_throwsNpe() {
+    assertThrows(NullPointerException.class, () -> provider.purgeJobsByUserId(null));
+  }
+}
