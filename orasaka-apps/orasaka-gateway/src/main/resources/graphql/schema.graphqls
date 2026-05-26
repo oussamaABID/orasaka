@@ -1,0 +1,69 @@
+type Query {
+    me: User
+    interceptionSchema(schemaId: String!): String
+    operationGraph: OperationGraph
+}
+
+type OperationGraph {
+    nodes: [OperationNode!]!
+}
+
+type OperationNode {
+    id: ID!
+    label: String!
+    icon: String!
+    presentationContext: String!
+    state: NodeState!
+    executionDetails: TargetExecutionUri!
+}
+
+type TargetExecutionUri {
+    uriPath: String!
+    httpMethod: String!
+    payloadTemplate: String
+}
+
+type NodeState {
+    type: String!
+    reason: String
+    lockedAt: String
+}
+
+
+type Mutation {
+    chat(prompt: String!, conversationId: String): ChatResponse
+    updatePreferences(preferences: Map!): User
+    register(username: String!, email: String!, password: String!, language: String): RegisterResult!
+    resolveInterception(interceptionType: String!, schemaId: String!, responses: Map!): Boolean!
+    image(prompt: String!, model: String): ChatResponse
+    speech(prompt: String!, model: String, voice: String): ChatResponse
+}
+
+type Subscription {
+    chatStream(prompt: String!, conversationId: String): ChatResponse
+}
+
+type User {
+    id: ID!
+    username: String!
+    email: String!
+    authorities: [String!]!
+    preferences: Map
+}
+
+type ChatResponse {
+    content: String!
+    conversationId: String
+    metadata: Map
+}
+
+"""
+Result of the self-service registration mutation.
+Exactly one of `user` or `error` will be non-null.
+"""
+type RegisterResult {
+    user: User
+    error: String
+}
+
+scalar Map

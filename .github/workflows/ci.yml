@@ -1,0 +1,272 @@
+# ════════════════════════════════════════════════════════════════════════════════
+# Orasaka Unified CI Pipeline
+# ════════════════════════════════════════════════════════════════════════════════
+# Multi-phase production CI: Lint → Governance → Integration → E2E → SonarCloud
+# Replaces the legacy sonarcloud.yml (ADR-033/034)
+# ════════════════════════════════════════════════════════════════════════════════
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Phase 1: Lint & Format Enforcement
+# ──────────────────────────────────────────────────────────────────────────────
+jobs:
+  lint:
+    name: "Phase 1 · Lint & Format"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: maven
+
+      - name: Set up Node.js 24.11.1
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.11.1"
+          cache: npm
+          cache-dependency-path: |
+            orasaka-apps/orasaka-ui/package-lock.json
+            orasaka-apps/orasaka-cli/package-lock.json
+
+      - name: Install Node dependencies
+        run: |
+          npm ci --prefix orasaka-apps/orasaka-ui
+          npm ci --prefix orasaka-apps/orasaka-cli
+
+      - name: Java — Spotless format check
+        run: ./mvnw spotless:check -q
+
+      - name: Frontend — ESLint
+        run: npm run lint --prefix orasaka-apps/orasaka-ui
+
+      - name: CLI — ESLint
+        run: npm run lint --prefix orasaka-apps/orasaka-cli
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Phase 2: Governance Gate + Java Integration Tests (Testcontainers)
+  # ──────────────────────────────────────────────────────────────────────────
+  test-java:
+    name: "Phase 2 · Java · Governance + Integration"
+    runs-on: ubuntu-latest
+    needs: lint
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: maven
+
+      - name: Set up Node.js 24.11.1
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.11.1"
+          cache: npm
+          cache-dependency-path: |
+            orasaka-apps/orasaka-ui/package-lock.json
+            orasaka-apps/orasaka-cli/package-lock.json
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install coverage Pillow
+
+      - name: Install Node dependencies
+        run: |
+          npm ci --prefix orasaka-apps/orasaka-ui
+          npm ci --prefix orasaka-apps/orasaka-cli
+
+      - name: Maven — Full verify (Compile + ArchUnit + Tests)
+        run: ./mvnw clean verify -B -q
+        timeout-minutes: 25
+        env:
+          TESTCONTAINERS_REUSE_ENABLE: "true"
+
+      - name: Upload test and coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-reports
+          path: |
+            **/target/site/jacoco/jacoco.xml
+            **/target/surefire-reports/TEST-*.xml
+          retention-days: 7
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Phase 3: Frontend Unit Tests + CLI Tests
+  # ──────────────────────────────────────────────────────────────────────────
+  test-frontend:
+    name: "Phase 3 · Frontend + CLI · Unit Tests"
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 24.11.1
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.11.1"
+          cache: npm
+          cache-dependency-path: |
+            orasaka-apps/orasaka-ui/package-lock.json
+            orasaka-apps/orasaka-cli/package-lock.json
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install coverage Pillow
+
+      - name: Install Node dependencies
+        run: |
+          npm ci --prefix orasaka-apps/orasaka-ui
+          npm ci --prefix orasaka-apps/orasaka-cli
+
+      - name: UI — Jest unit tests with coverage
+        run: npm run test:coverage --prefix orasaka-apps/orasaka-ui
+
+      - name: CLI — Jest unit tests with coverage
+        run: npm run test:coverage --prefix orasaka-apps/orasaka-cli
+
+      - name: Upload frontend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: |
+            orasaka-apps/orasaka-ui/coverage/lcov.info
+            orasaka-apps/orasaka-cli/coverage/lcov.info
+          retention-days: 7
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Phase 4: Playwright E2E (Headless Chromium)
+  # ──────────────────────────────────────────────────────────────────────────
+  e2e:
+    name: "Phase 4 · Playwright E2E"
+    runs-on: ubuntu-latest
+    needs: test-frontend
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 24.11.1
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.11.1"
+          cache: npm
+          cache-dependency-path: orasaka-apps/orasaka-ui/package-lock.json
+
+      - name: Install UI dependencies
+        run: npm ci --prefix orasaka-apps/orasaka-ui
+
+      - name: Install Playwright browsers
+        run: npx --prefix orasaka-apps/orasaka-ui playwright install --with-deps chromium
+
+      - name: Run Playwright E2E tests
+        run: npm run test:e2e:ci --prefix orasaka-apps/orasaka-ui
+        env:
+          NEXTAUTH_SECRET: a_very_secure_secret_key_for_testing
+          NEXTAUTH_URL: http://localhost:3000
+          GATEWAY_URL: http://localhost:8080
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: orasaka-apps/orasaka-ui/playwright-report/
+          retention-days: 7
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Phase 5: SonarCloud Analysis (main branch only)
+  # ──────────────────────────────────────────────────────────────────────────
+  sonar:
+    name: "Phase 5 · SonarCloud Quality Gate"
+    runs-on: ubuntu-latest
+    needs: [test-java, test-frontend]
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: maven
+
+      - name: Set up Node.js 24.11.1
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.11.1"
+          cache: npm
+          cache-dependency-path: |
+            orasaka-apps/orasaka-ui/package-lock.json
+            orasaka-apps/orasaka-cli/package-lock.json
+
+      - name: Install Node dependencies
+        run: |
+          npm ci --prefix orasaka-apps/orasaka-ui
+          npm ci --prefix orasaka-apps/orasaka-cli
+
+      - name: Package Java modules for SonarCloud
+        run: ./mvnw clean package -B -q -DskipTests
+
+      - name: Download test and coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          name: java-reports
+          path: .
+
+      - name: Download frontend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage
+          path: .
+
+      - name: Run SonarCloud analysis
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: >
+          ./mvnw -B sonar:sonar
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+

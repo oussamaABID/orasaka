@@ -1,0 +1,129 @@
+### ─────────────────────────────────────────────────────────────────────────
+### admin-pipeline.http — Admin Pipeline Configuration Contract (ADR-040)
+### Validates pipeline interceptor listing, reordering, toggle, and reset.
+### ─────────────────────────────────────────────────────────────────────────
+
+### Authenticate (Admin)
+# @name loginAdmin
+POST {{$dotenv GATEWAY_TARGET_URL}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{$dotenv ADMIN_EMAIL}}",
+  "password": "{{$dotenv ADMIN_PASSWORD}}"
+}
+
+?? status == 200
+
+###
+
+### List Pipeline Interceptors
+# @name listPipeline
+GET {{$dotenv GATEWAY_TARGET_URL}}/api/v1/admin/pipeline/interceptors
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### Reset Pipeline to Defaults
+# @name resetPipeline
+POST {{$dotenv GATEWAY_TARGET_URL}}/api/v1/admin/pipeline/interceptors/reset
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### List After Reset (verify defaults applied)
+# @name listAfterReset
+GET {{$dotenv GATEWAY_TARGET_URL}}/api/v1/admin/pipeline/interceptors
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### Admin Feature Flags — List
+# @name listFeatures
+GET {{$dotenv GATEWAY_TARGET_URL}}/api/v1/admin/features
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### Admin Feature Flags — Toggle Feature
+# @name toggleFeature
+PUT {{$dotenv GATEWAY_TARGET_URL}}/api/v1/admin/features/chat
+Authorization: Bearer {{loginAdmin.token}}
+Content-Type: application/json
+
+{
+  "isEnabled": true
+}
+
+?? status == 200
+
+###
+
+### Admin Models — List Catalog
+# @name listCatalog
+GET {{$dotenv GATEWAY_TARGET_URL}}/api/v1/models/catalog
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### Admin Models — List Providers
+# @name listProviders
+GET {{$dotenv GATEWAY_TARGET_URL}}/api/v1/models/providers
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### Admin Models — Create Model
+# @name createModel
+POST {{$dotenv GATEWAY_TARGET_URL}}/api/v1/admin/models
+Authorization: Bearer {{loginAdmin.token}}
+Content-Type: application/json
+
+{
+  "modelName": "e2e-test-model",
+  "modelLabel": "E2E Test Model",
+  "category": "theme",
+  "options": "",
+  "isDefault": false,
+  "providerName": "local"
+}
+
+?? status >= 200
+
+###
+
+### Admin Jobs — Active Connections
+# @name activeConnections
+GET {{$dotenv GATEWAY_TARGET_URL}}/api/v1/admin/jobs/active-connections
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### Admin Jobs — Purge Test Data
+# @name purgeJobs
+POST {{$dotenv GATEWAY_TARGET_URL}}/api/v1/admin/jobs/purge
+Authorization: Bearer {{loginAdmin.token}}
+
+?? status == 200
+
+###
+
+### Pipeline — Unauthenticated Access (401)
+# @name pipelineUnauth
+GET {{$dotenv GATEWAY_TARGET_URL}}/api/v1/admin/pipeline/interceptors
+
+?? status == 401
