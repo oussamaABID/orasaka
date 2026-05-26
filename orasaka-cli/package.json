@@ -9,7 +9,8 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "build": "tsc --outDir dist",
-    "test": "jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "sonar": "npx -y sonar-scanner -Dsonar.token=$SONAR_TOKEN -Dsonar.branch.name=$(git rev-parse --abbrev-ref HEAD)"
   },
   "keywords": [
     "orasaka",
@@ -25,6 +26,7 @@
     "cli-table3": "^0.6.5",
     "commander": "^13.1.0",
     "date-fns": "^4.3.0",
+    "dotenv": "^17.4.2",
     "graphql-ws": "^6.0.8",
     "ora": "^5.4.1",
     "ws": "^8.20.1"

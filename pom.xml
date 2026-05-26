@@ -24,14 +24,50 @@
         <graphql-spring-boot.version>15.0.0</graphql-spring-boot.version>
         <archunit.version>1.3.0</archunit.version>
         <jacoco.version>0.8.12</jacoco.version>
+
+        <!-- SonarQube Cloud -->
+        <sonar.organization>orasaka</sonar.organization>
+        <sonar.projectKey>orasaka_orasaka</sonar.projectKey>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.java.source>21</sonar.java.source>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+
+        <!-- 🔑 Token injected from SONAR_TOKEN env var — never hardcoded -->
+        <sonar.token>${env.SONAR_TOKEN}</sonar.token>
+
+        <!-- 🌿 Branch detection: auto-resolved from git or overridden via -Dsonar.branch.name -->
+        <sonar.branch.name></sonar.branch.name>
+
+        <!-- 🚫 Exclusions: scratch files, test fixtures, generated code -->
+        <sonar.exclusions>
+            scratch/**/*,
+            **/node_modules/**/*,
+            **/dist/**/*,
+            **/.next/**/*,
+            **/target/**/*
+        </sonar.exclusions>
+
+        <!-- 📊 Coverage exclusions: boilerplate not requiring test coverage -->
+        <sonar.coverage.exclusions>
+            **/infrastructure/persistence/entity/**,
+            **/infrastructure/persistence/converter/**,
+            **/infrastructure/config/**,
+            **/domain/model/**,
+            **/Application.java,
+            **/Mapper.java,
+            **/*Mapper.java
+        </sonar.coverage.exclusions>
     </properties>
 
     <modules>
+        <module>orasaka-persistence</module>
         <module>orasaka-core</module>
+        <module>orasaka-interceptors</module>
         <module>orasaka-identity</module>
         <module>orasaka-gateway</module>
         <module>orasaka-tools</module>
-        <module>orasaka-persistence</module>
+        <module>orasaka-workers</module>
+        <!-- EXCLUDE orasaka-workers/video per mandate (Python project) -->
     </modules>
 
     <dependencyManagement>
@@ -69,7 +105,27 @@
             </dependency>
             <dependency>
                 <groupId>com.orasaka</groupId>
-                <artifactId>orasaka-persistence</artifactId>
+                <artifactId>orasaka-persistence-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-persistence-identity</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-interceptor-translation</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-interceptor-validation</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.orasaka</groupId>
+                <artifactId>orasaka-interceptor-reformulation</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- Architectural Testing -->
@@ -109,6 +165,11 @@
                     <artifactId>jacoco-maven-plugin</artifactId>
                     <version>${jacoco.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>4.0.0.4121</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -123,33 +184,7 @@
                     </compilerArgs>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.6.3</version>
-                <configuration>
-                    <!-- Java 21: recognises records, sealed types, virtual threads -->
-                    <source>21</source>
-                    <!-- Suppress pedantic Javadoc formatting errors -->
-                    <doclint>none</doclint>
-                    <!--
-                        The plugin appends /apidocs to this value automatically.
-                        Result: ${project.basedir}/docs/apidocs/index.html
-                    -->
-                    <reportOutputDirectory>${project.basedir}/docs</reportOutputDirectory>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>aggregate-javadoc</id>
-                        <inherited>false</inherited>
-                        <!-- Keeps docs in sync with every package lifecycle run -->
-                        <phase>package</phase>
-                        <goals>
-                            <goal>aggregate</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
@@ -162,6 +197,27 @@
                         </googleJavaFormat>
                     </java>
                 </configuration>
+            </plugin>
+
+            <!-- JaCoCo — instruments tests and generates XML coverage reports for SonarCloud -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

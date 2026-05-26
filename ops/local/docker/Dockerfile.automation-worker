@@ -1,0 +1,29 @@
+FROM eclipse-temurin:21-jre-alpine AS runtime
+
+LABEL maintainer="orasaka" \
+      description="Automation Worker — Quartz + AMQP task engine (centralized build)"
+
+# Install ffmpeg for local audio extraction
+RUN apk add --no-cache ffmpeg
+
+WORKDIR /app
+
+# 🛡️ Create non-root user for runtime security (Sonar S6471)
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# The JAR is copied from the monorepo build output via docker-compose context
+ARG JAR_FILE=orasaka-automation-worker/target/orasaka-automation-worker-*.jar
+COPY ${JAR_FILE} app.jar
+
+RUN chown appuser:appgroup app.jar
+
+ENV JAVA_OPTS="-XX:+UseZGC -XX:+ZGenerational -Xmx512m"
+ENV SPRING_PROFILES_ACTIVE=docker
+
+# Switch to non-root user
+USER appuser
+
+# Internal mesh only — no inbound ports
+EXPOSE 0
+
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar app.jar"]

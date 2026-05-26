@@ -9,7 +9,8 @@
     "lint": "eslint",
     "format": "prettier --write \"src/**/*.{ts,tsx,json,md}\"",
     "validate": "npx depcruise src --config .dependency-cruiser.cjs",
-    "test": "jest"
+    "test": "jest",
+    "sonar": "npx -y sonar-scanner -Dsonar.token=$SONAR_TOKEN -Dsonar.branch.name=$(git rev-parse --abbrev-ref HEAD)"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.100.11",

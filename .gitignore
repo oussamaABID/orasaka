@@ -30,7 +30,6 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-
 # Next.js build artifacts
 **/.next/
 **/out/
@@ -46,6 +45,22 @@
 **/*debug.log*
 **/*error.log*
 yarn-error.log*
+
+# Test
+**/coverage/
+**/test-results/
+
+# --------------------------------------------------------------------
+# 🐍 PYTHON (Orasaka Core - Services, MCP)
+# --------------------------------------------------------------------
+
+**/__pycache__/
+**/mcp_debug/**
+**/*.log
+**/*.egg-info/
+**/.scannerwork/
+.venv/
+.pytest_cache/
 
 # --------------------------------------------------------------------
 # 🖥️ IDE & TOOLS (IntelliJ, VS Code, Cursor)
@@ -108,4 +123,14 @@ ehthumbs.db
 # AI IDE & TOOLS
 # --------------------------------------------------------------------
 .agent/
+.awesome-skills/
 .gemini/
+*.sh
+.idea
+.sonarlint
+
+# Volatile & Operational Storage
+
+var/
+**/.swc/
+scratch/

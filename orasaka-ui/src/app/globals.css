@@ -1,0 +1,713 @@
+/* Inter & JetBrains Mono loaded via next/font/google in layout.tsx — no external @import needed */
+
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+@custom-variant custom (&:is(.custom *));
+@custom-variant cyberpunk (&:is(.cyberpunk *));
+@custom-variant solarized (&:is(.solarized *));
+
+/* ═══════════════════════════════════════════════════
+   DESIGN TOKENS — Calm Obsidian 2028
+   Surface-hierarchy system with 4 depth levels.
+   Fluid type scale, elevation shadows, radius, and
+   spacing tokens. ALL downstream utilities MUST
+   reference these vars.
+   Theme switching (dark/custom/cyberpunk/solarized)
+   is 100% preserved via class selectors.
+   ═══════════════════════════════════════════════════ */
+
+:root {
+  /* Surfaces — light mode */
+  --surface-0: #f8fafc;
+  --surface-1: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-3: #e2e8f0;
+
+  /* Borders */
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.10);
+  --border-strong: rgba(0, 0, 0, 0.16);
+
+  /* Text */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+
+  /* Accent — amber */
+  --accent: #f59e0b;
+  --accent-hover: #d97706;
+  --accent-soft: rgba(245, 158, 11, 0.10);
+  --accent-glow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+
+  /* ── Fluid Type Scale (clamp for responsive) ────── */
+  --text-xs: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);
+  --text-sm: clamp(0.8125rem, 0.77rem + 0.18vw, 0.875rem);
+  --text-base: clamp(0.875rem, 0.83rem + 0.2vw, 1rem);
+  --text-lg: clamp(1.125rem, 1.05rem + 0.3vw, 1.25rem);
+  --text-xl: clamp(1.5rem, 1.3rem + 0.8vw, 2rem);
+  --text-2xl: clamp(1.75rem, 1.5rem + 1vw, 2.5rem);
+  --text-display: clamp(2rem, 1.6rem + 1.6vw, 3rem);
+
+  /* ── Elevation Shadows ─────────────────────────── */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.10), 0 4px 8px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 0 1px var(--accent-soft), 0 8px 20px var(--accent-soft);
+
+  /* ── Border Radius Tokens ──────────────────────── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* ── Spacing Tokens ────────────────────────────── */
+  --space-card: clamp(1rem, 0.8rem + 0.8vw, 1.5rem);
+  --space-section: clamp(1.5rem, 1.2rem + 1.2vw, 2.5rem);
+
+  /* Status */
+  --status-success: #10b981;
+  --status-error: #ef4444;
+  --status-warning: #f59e0b;
+
+  /* Legacy compat aliases (consumed by remaining inline Tailwind) */
+  --background: var(--surface-0);
+  --foreground: var(--text-primary);
+  --card-bg: var(--surface-1);
+  --card-border: var(--border-subtle);
+  --card-text: var(--text-primary);
+  --input-bg: var(--surface-2);
+  --input-border: var(--border-default);
+  --input-text: var(--text-primary);
+  --glow-color: var(--accent);
+  --glow-accent: var(--accent-soft);
+  --grid-color: rgba(0, 0, 0, 0.03);
+}
+
+.dark {
+  --surface-0: #09090b;
+  --surface-1: #111114;
+  --surface-2: #1a1a1f;
+  --surface-3: #222228;
+
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted: #52525b;
+
+  --accent: #f59e0b;
+  --accent-hover: #fbbf24;
+  --accent-soft: rgba(245, 158, 11, 0.10);
+  --accent-glow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+
+  --grid-color: rgba(255, 255, 255, 0.02);
+}
+
+.custom {
+  --surface-0: #040108;
+  --surface-1: #0c0818;
+  --surface-2: #140f20;
+  --surface-3: #1c1630;
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-default: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.18);
+
+  --text-primary: #f3f4f6;
+  --text-secondary: #a78bfa;
+  --text-muted: #6b6b80;
+
+  --accent: #a855f7;
+  --accent-hover: #c084fc;
+  --accent-soft: rgba(168, 85, 247, 0.12);
+  --accent-glow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+
+  --grid-color: rgba(255, 255, 255, 0.02);
+}
+
+.cyberpunk {
+  --surface-0: #05010a;
+  --surface-1: #120522;
+  --surface-2: #1a0a30;
+  --surface-3: #220e3e;
+
+  --border-subtle: rgba(0, 255, 204, 0.12);
+  --border-default: rgba(240, 0, 255, 0.25);
+  --border-strong: rgba(0, 255, 204, 0.35);
+
+  --text-primary: #00ffcc;
+  --text-secondary: #80ffe6;
+  --text-muted: #3d7a6b;
+
+  --accent: #f000ff;
+  --accent-hover: #ff4dff;
+  --accent-soft: rgba(240, 0, 255, 0.12);
+  --accent-glow: 0 0 0 3px rgba(240, 0, 255, 0.20);
+
+  --grid-color: rgba(0, 255, 204, 0.03);
+}
+
+.solarized {
+  --surface-0: #fdf6e3;
+  --surface-1: #eee8d5;
+  --surface-2: #e6dfcc;
+  --surface-3: #ddd6c3;
+
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(147, 161, 161, 0.35);
+  --border-strong: rgba(147, 161, 161, 0.50);
+
+  --text-primary: #586e75;
+  --text-secondary: #657b83;
+  --text-muted: #93a1a1;
+
+  --accent: #268bd2;
+  --accent-hover: #2aa198;
+  --accent-soft: rgba(38, 139, 210, 0.10);
+  --accent-glow: 0 0 0 3px rgba(38, 139, 210, 0.15);
+
+  --grid-color: rgba(0, 0, 0, 0.03);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-card-text: var(--card-text);
+  --color-input-bg: var(--input-bg);
+  --color-input-border: var(--input-border);
+  --color-input-text: var(--input-text);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-outfit);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not(.solarized) {
+    --surface-0: #09090b;
+    --surface-1: #111114;
+    --surface-2: #1a1a1f;
+    --surface-3: #222228;
+    --background: #09090b;
+    --foreground: #fafafa;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   BASE — Typography & Body (Inter + Outfit — 2028)
+   ═══════════════════════════════════════════════════ */
+
+body {
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--font-inter, 'Inter'), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: var(--text-base);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  letter-spacing: -0.018em;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Display headings use Outfit for visual hierarchy */
+h1, h2, .text-display {
+  font-family: var(--font-outfit, 'Outfit'), var(--font-inter, 'Inter'), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+code, pre, .font-mono {
+  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace !important;
+}
+
+/* ═══════════════════════════════════════════════════
+   SCROLLBARS — Ultra-thin, themed (4px)
+   ═══════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* ═══════════════════════════════════════════════════
+   KEYFRAMES — 2028 Motion System (purposeful only)
+   ═══════════════════════════════════════════════════ */
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(6px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(4px); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-8px) scale(0.95); }
+}
+
+@keyframes gradient-mesh {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes counter-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes breathing-glow {
+  0%, 100% { box-shadow: 0 0 0 0 transparent, 0 0 8px rgba(var(--glow-rgb, 245, 158, 11), 0.0); }
+  50%      { box-shadow: 0 0 0 1px rgba(var(--glow-rgb, 245, 158, 11), 0.08), 0 0 16px rgba(var(--glow-rgb, 245, 158, 11), 0.06); }
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(0.95); opacity: 0.6; }
+  50%  { transform: scale(1.0);  opacity: 0.3; }
+  100% { transform: scale(0.95); opacity: 0.6; }
+}
+
+/* ═══════════════════════════════════════════════════
+   SURFACE CARDS — Jarvis 2026 Glassmorphic Depth
+   Deep obsidian translucent containers with
+   backdrop-filter blur + saturate. Razor-thin
+   gradient edge borders (0.5px visual via pseudo).
+   ═══════════════════════════════════════════════════ */
+
+.glass-panel {
+  background: color-mix(in srgb, var(--surface-1) 82%, transparent);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-color: var(--border-subtle);
+}
+
+.glass-card {
+  position: relative;
+  background: color-mix(in srgb, var(--surface-1) 80%, transparent) !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--border-subtle) !important;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  transition: border-color 200ms ease, box-shadow 300ms ease;
+}
+
+.glass-card:hover {
+  border-color: var(--border-default) !important;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* Razor-thin gradient edge — 0.5px visual via pseudo-element */
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 0.5px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    transparent 40%,
+    transparent 60%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+}
+
+/* Active card — breathing glow for SIM-DAG telemetry */
+.glass-card-active {
+  animation: breathing-glow 3s ease-in-out infinite;
+  will-change: box-shadow;
+}
+
+/* ═══════════════════════════════════════════════════
+   UTILITY CLASSES — Command HUD Micro-interactions
+   ═══════════════════════════════════════════════════ */
+
+.premium-transition {
+  transition: all 200ms ease;
+}
+
+.hover-lift {
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
+}
+
+/* Ambient grid background */
+.ambient-grid {
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Command HUD typography — ultra-sharp tracking */
+.hud-title {
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+
+.hud-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.hud-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+/* Stagger children animations — restrained */
+.stagger-children > * {
+  animation: fade-up 300ms ease both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 350ms; }
+
+/* ═══════════════════════════════════════════════════
+   COMPONENT — Theme Card (rotating gradient border)
+   ═══════════════════════════════════════════════════ */
+
+@keyframes gradient-rotate {
+  from { --gradient-angle: 0deg; }
+  to   { --gradient-angle: 360deg; }
+}
+
+@keyframes select-pulse {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.97); }
+  70%  { transform: scale(1.01); }
+  100% { transform: scale(1); }
+}
+
+@keyframes check-pop {
+  0%   { transform: scale(0) rotate(-45deg); opacity: 0; }
+  60%  { transform: scale(1.2) rotate(0deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes status-slide {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@property --gradient-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.theme-card-active::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--gradient-angle, 0deg),
+    var(--accent),
+    transparent 30%,
+    transparent 70%,
+    var(--accent)
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+  animation: gradient-rotate 3s linear infinite;
+}
+
+.theme-card-pulse {
+  animation: select-pulse 300ms ease-out;
+}
+
+.theme-check-pop {
+  animation: check-pop 350ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.theme-status-slide {
+  animation: status-slide 250ms ease-out both;
+}
+
+/* ═══════════════════════════════════════════════════
+   COMPONENT — Input focus accent ring
+   ═══════════════════════════════════════════════════ */
+
+input:focus, textarea:focus {
+  box-shadow: var(--accent-glow) !important;
+  border-color: var(--accent) !important;
+  outline: none;
+}
+
+/* ═══════════════════════════════════════════════════
+   COMPONENT — Status dot (active/processing)
+   ═══════════════════════════════════════════════════ */
+
+.status-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: currentColor;
+}
+.status-dot::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0.3;
+  animation: fade-in 1s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════
+   PAGE — Login split layout
+   ═══════════════════════════════════════════════════ */
+
+.login-split {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.login-hero {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  width: 50%;
+  padding: 3rem 3.5rem;
+  background: var(--surface-1);
+  border-right: 1px solid var(--border-subtle);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle dot grid pattern on hero panel */
+.login-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, var(--border-subtle) 1px, transparent 1px);
+  background-size: 20px 20px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.login-hero-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.login-hero-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.login-hero-headline {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+
+.login-hero-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  list-style: none;
+  padding: 0;
+}
+
+.login-hero-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.login-hero-feature-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #000;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.login-form-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  background: var(--surface-0);
+}
+
+@media (min-width: 768px) {
+  .login-hero {
+    display: flex;
+  }
+  .login-form-panel {
+    width: 50%;
+    flex: none;
+  }
+}
+
+@media (min-width: 1280px) {
+  .login-hero {
+    width: 55%;
+    padding: 4rem 5rem;
+  }
+  .login-form-panel {
+    width: 45%;
+  }
+  .login-hero-headline {
+    font-size: var(--text-display);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   COMPONENTS — Skeleton, Toast, Spinner (2028)
+   ═══════════════════════════════════════════════════ */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--surface-3) 37%,
+    var(--surface-2) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-text {
+  height: 0.875rem;
+  border-radius: 4px;
+}
+
+.skeleton-circle {
+  border-radius: var(--radius-full);
+}
+
+.toast-enter {
+  animation: toast-in 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast-exit {
+  animation: toast-out 200ms ease-in forwards;
+}
+
+.animate-shake {
+  animation: shake 400ms ease-in-out;
+}
+
+.animate-spin-slow {
+  animation: spin 800ms linear infinite;
+}
+
+/* Gradient mesh for login hero background */
+.gradient-mesh {
+  background: linear-gradient(
+    -45deg,
+    var(--surface-1),
+    color-mix(in srgb, var(--accent-soft) 40%, var(--surface-1)),
+    var(--surface-1),
+    color-mix(in srgb, var(--accent-soft) 30%, var(--surface-1))
+  );
+  background-size: 400% 400%;
+  animation: gradient-mesh 12s ease infinite;
+}
+
+/* Fluid text utility classes */
+.fluid-xs { font-size: var(--text-xs); }
+.fluid-sm { font-size: var(--text-sm); }
+.fluid-base { font-size: var(--text-base); }
+.fluid-lg { font-size: var(--text-lg); }
+.fluid-xl { font-size: var(--text-xl); }
+.fluid-2xl { font-size: var(--text-2xl); }
+.fluid-display { font-size: var(--text-display); }
+

@@ -1,0 +1,171 @@
+package com.orasaka.core.application.service;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.orasaka.core.domain.event.JobStatusChangedEvent;
+import com.orasaka.core.domain.model.job.JobInfo;
+import com.orasaka.core.domain.model.job.JobStatus;
+import com.orasaka.persistence.domain.model.JobDto;
+import com.orasaka.persistence.domain.ports.inbound.JobPersistenceProvider;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+class JobServiceImplTest {
+
+  private JobPersistenceProvider persistenceProvider;
+  private ApplicationEventPublisher eventPublisher;
+  private JobServiceImpl jobService;
+
+  @BeforeEach
+  void setUp() {
+    persistenceProvider = mock(JobPersistenceProvider.class);
+    eventPublisher = mock(ApplicationEventPublisher.class);
+    jobService = new JobServiceImpl(persistenceProvider, eventPublisher);
+  }
+
+  @Test
+  @DisplayName("constructor rejects null dependencies")
+  void constructorValidation() {
+    assertThrows(NullPointerException.class, () -> new JobServiceImpl(null, eventPublisher));
+    assertThrows(NullPointerException.class, () -> new JobServiceImpl(persistenceProvider, null));
+  }
+
+  @Test
+  @DisplayName("create job forwards calls and publishes event")
+  void createJob() {
+    String jobId = "job-123";
+    String userId = "user-456";
+    String featureKey = "feat";
+    Map<String, Object> payload = Map.of("key", "val");
+
+    when(persistenceProvider.createJob(userId, featureKey, payload)).thenReturn(jobId);
+    Instant now = Instant.now();
+    JobDto dto =
+        new JobDto(jobId, userId, featureKey, "PENDING", payload, Map.of(), null, now, now);
+    when(persistenceProvider.getJob(jobId)).thenReturn(Optional.of(dto));
+
+    String returnedId = jobService.createJob(userId, featureKey, payload);
+
+    assertEquals(jobId, returnedId);
+    verify(persistenceProvider).createJob(userId, featureKey, payload);
+
+    ArgumentCaptor<JobStatusChangedEvent> eventCaptor =
+        ArgumentCaptor.forClass(JobStatusChangedEvent.class);
+    verify(eventPublisher).publishEvent(eventCaptor.capture());
+    assertEquals(jobId, eventCaptor.getValue().job().id());
+  }
+
+  @Test
+  @DisplayName("create job with custom ID forwards calls and publishes event")
+  void createJobWithId() {
+    String jobId = "job-123";
+    String userId = "user-456";
+    String featureKey = "feat";
+    Map<String, Object> payload = Map.of("key", "val");
+
+    when(persistenceProvider.createJob(jobId, userId, featureKey, payload)).thenReturn(jobId);
+    Instant now = Instant.now();
+    JobDto dto =
+        new JobDto(jobId, userId, featureKey, "PENDING", payload, Map.of(), null, now, now);
+    when(persistenceProvider.getJob(jobId)).thenReturn(Optional.of(dto));
+
+    String returnedId = jobService.createJob(jobId, userId, featureKey, payload);
+
+    assertEquals(jobId, returnedId);
+    verify(persistenceProvider).createJob(jobId, userId, featureKey, payload);
+  }
+
+  @Test
+  @DisplayName("update job status forwards calls and publishes event")
+  void updateJobStatus() {
+    String jobId = "job-123";
+    JobStatus status = JobStatus.COMPLETED;
+    Map<String, Object> result = Map.of("done", true);
+    String error = null;
+
+    Instant now = Instant.now();
+    JobDto dto =
+        new JobDto(jobId, "user-1", "feat", status.name(), Map.of(), result, error, now, now);
+    when(persistenceProvider.getJob(jobId)).thenReturn(Optional.of(dto));
+
+    jobService.updateJobStatus(jobId, status, result, error);
+
+    verify(persistenceProvider).updateJobStatus(jobId, status.name(), result, error);
+    verify(eventPublisher).publishEvent(any(JobStatusChangedEvent.class));
+  }
+
+  @Test
+  @DisplayName("get job returns mapped result")
+  void getJob() {
+    String jobId = "job-123";
+    when(persistenceProvider.getJob(jobId)).thenReturn(Optional.empty());
+    assertTrue(jobService.getJob(jobId).isEmpty());
+
+    Instant now = Instant.now();
+    JobDto dto = new JobDto(jobId, "user-1", "feat", "PENDING", Map.of(), Map.of(), null, now, now);
+    when(persistenceProvider.getJob(jobId)).thenReturn(Optional.of(dto));
+
+    Optional<JobInfo> res = jobService.getJob(jobId);
+    assertTrue(res.isPresent());
+    assertEquals(jobId, res.get().id());
+  }
+
+  @Test
+  @DisplayName("get jobs by user ID returns mapped page")
+  void getJobsByUserId() {
+    String userId = "user-1";
+    Pageable pageable = PageRequest.of(0, 10);
+    Instant now = Instant.now();
+    JobDto dto = new JobDto("job-1", userId, "feat", "PENDING", Map.of(), Map.of(), null, now, now);
+    Page<JobDto> page = new PageImpl<>(List.of(dto), pageable, 1);
+    when(persistenceProvider.getJobsByUserId(userId, pageable)).thenReturn(page);
+
+    Page<JobInfo> result = jobService.getJobsByUserId(userId, pageable);
+    assertNotNull(result);
+    assertEquals(1, result.getTotalElements());
+    assertEquals("job-1", result.getContent().get(0).id());
+  }
+
+  @Test
+  @DisplayName("get all jobs returns mapped page")
+  void getAllJobs() {
+    Pageable pageable = PageRequest.of(0, 10);
+    Instant now = Instant.now();
+    JobDto dto =
+        new JobDto("job-1", "user-1", "feat", "PENDING", Map.of(), Map.of(), null, now, now);
+    Page<JobDto> page = new PageImpl<>(List.of(dto), pageable, 1);
+    when(persistenceProvider.getAllJobs(pageable)).thenReturn(page);
+
+    Page<JobInfo> result = jobService.getAllJobs(pageable);
+    assertNotNull(result);
+    assertEquals(1, result.getTotalElements());
+    assertEquals("job-1", result.getContent().get(0).id());
+  }
+
+  @Test
+  @DisplayName("purge jobs forwards to provider")
+  void purgeJobs() {
+    String userId = "user-1";
+    jobService.purgeJobsByUserId(userId);
+    verify(persistenceProvider, times(1)).purgeJobsByUserId(userId);
+  }
+}

@@ -36,6 +36,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+        </dependency>
         <!-- Internal Dependencies -->
         <dependency>
             <groupId>com.orasaka</groupId>
@@ -51,7 +55,20 @@
         </dependency>
         <dependency>
             <groupId>com.orasaka</groupId>
-            <artifactId>orasaka-persistence</artifactId>
+            <artifactId>orasaka-persistence-app</artifactId>
+        </dependency>
+
+
+        <!-- Spring AI Starters for Autoconfiguration -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-ollama</artifactId>
+            <version>${spring-ai.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
+            <version>${spring-ai.version}</version>
         </dependency>
 
         <!-- RabbitMQ AMQP -->

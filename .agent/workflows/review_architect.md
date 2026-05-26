@@ -2,91 +2,184 @@
 description: ARCHITECTURAL STATIC GATE & REJECTION CRITERIA
 ---
 
-# ORASAKA WORKFLOW: ARCHITECTURAL STATIC GATE & REJECTION CRITERIA
+# WORKFLOW: ARCHITECTURAL REVIEW GATE
 
-> ### 🔌 0. MCP ENGINE BOOTSTRAPPER & CONTEXT INITIALIZATION
-> * **Mandatory Boot Sequence**: Before executing any generation cycle, code modification, or file review, you MUST invoke your filesystem MCP tools to read and index all configuration sheets inside the `.agent/rules/` workspace directory, specifically:
->   - `.agent/rules/naming_conventions.md`
->   - `.agent/rules/security_standards.md`
-> * **Constraint**: Your internal generation tokens and constraints must remain 100% synchronized with these localized configuration states. Hallucinating or bypassing rule checking will trigger an immediate generation freeze.
+## §0 — Context Initialization
 
-## ⛔ Rejection Gates
+Before executing any review:
+1. Load `.agent/rules/naming_conventions.md`
+2. Load `.agent/rules/security_standards.md`
+3. Load `.agent/rules/performance_standards.md`
+4. Load `.agent/rules/ui_standards.md`
 
-Immediately halt execution and reject any generation cycle if the following patterns are detected:
+## §1 — Rejection Gates
 
-1. **Inline Serialization Pollution**: Multi-line try-catch blocks handling Jackson mapping (`ObjectMapper`) inside standard service paths. *Remediation*: Extract into private mapping utilities or custom helper classes.
-2. **Simulated Token Streaming**: Simulating streaming tokens via raw string splitting (`.split(" ")`) or arbitrary `Thread.sleep` calls. *Remediation*: Enforce native reactive non-blocking `Flux<OrasakaChatResponse>`.
-3. **FQCN Inline Exposure**: Utilizing Fully Qualified Class Names inside method blocks (e.g., `java.util.Set<String>`). *Remediation*: Declare explicit imports at the top of the file.
-4. **Mutation Query Duplication**: Resolving a database write or mutation followed by a separate query/read lookup of the same record within the controller/facade layer. *Remediation*: Ensure the write/mutation method returns the updated domain record directly.
-5. **Procedural Invariant Checks & Anemic Records [ERR-042]**: Intercept any new or modified Application Service (`*Service.java`) performing defensive null-checks or assigning default domain values (e.g., `lang = language != null ? language : "en"`), or any anemic domain records missing validation or defensive copies. *Remediation*: Force the migration of validation and fallback logic directly into the Domain Record's compact constructor. The Service layer must remain a pure orchestration engine.
-6. **Read-Before-Write Concurrency Vulnerability [ERR-043]**: Intercept any persistence or registration services performing a read check (e.g. `count*`, `exists*`, `find*`) solely to validate an upcoming write operation within the same thread context. *Remediation*: Offload unique constraints to database constraints handled via Spring's `DataIntegrityViolationException` catching. Hashing and heavy CPU tasks must be computed outside `@Transactional` contexts.
-7. **Cognitive Core Infrastructure Coupling [ERR-100]**: Intercept any modifications or new declarations in the cognitive core engines (`AbstractOrasakaEngine.java` and `OrasakaEngine.java`) that introduce direct field bindings or constructor parameters referencing specialized infrastructure services (e.g., `OrasakaToolRegistry`, `McpOrchestrator`, `OrasakaKnowledgeService`, `OrasakaMemoryResolver`). *Remediation*: Force dynamic context enrichment through the generic interceptor pipeline (`List<OrasakaContextInterceptor>`).
-8. **Enterprise Data Fetch & Persistence Purity [ERR-200]**: Intercept any business services or cognitive orchestration layers performing manual JSON parsing/serialization or unoptimized sequential repository lookups (causing N+1 queries). *Remediation*: Serialization must be offloaded to native JPA Attribute Converters, and multi-table reads combined via optimized JPQL fetch joins.
-9. **Universal Record Invariant Validation Enforcement [ERR-103]**: Intercept any application services (`*Service.java`), clients (`*Client.java`), or engines (`*Engine.java`) performing manual, procedural validation logic or fallback defaults assignment (e.g. mapping null values, empty check guards, setting language codes, or using ternary expressions to initialize collections). All state constraints, collection safety copies, and field invariants MUST reside within the compact constructor of the corresponding Domain Record (e.g. `User.java`, `OrasakaChatRequest.java`). *Remediation*: Move validation logic and safety defaults to the compact constructor of the target Java Record, rejecting invalid state with `IllegalArgumentException` or `NullPointerException`.
-10. **Eradication of Procedural Imperative Noise [ERR-104]**: Universal ban on local variable null mutations, intermediate procedural states, conditional ternary nesting for file type sniffing, and empty catch blocks. All boilerplate Javadoc, obvious `/** get */` method comments, or self-evident inline comments are forbidden and must be purged. Applies to both backend Java modules and the `orasaka-cli` TypeScript module.
-11. **UI Logic Leaking & Operation Graph Bypass [ERR-106]**: The UI and CLI layers must remain anemic interpreters. Hardcoding feature toggles or mapping raw configuration blocks for element visibility is strictly banned. The "+" input menu tree and CLI options must map dynamically to the `TargetExecutionUri` contracts resolved from the `OrasakaOperationGraph` node states. Hardcoding CLI feature command switches locally is strictly prohibited.
-12. **Pattern Matching For Sealed Graph States [ERR-107]**: Any internal controller, service, or mapper interrogating a node's capabilities must utilize Java 21 switch expressions with pattern matching over the NodeState sealed hierarchy. Legacy instanceof blocks or type-casting checks will REJECT THE BUILD.
-13. **Pseudo-Record Accessor Check [ERR-109]**: Any standard `public class` data component mimicking record naming patterns without standard JavaBean prefixes (`get`, `is`, `has`) for its properties will automatically REJECT THE BUILD. Context maps and data transfer blocks must be true Java 21 `record` types.
-14. **Architectural Encapsulation Leakage Protection [ERR-110]**: Component implementation sub-steps (Interceptors, Filters, internal Converters) must remain package-private. Only facades or unified orchestrators are allowed to be public.
-15. **Strong Polymorphic Invariance (Back & Front) [ERR-111]**: Force the use of compile-time exhaustive pattern matching over sealed hierarchies in Java 21 and strict discriminated unions (`kind: 'text' | 'image' | 'audio'`) in TypeScript (e.g., inside the CLI console timeline render). Manual type-sniffing via regex or inline string testing in the UI is strictly banned. All boilerplate Javadoc, obvious `/** get */` method comments, or self-evident inline comments are forbidden and must be purged.
-16. **High-Density Structural Locality & Ingress Segregation [ERR-112]**: Orasaka Ingress layers MUST strictly segregate protocol handlers into specialized, isolated sub-packages under the adapter layer: 'adapter.rest' for REST/SSE endpoints, 'adapter.graphql' for GraphQL schemas, and 'adapter.amqp' for asynchronous workers. Mixing different communication protocols in a flat package is now classified as a severe architectural violation.
-17. **Absolute Prohibition of Direct Environment Sniffing in Functional Beans [ERR-113]**: Injecting `org.springframework.core.env.Environment` into functional components, filters, services, interceptors, or controllers to call `.getProperty()` or `.acceptsProfiles()` inside code bodies is strictly FORBIDDEN. All functional components must remain completely oblivious to raw environment variables and Spring profile names. Configuration mapping must be managed exclusively at the configuration bootstrap layer using immutable, type-safe Record structures populated via Spring's programmatic Binder matrix. Components must receive clean, pre-resolved configuration properties through explicit constructor dependency injection.
-18. **Inline Mapping Boilerplate Pollution [ERR-114]**: Intercept any controller (`*Controller.java`), service (`*Service.java`, `*ServiceImpl.java`), or engine (`*Engine.java`) containing repetitive field-by-field entity construction (setter chains with 5+ lines), manual domain-to-DTO constructor calls with 5+ arguments, or duplicated mapping blocks across methods. *Remediation*: Force extraction into a dedicated, package-private `final class *Mapper` utility class with `static` methods and a private constructor, co-located in the same package as the consuming service. The call site must reduce to a single, readable mapper invocation (e.g., `UserMapper.toEntity(profile, userId, provider, "free")`). Mappers must never be `public`.
-19. **Immutable Time Invariant [ERR-108]**: Intercept any TypeScript/JavaScript source files in `orasaka-ui` or `orasaka-cli` performing mutable operations on native `Date` objects (e.g. `setDate`, `setHours`). Force date calculations, comparisons, and formatting to utilize functional, immutable utilities from `date-fns`.
-20. **Global i18n Externalization [ERR-115]**: Intercept any TypeScript/JavaScript files in `orasaka-ui` with hardcoded string literals or inline language switches in user-facing content (including validation schemas, custom hooks, `catch` blocks, alerts, and notifications). All user-facing strings must resolve dynamically using the `TranslationDictionary` context keys, and parameterized values must use structured interpolations or functional dictionaries rather than manual string concatenations.
+Immediately halt and reject if any of the following are detected:
+
+### Backend Java Gates
+
+| Gate | Pattern | Remediation |
+|:---|:---|:---|
+| **Inline Serialization** | Multi-line `ObjectMapper` try-catch in services | Extract to mapper utilities or JPA `@Convert` |
+| **Simulated Streaming** | `String.split(" ")` + `Thread.sleep` | Use native `Flux<ChatResponse>` |
+| **FQCN Inline** | `java.util.Set<String>` in method bodies | Use imports |
+| **Mutation Query Dup** | Write then separate read of same record | Return domain record from write method |
+| **Anemic Records [ERR-042]** | Null-checks or defaults in services | Move to record compact constructor |
+| **Read-Before-Write [ERR-043]** | `exists*`/`find*` before `save` | Use DB constraints + `DataIntegrityViolationException` |
+| **Engine Coupling [ERR-100]** | Engine importing `ToolRegistry`, `McpOrchestrator` | Use interceptor pipeline |
+| **N+1 Queries [ERR-200]** | Sequential repo calls in loops | Use `LEFT JOIN FETCH` |
+| **Procedural Validation [ERR-103]** | Manual null-checks in services/engines | Move to record constructors |
+| **Imperative Noise [ERR-104]** | Nested ternaries, empty catches, obvious comments | Clean up |
+| **UI Graph Bypass [ERR-106]** | Hardcoded feature toggles in UI/CLI | Map from `OperationGraph` |
+| **Sealed Pattern [ERR-107]** | `instanceof` for `NodeState` | Use switch expression |
+| **Pseudo-Records [ERR-109]** | Public class with record-like accessors but no `get*` | Use Java `record` |
+| **Encapsulation Leak [ERR-110]** | Public interceptors/filters/converters | Make package-private |
+| **Polymorphic Sniffing [ERR-111]** | String regex type detection | Use sealed/discriminated unions |
+| **Protocol Mixing [ERR-112]** | REST + GraphQL in flat package | Isolate in sub-packages |
+| **Env Sniffing [ERR-113]** | `Environment.getProperty()` in beans | Use typed `@ConfigurationProperties` |
+| **Inline Mapping [ERR-114]** | 5+ line setter chains in controllers/services | Extract to `*Mapper` |
+| **Prefix Violation [ERR-104]** | `OrasakaEngine`, `OrasakaSidebar` | Remove prefix |
+| **Caller-Side Validation [ERR-116]** | `if (request.context() != null)` or `Objects.requireNonNull(dto.field())` in a service | The owning record validates its own fields in its compact constructor. Callers trust the invariant. Favor `record` over `class`. |
+
+### Frontend TypeScript Gates
+
+| Gate | Pattern | Remediation |
+|:---|:---|:---|
+| **Hardcoded Strings [ERR-115]** | Literal text in JSX/catch/validation | Use `TranslationDictionary` |
+| **Date Mutation [ERR-108]** | `setDate()`, `setHours()` on `Date` | Use `date-fns` |
+| **File Size** | `.tsx` > 250 lines | Split into sub-components |
+| **Inline Loops** | Non-trivial `.map()` JSX | Extract to named component |
+
+### Python Gates
+
+| Gate | Pattern | Remediation |
+|:---|:---|:---|
+| **No Type Hints** | Missing function signatures or return types | Add PEP 484 type hints |
+| **Bare Except** | `except:` without specific exception type | Catch specific exceptions or log explicitly |
+| **Hardcoded Secrets** | API keys or tokens in source code | Use env vars (`os.getenv`) |
+| **Print in Production** | `print()` statements used for logging | Replace with standard `logging` module |
+| **Mutable Defaults** | Banned mutable default arguments `def f(x=[])` | Use `x=None` and initialize inside |
+| **Dead Code / Unused Imports** | Unused import statements or variables | Purge unused code |
+| **Path Slicing** | Raw string concatenation for directory paths | Use `pathlib.Path` |
+| **Dynamic Pip** | Runtime calling of `pip` or package installers | Pre-declare packages in `requirements.txt` |
+| **Resource Leak** | Opening files/sockets without `with` context manager | Use context managers for proper resource cleanup |
+| **Bad Exit Code** | Python scripts exiting without explicit exit codes | Use `sys.exit(code)` explicitly |
 
 
-## ✍️ Documentation Gate
+### Terraform Gates
 
-* **Java 21 Javadoc Rule**: Missing Javadoc annotations on public interfaces, methods, or record structures will automatically fail compilation cycles.
-* **Front-End TSDoc Rule**: All shared TypeScript components, hooks, and helpers under `orasaka-ui` must be fully documented using valid TSDoc annotations.
+| Gate | Pattern | Remediation |
+|:---|:---|:---|
+| **Hardcoded Values** | Inline strings in resources | Use `var.*` references |
+| **Missing Description** | Variables without `description` | Add description block |
+| **No Sensitivity** | Secrets not marked `sensitive` | Add `sensitive = true` |
 
-## 🧹 Code Quality & Formatting Gates
+## §2 — Documentation Gate
 
-Enforce strict formatting using official ecosystem tools before task completion.
+- Missing Javadoc on public interfaces/methods → compilation failure.
+- Missing TSDoc on shared React components/hooks → review violation.
+- Obvious `/** get */` or self-evident comments → must be purged.
 
-### 1. Java Backend Quality Gates (Spotless + Google Java Style)
+## §3 — Code Quality Gates
 
-* **Formatting Execution**: Prior to backend task completion, format the code within the specific modified module using Spotless:
+### Java (Spotless + Google Java Style)
+```bash
+mvn spotless:apply -pl <module>
+mvn spotless:check -pl <module>
+```
 
-  ```bash
-  mvn spotless:apply -pl <module-name>
-  ```
+### Frontend (Prettier + ESLint)
+```bash
+cd orasaka-ui && npm run format
+cd orasaka-ui && npm run lint
+```
 
-* **Validation Check**: Verify that no formatting rules are broken:
+### Python (Ruff + Black)
+For Python workers and E2E testing scripts:
+```bash
+# Check formatting and linting rules
+ruff check scratch/ orasaka-workers/
+black --check scratch/ orasaka-workers/
 
-  ```bash
-  mvn spotless:check -pl <module-name>
-  ```
+# Auto-format and auto-fix
+ruff check --fix scratch/ orasaka-workers/
+black scratch/ orasaka-workers/
+```
 
-  If this check fails, formatting must be re-applied and re-verified.
+### SonarQube Quality Gate
 
-### 2. Frontend Quality Gates (Prettier + ESLint)
+#### Running Analysis
+```bash
+# Full backend analysis (requires SONAR_TOKEN env var)
+mvn verify sonar:sonar -Dsonar.token=$SONAR_TOKEN
 
-* **Prettier Code Formatting**: format React, TypeScript, and JSON files inside `orasaka-ui` before committing:
+# Single module analysis
+mvn verify sonar:sonar -pl orasaka-core -am -Dsonar.token=$SONAR_TOKEN
+```
 
-  ```bash
-  cd orasaka-ui && npm run format
-  ```
+#### Automatic Rejection Rules (SonarQube)
 
-* **ESLint Static Analysis**: Ensure ESLint checks pass cleanly:
+| Rule ID | Category | Description | Severity |
+|:---|:---|:---|:---|
+| **S3776** | Code Smell | Cognitive Complexity > 15 | Critical |
+| **S1068** | Code Smell | Unused private fields | Major |
+| **S1144** | Code Smell | Unused private methods | Major |
+| **S3655** | Bug | `Optional.get()` without `isPresent()`/`isEmpty()` | Blocker |
+| **S5778** | Code Smell | Multiple invocations in `assertThrows` lambda | Major |
+| **S1602** | Code Smell | Useless curly braces around lambda | Minor |
+| **S1481** | Code Smell | Unused local variables | Major |
+| **S106** | Code Smell | `System.out`/`System.err` in production code | Major |
+| **S2221** | Code Smell | Broad `catch (Exception e)` in non-adapter code | Major |
+| **S1135** | Info | `TODO`/`FIXME` without tracking issue | Info |
+| **S2629** | Performance | String concatenation in `logger.info()` | Major |
 
-  ```bash
-  cd orasaka-ui && npm run lint
-  ```
+#### Quality Gate Thresholds
 
-  All errors/warnings must be resolved until a clean exit status is achieved.
+| Metric | Threshold | Action |
+|:---|:---|:---|
+| New code coverage | ≥ 80% | Block merge |
+| Duplicated lines on new code | ≤ 3% | Block merge |
+| Reliability rating | A | Block merge |
+| Security rating | A | Block merge |
+| Maintainability rating | A | Block merge |
+| Cognitive Complexity per method | ≤ 15 | Refactor to sub-methods |
 
-## 🔍 Workspace Discovery & Semantic Lookup Constraint
+#### Acceptable Exceptions
 
-* **The Constraint**: Direct iterative file-looping or blind directory-walking across packages for multi-module reviews is now **STRICTLY BANNED**.
-* **The Workflow**: For any broad architectural pass (such as enforcing `[ERR-100]` or `[ERR-200]`), you must first invoke the MCP tool `search_symbols` or `grep_pattern` from the workspace database (`orasaka-code-intel`). Extract only the semantic coordinates of matching files, and open exclusively those specific file buffers.
+`catch (Exception e)` is acceptable **only** in:
+- Adapter-layer MCP client initialization (resilient to external service failures)
+- SSE streaming error handlers (must not crash the event loop)
+- `@Bean` factory methods that provide fallback behavior
 
-## 🚀 Workflow Pipeline Order
+All other broad catches must narrow to specific exception types.
 
-The final verification execution sequence must follow:
+## §4 — Verification Pipeline Order
 
-1. Generate / Refactor target files.
-2. Run ecosystem formatters (`mvn spotless:apply` or `npm run format`).
-3. Run static analysis quality gates (`mvn spotless:check` or `npm run lint`).
-4. Execute project compiling (`mvn clean compile -pl orasaka-gateway -am`).
+1. Generate / refactor target files
+2. Run formatters (`spotless:apply` or `npm run format`)
+3. Run static analysis (`spotless:check` or `npm run lint`)
+4. Compile: `mvn clean compile -pl orasaka-gateway -am`
+5. Test: `mvn test -q` or `npm test`
+6. **SonarCloud Analysis** (publishes reports with branch name):
+   ```bash
+   # Full monorepo (backend + UI + CLI) — loads SONAR_TOKEN from .env
+   ./ops/local/scripts/sonar-publish.sh
+
+   # Individual scopes
+   ./ops/local/scripts/sonar-publish.sh backend   # Java modules only
+   ./ops/local/scripts/sonar-publish.sh ui         # orasaka-ui only
+   ./ops/local/scripts/sonar-publish.sh cli        # orasaka-cli only
+
+   # Or use npm scripts directly (SONAR_TOKEN must be exported)
+   cd orasaka-ui && npm run sonar
+   cd orasaka-cli && npm run sonar
+   ```
+7. Quality Gate: verify all metrics pass on [SonarCloud Dashboard](https://sonarcloud.io/organizations/orasaka/projects)
+
+### SonarCloud Token Configuration
+
+The `SONAR_TOKEN` environment variable is **never hardcoded**:
+- **Local**: Loaded from `.env` at project root (`SONAR_TOKEN=...`)
+- **Maven**: Injected via `${env.SONAR_TOKEN}` in `pom.xml` `<sonar.token>` property
+- **npm**: Passed via `$SONAR_TOKEN` in the `sonar` script
+- **CI/CD**: Set as a repository secret in GitHub Actions / GitLab CI

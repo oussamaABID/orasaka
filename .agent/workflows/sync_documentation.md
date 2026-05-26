@@ -2,20 +2,63 @@
 description: CONTINUOUS DOCUMENTATION SYNCHRONIZATION
 ---
 
-# ORASAKA WORKFLOW: CONTINUOUS DOCUMENTATION SYNCHRONIZATION
+# WORKFLOW: CONTINUOUS DOCUMENTATION SYNCHRONIZATION
 
-## 🔄 Synchronization Policy & Drift Enforcement
-* **Trigger**: Any signature modification, entity layout shift, interface change, or configuration key addition under the `orasaka.core` namespace must immediately trigger a documentation compliance review.
-* **Target Matrix Mapping**: Ensure absolute synchronization between code reality and the high-level documentation matrix. The target matrix consists of the following 9 files:
-  1. `README.md` (Root level overview)
-  2. `docs/ARCHITECTURE.md` (Core design decisions and package mappings)
-  3. `docs/API_REFERENCE.md` (Public endpoint specifications)
-  4. `docs/GLOSSARY.md` (Terminology, naming constraints, and concepts)
-  5. `docs/CONTEXT.md` (Runtime environment variables and tool mappings)
-  6. `docs/AUTH.md` (Authentification flow)
-  7. `docs/BUSINESS_IMPLEMENTATION.md` (CinePulse AI business enabler guide)
-  8. `docs/ORASAKA101.md` (Technical developer onboarding guide)
-  9. `docs/DEPLOY.md` (Production deployment manual and multi-cloud IaC configurations)
-* **Terraform / IaC Drift Validation**: Any structural change in the Terraform state tree, module directory structures, provider configurations, or network variables under `ops/deploy/terraform` must trigger a documentation validation step to ensure `docs/DEPLOY.md` perfectly mirrors the codebase.
-* **Environment Variable Registry**: Any addition or modification of environment variables in `.env` or `orasaka-ui/.env.local` must immediately trigger an update of the "Environment Variables" section in `docs/GLOSSARY.md`. Each variable must be documented with its key, purpose, default value, and security classification.
-* **Docstring Gate**: Missing Javadoc or TSDoc blocks on public components will automatically block compiling cycles.
+## §1 — Trigger Conditions
+
+Documentation sync is required when:
+- Java interface signatures change (methods added, removed, or modified)
+- Entity/record field layouts change
+- Configuration keys are added or modified under `orasaka.core`, `orasaka.features`, or `orasaka.infrastructure.identity`
+- Flyway migrations add or alter tables/columns
+- Terraform modules, variables, or outputs change
+- Environment variables are added to `.env` or `orasaka-ui/.env.local`
+- API endpoints are added, removed, or security-hardened
+- ADRs are created or updated in `docs/CONTEXT.md`
+
+## §2 — Documentation Matrix
+
+### Backend & Architecture
+| File | Scope |
+|:---|:---|
+| `README.md` | Root overview, quickstart, project structure |
+| `docs/ARCHITECTURE.md` | Module boundaries, package topology, mermaid diagrams |
+| `docs/API_REFERENCE.md` | REST/GraphQL endpoints, security requirements, request/response schemas |
+| `docs/ORASAKA_CORE.md` | Core engine pipeline, interceptors, configuration namespace |
+| `docs/CONTEXT.md` | ADR log (ADR-001 through ADR-028+) |
+
+### Domain & Operations
+| File | Scope |
+|:---|:---|
+| `docs/AUTH.md` | Authentication flow (NextAuth → BFF → Spring Security) |
+| `docs/ORASAKA101.md` | Developer onboarding, local setup, build commands |
+| `docs/GLOSSARY.md` | Terminology, env var registry, naming constraints |
+| `docs/DEPLOY.md` | Production deployment, Terraform modules, multi-cloud IaC |
+| `docs/BUSINESS_IMPLEMENTATION.md` | Business enabler guide |
+
+## §3 — Sync Rules
+
+### API Reference Sync
+- Every `@GetMapping`, `@PostMapping`, `@PutMapping`, `@DeleteMapping`, `@MutationMapping`, `@QueryMapping` must have a matching entry in `API_REFERENCE.md`.
+- Security annotations (`@PreAuthorize`, `hasAnyAuthority`) must be documented.
+- Request/response record fields must match actual Java record definitions.
+
+### Environment Variable Registry
+- Every env var in `.env`, `orasaka-ui/.env.local`, or `docker-compose.yml` must be listed in `docs/GLOSSARY.md`.
+- Each entry: key, purpose, default value, security classification (public/secret).
+
+### Terraform / IaC Drift
+- Changes to `ops/deploy/terraform/**` must trigger validation of `docs/DEPLOY.md`.
+- Module inputs/outputs must match `variables.tf` and `outputs.tf`.
+- Provider version constraints must be documented.
+
+### ADR Sync
+- New architectural decisions must be added to `docs/CONTEXT.md` with sequential numbering.
+- AGENTS.md `§11` must reference the latest ADR range.
+
+## §4 — Quality Gates
+
+- Missing Javadoc on public interfaces/methods blocks compilation.
+- Missing TSDoc on shared React components/hooks is a review violation.
+- Documentation must use correct file links: `[ClassName](file:///path)` format.
+- Mermaid diagrams must compile without syntax errors.
