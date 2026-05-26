@@ -1,0 +1,41 @@
+{
+  "name": "orasaka-cli",
+  "version": "1.0.0",
+  "description": "Orasaka AI CLI — Terminal client for the Orasaka Orchestration Engine",
+  "main": "dist/index.js",
+  "bin": {
+    "orasaka": "dist/index.js"
+  },
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc --outDir dist",
+    "test": "jest"
+  },
+  "keywords": [
+    "orasaka",
+    "ai",
+    "cli"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@clack/prompts": "^0.9.1",
+    "chalk": "^4.1.2",
+    "cli-table3": "^0.6.5",
+    "commander": "^13.1.0",
+    "date-fns": "^4.3.0",
+    "graphql-ws": "^6.0.8",
+    "ora": "^5.4.1",
+    "ws": "^8.20.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.8.0",
+    "@types/ws": "^8.18.1",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  }
+}
