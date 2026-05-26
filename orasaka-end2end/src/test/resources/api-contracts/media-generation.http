@@ -1,0 +1,106 @@
+### ─────────────────────────────────────────────────────────────────────────
+### media-generation.http — Image/Speech/Video Generation Contract (ADR-040)
+### Validates the job-based generation endpoints accept requests and queue jobs.
+### These endpoints return Job IDs immediately (async processing).
+### ─────────────────────────────────────────────────────────────────────────
+
+### Authenticate
+# @name login
+POST {{$dotenv GATEWAY_TARGET_URL}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{$dotenv ADMIN_EMAIL}}",
+  "password": "{{$dotenv ADMIN_PASSWORD}}"
+}
+
+?? status == 200
+
+###
+
+### Image Generation — Submit Job
+# @name imageGen
+POST {{$dotenv GATEWAY_TARGET_URL}}/api/v1/ai/image
+Authorization: Bearer {{login.token}}
+Content-Type: application/json
+
+{
+  "prompt": "A futuristic cityscape at sunset with neon lights",
+  "model": "stable-diffusion"
+}
+
+?? status >= 200
+?? status < 500
+
+###
+
+### Speech Synthesis — Submit Job
+# @name speechGen
+POST {{$dotenv GATEWAY_TARGET_URL}}/api/v1/ai/speech
+Authorization: Bearer {{login.token}}
+Content-Type: application/json
+
+{
+  "prompt": "Hello, this is an end-to-end test of Orasaka speech synthesis.",
+  "model": "tts-1",
+  "voice": "alloy"
+}
+
+?? status >= 200
+?? status < 500
+
+###
+
+### Video Generation — Submit Job
+# @name videoGen
+POST {{$dotenv GATEWAY_TARGET_URL}}/api/v1/ai/video
+Authorization: Bearer {{login.token}}
+Content-Type: application/json
+
+{
+  "prompt": "A calm ocean wave breaking on a beach at dawn",
+  "model": "wan2.1"
+}
+
+?? status >= 200
+?? status < 500
+
+###
+
+### Image Generation — Unauthenticated (401)
+# @name imageUnauth
+POST {{$dotenv GATEWAY_TARGET_URL}}/api/v1/ai/image
+Content-Type: application/json
+
+{
+  "prompt": "test"
+}
+
+?? status == 401
+
+###
+
+### Speech Synthesis — Unauthenticated (401)
+# @name speechUnauth
+POST {{$dotenv GATEWAY_TARGET_URL}}/api/v1/ai/speech
+Content-Type: application/json
+
+{
+  "prompt": "test"
+}
+
+?? status == 401
+
+###
+
+### Video Generation — Unauthenticated (401 or 403)
+# @name videoUnauth
+POST {{$dotenv GATEWAY_TARGET_URL}}/api/v1/ai/video
+Content-Type: application/json
+
+{
+  "prompt": "test"
+}
+
+?? status >= 401
+?? status < 404

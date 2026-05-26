@@ -1,0 +1,28 @@
+{
+  "name": "orasaka-mobile-client",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/App.tsx",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@react-navigation/native": "^7.1.0",
+    "@react-navigation/native-stack": "^7.3.0",
+    "date-fns": "^4.3.0",
+    "expo": "~53.0.0",
+    "expo-status-bar": "~2.2.0",
+    "react": "19.0.0",
+    "react-native": "0.79.2",
+    "react-native-safe-area-context": "^5.4.0",
+    "react-native-screens": "^4.11.0",
+    "orasaka-shared": "*"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "typescript": "^5.8.0"
+  }
+}

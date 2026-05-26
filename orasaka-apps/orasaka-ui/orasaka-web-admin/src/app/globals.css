@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: hsl(220 20% 6%);
+  --bg-surface: hsl(220 16% 10%);
+  --bg-elevated: hsl(220 14% 14%);
+  --text-primary: hsl(220 20% 92%);
+  --text-secondary: hsl(220 12% 62%);
+  --accent-primary: hsl(200 90% 55%);
+  --accent-glow: hsl(200 90% 55% / 0.15);
+  --border-subtle: hsl(220 14% 18%);
+  --glass-bg: hsl(220 16% 10% / 0.75);
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}

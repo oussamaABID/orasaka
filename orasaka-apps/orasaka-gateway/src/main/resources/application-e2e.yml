@@ -1,0 +1,44 @@
+# ==============================================================================
+# ORASAKA Gateway — E2E Testing Profile Override
+# ==============================================================================
+# Activated via: --spring.profiles.active=e2e
+# Enables strict health indicators and activates rate-limiting.
+#
+# With Redis/RabbitMQ health contributor auto-configs NO LONGER excluded from
+# the base application.yml, this profile can now include them in the readiness
+# health group for deterministic infrastructure validation.
+# ==============================================================================
+
+spring:
+  autoconfigure:
+    exclude:
+      # Keep OpenAI exclusions (no cloud AI in E2E)
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiImageAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiAudioSpeechAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiAudioTranscriptionAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiModerationAutoConfiguration
+      - org.springframework.ai.autoconfigure.openai.OpenAiAutoConfiguration
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+
+management:
+  endpoint:
+    health:
+      show-details: always
+      group:
+        readiness:
+          include: db, rabbit
+
+orasaka:
+  infrastructure:
+    rate-limit:
+      enabled: true
+      default-tier: free

@@ -1,0 +1,127 @@
+# ==============================================================================
+# ORASAKA — Production Docker Compose (Hardened On-Premise Deployment)
+# ==============================================================================
+# Single-container group configuration tailored for Loi 25 (Quebec) & GDPR.
+# All data-storing services are isolated in an internal bridge network.
+# Only the Gateway BFF exposes port 8080 to the external environment.
+# ==============================================================================
+
+services:
+  # ── PostgreSQL with pgvector (Isolated) ─────────────────────────────────────
+  db-vector:
+    image: ankane/pgvector:latest
+    container_name: orasaka-db-vector
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME:-orasaka_db}
+      POSTGRES_USER: ${DB_USERNAME:-orasaka_app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-orasaka_pass}
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-orasaka_app} -d ${DB_NAME:-orasaka_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - orasaka-isolated
+
+  # ── Redis Rate-Limiter (Isolated) ──────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: orasaka-redis
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - orasaka-isolated
+
+  # ── RabbitMQ Job Broker (Isolated) ─────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: orasaka-rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - orasaka-isolated
+
+  # ── Ollama Local LLM Execution Engine (Isolated) ───────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: orasaka-ollama
+    restart: always
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - orasaka-isolated
+
+  # ── Gateway BFF Backend (Exposed API Gateway) ──────────────────────────────
+  gateway:
+    build:
+      context: ..
+      dockerfile: orasaka-apps/orasaka-gateway/Dockerfile
+    container_name: orasaka-gateway
+    restart: always
+    ports:
+      - "8080:8080" # Only gateway exposes its port to the outside world
+    depends_on:
+      db-vector:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - PORT=8080
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db-vector:5432/${DB_NAME:-orasaka_db}
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-orasaka_app}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-orasaka_pass}
+      - REDIS_URL=redis://redis:6379
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-guest}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASS:-guest}
+      - SPRING_AI_OLLAMA_BASE_URL=http://ollama:11434
+      - SPRING_AI_OLLAMA_CHAT_MODEL=${OLLAMA_MODEL:-llama3.2:3b}
+      - ORASAKA_OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2:3b}
+      # Security settings & Dev tool deactivation
+      - SPRING_GRAPHQL_GRAPHIQL_ENABLED=false
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info
+      - CRYPTO_KEY=${CRYPTO_KEY}
+      - CRYPTO_SALT=${CRYPTO_SALT}
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - orasaka-isolated
+
+# ── Volumes and Isolated Networking ──────────────────────────────────────────
+volumes:
+  pgvector_data:
+  ollama_data:
+
+networks:
+  orasaka-isolated:
+    driver: bridge
+    internal: false

@@ -1,0 +1,11 @@
+torch
+torchvision
+diffusers
+accelerate
+safetensors
+transformers
+Pillow
+pika
+psutil
+mlx
+mflux

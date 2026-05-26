@@ -1,0 +1,23 @@
+import type { NextConfig } from "next";
+import path from "node:path";
+
+const nextConfig: NextConfig = {
+  turbopack: {
+    root: path.resolve(__dirname, ".."),
+  },
+  async rewrites() {
+    const gatewayUrl = process.env.GATEWAY_URL || "http://localhost:8080";
+    return [
+      {
+        source: "/uploads/:path*",
+        destination: `${gatewayUrl}/uploads/:path*`,
+      },
+      {
+        source: "/graphql",
+        destination: `${gatewayUrl}/graphql`,
+      },
+    ];
+  },
+};
+
+export default nextConfig;
