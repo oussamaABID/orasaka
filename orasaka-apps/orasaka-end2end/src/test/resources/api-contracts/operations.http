@@ -1,0 +1,11 @@
+### ─────────────────────────────────────────────────────────────────────────
+### operations.http — Operations Graph Contract (ADR-040)
+### Validates the operations graph endpoint for system introspection.
+### ─────────────────────────────────────────────────────────────────────────
+
+### Operations Graph — System Topology
+# @name operationsGraph
+GET {{$dotenv GATEWAY_TARGET_URL}}/api/v1/operations/graph
+Accept: application/json
+
+?? status == 200

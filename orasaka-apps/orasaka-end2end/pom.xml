@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.orasaka</groupId>
+        <artifactId>orasaka-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>orasaka-end2end</artifactId>
+    <name>orasaka-end2end</name>
+    <description>Hermetic E2E Testing Module — Playwright Java, HTTPyac, CLI Validation (ADR-040)</description>
+    <packaging>jar</packaging>
+
+    <!-- ====================================================================
+         Reactor Dependency: forces orasaka-gateway to be compiled, packaged,
+         and its repackaged Spring Boot JAR to exist before this module enters
+         pre-integration-test.
+         ==================================================================== -->
+    <dependencies>
+        <dependency>
+            <groupId>com.orasaka</groupId>
+            <artifactId>orasaka-gateway</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Playwright Java — headless browser automation -->
+        <dependency>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>1.49.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JUnit 5 — test engine for Playwright suites -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <!-- ====================================================================
+         ADR-040: Hermetic E2E Testing Profile — Full Lifecycle Orchestration
+         Activated via: ./mvnw clean verify -P e2e-tests
+         All infrastructure plugins encapsulated here. Default 'mvn compile'
+         skips every E2E plugin — zero overhead on fast compilations.
+         ==================================================================== -->
+    <profiles>
+        <profile>
+            <id>e2e-tests</id>
+            <properties>
+                <docker-maven-plugin.version>0.45.1</docker-maven-plugin.version>
+                <frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
+                <node.version>v22.12.0</node.version>
+            </properties>
+            <build>
+                <plugins>
+
+                    <!-- ─── 1. Docker Compose — boot db-local via native CLI ─── -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.5.0</version>
+                        <executions>
+                            <execution>
+                                <id>start-db-local</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>docker</executable>
+                                    <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+                                    <arguments>
+                                        <argument>compose</argument>
+                                        <argument>up</argument>
+                                        <argument>-d</argument>
+                                        <argument>--wait</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>stop-db-local</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>docker</executable>
+                                    <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+                                    <arguments>
+                                        <argument>compose</argument>
+                                        <argument>down</argument>
+                                        <argument>-v</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- ─── 2. Process Exec — background gateway JAR launcher ─── -->
+                    <plugin>
+                        <groupId>com.bazaarvoice.maven.plugins</groupId>
+                        <artifactId>process-exec-maven-plugin</artifactId>
+                        <version>0.9</version>
+                        <executions>
+                            <execution>
+                                <id>e2e-start-gateway</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>start</goal>
+                                </goals>
+                                <configuration>
+                                    <name>orasaka-gateway</name>
+                                    <workingDir>${maven.multiModuleProjectDirectory}</workingDir>
+                                    <healthcheckUrl>${GATEWAY_TARGET_URL}/actuator/health</healthcheckUrl>
+                                    <waitAfterLaunch>5</waitAfterLaunch>
+                                    <processLogFile>${project.build.directory}/gateway-e2e.log</processLogFile>
+                                    <arguments>
+                                        <argument>java</argument>
+                                        <argument>-jar</argument>
+                                        <argument>${maven.multiModuleProjectDirectory}/orasaka-apps/orasaka-gateway/target/orasaka-gateway-${project.version}.jar</argument>
+                                        <argument>--spring.datasource.url=jdbc:postgresql://localhost:${DB_LOCAL_PORT}/${DB_LOCAL_NAME}</argument>
+                                        <argument>--spring.datasource.username=${DB_LOCAL_USERNAME}</argument>
+                                        <argument>--spring.datasource.password=${DB_LOCAL_PASSWORD}</argument>
+                                        <argument>--server.port=${PORT}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>e2e-stop-gateway</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>stop-all</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- ─── 3. Antrun — HTTP healthcheck gate ─── -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>wait-for-gateway-health</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <echo message="Polling ${GATEWAY_TARGET_URL}/actuator/health ..." />
+                                        <waitfor maxwait="120" maxwaitunit="second"
+                                                 checkevery="2" checkeveryunit="second">
+                                            <http url="${GATEWAY_TARGET_URL}/actuator/health" />
+                                        </waitfor>
+                                        <echo message="Gateway is UP — releasing to test runners." />
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- ─── 4. Frontend Maven Plugin — sandboxed Node + httpyac ─── -->
+                    <plugin>
+                        <groupId>com.github.eirslett</groupId>
+                        <artifactId>frontend-maven-plugin</artifactId>
+                        <version>${frontend-maven-plugin.version}</version>
+                        <configuration>
+                            <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+                            <installDirectory>${project.build.directory}/node</installDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>install-node-for-e2e</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>install-node-and-npm</goal>
+                                </goals>
+                                <configuration>
+                                    <nodeVersion>${node.version}</nodeVersion>
+                                </configuration>
+                            </execution>
+
+                            <!-- ── Tier 1: API Contract Tests (httpyac) ── -->
+                            <execution>
+                                <id>e2e-tier1-api-contracts</id>
+                                <phase>integration-test</phase>
+                                <goals>
+                                    <goal>npx</goal>
+                                </goals>
+                                <configuration>
+                                    <arguments>httpyac send ${project.basedir}/src/test/resources/api-contracts/ --all --output short --bail</arguments>
+                                    <environmentVariables>
+                                        <GATEWAY_TARGET_URL>${GATEWAY_TARGET_URL}</GATEWAY_TARGET_URL>
+                                        <ADMIN_EMAIL>${ADMIN_EMAIL}</ADMIN_EMAIL>
+                                        <ADMIN_PASSWORD>${ADMIN_PASSWORD}</ADMIN_PASSWORD>
+                                    </environmentVariables>
+                                </configuration>
+                            </execution>
+
+                            <!-- ── Tier 2: CLI E2E (orasaka-cli npm test:e2e) ── -->
+                            <execution>
+                                <id>e2e-tier2-cli-validation</id>
+                                <phase>integration-test</phase>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <configuration>
+                                    <workingDirectory>${maven.multiModuleProjectDirectory}/orasaka-apps/orasaka-cli</workingDirectory>
+                                    <arguments>run test:e2e</arguments>
+                                    <skip>${skipCliE2E}</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- ─── 5. Failsafe — Tier 3: Playwright Java + lifecycle verify ─── -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>3.5.3</version>
+                        <executions>
+                            <execution>
+                                <id>e2e-tier3-playwright</id>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                                <configuration>
+                                    <includes>
+                                        <include>**/*IT.java</include>
+                                    </includes>
+                                    <systemPropertyVariables>
+                                        <gateway.target.url>${GATEWAY_TARGET_URL}</gateway.target.url>
+                                        <ui.base.url>http://localhost:3000</ui.base.url>
+                                    </systemPropertyVariables>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>

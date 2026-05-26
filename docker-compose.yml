@@ -1,0 +1,35 @@
+# ==============================================================================
+# ORASAKA — Docker Compose (E2E Testing Infrastructure)
+# ==============================================================================
+# Single source of truth for E2E container definitions.
+# Consumed by Fabric8 docker-maven-plugin via <external><type>compose</type>
+# within the 'e2e-tests' Maven profile (ADR-040).
+#
+# Manual usage:  docker compose up db-local
+# Maven usage:   ./mvnw clean verify -P e2e-tests
+# ==============================================================================
+
+version: '2.4'
+
+services:
+  db-local:
+    image: postgres:17-alpine
+    container_name: orasaka-db-local
+    environment:
+      POSTGRES_DB: orasaka_e2e
+      POSTGRES_USER: orasaka_e2e
+      POSTGRES_PASSWORD: orasaka_e2e_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./infra/local-db/01-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./infra/local-db/02-data.sql:/docker-entrypoint-initdb.d/02-data.sql:ro
+    labels:
+      # Fabric8 docker-maven-plugin wait directives (DRY — read from compose)
+      io.fabric8.docker.wait.tcp.port: "5432"
+      io.fabric8.docker.wait.time: "60000"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orasaka_e2e -d orasaka_e2e"]
+      interval: 2s
+      timeout: 5s
+      retries: 15

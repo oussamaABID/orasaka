@@ -1,0 +1,139 @@
+# ====================================================================
+# ORASAKA MONOREPO GLOBAL GITIGNORE
+# ====================================================================
+
+# --------------------------------------------------------------------
+# ☕ JAVA & MAVEN (Core, Gateway, Identity, Tools)
+# --------------------------------------------------------------------
+**/target/
+target/
+**.class
+**.jar
+**.war
+**.ear
+**.nar
+*.vtbl
+
+# --------------------------------------------------------------------
+# ⚛️ JAVASCRIPT / TYPESCRIPT / NODE (UI & CLI)
+# --------------------------------------------------------------------
+# Dependencies
+**/node_modules/
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+# Next.js build artifacts
+**/.next/
+**/out/
+
+# Production builds & tools
+**/build/
+**/dist/
+**/.vercel
+**/*.tsbuildinfo
+**/next-env.d.ts
+
+# Logs
+**/*debug.log*
+**/*error.log*
+yarn-error.log*
+
+# Test
+**/coverage/
+**/test-results/
+
+# --------------------------------------------------------------------
+# 🐍 PYTHON (Orasaka Core - Services, MCP)
+# --------------------------------------------------------------------
+
+**/__pycache__/
+**/mcp_debug/**
+**/*.log
+**/*.egg-info/
+**/.scannerwork/
+.venv/
+.pytest_cache/
+.coverage
+coverage.xml
+**/coverage.xml
+**/.coverage
+
+# --------------------------------------------------------------------
+# 🖥️ IDE & TOOLS (IntelliJ, VS Code, Cursor)
+# --------------------------------------------------------------------
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# VS Code / Cursor
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# --------------------------------------------------------------------
+# 🔒 SECURITY & ENVIRONMENTS (Strict Guardrails)
+# --------------------------------------------------------------------
+# Local environment variables (Never commit real secrets)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+**/.env*.local
+*.log
+# Audio and video files
+*.wav
+*.mp3
+*.aac
+*.m4a
+*.flac
+*.ogg
+*.opus
+*.webm
+*.mp4
+*.avi
+*.mkv
+# Certificates and private keys
+*.pem
+*.key
+*.pub
+*.p12
+*.jks
+
+# --------------------------------------------------------------------
+# 🍏 OS SPECIFIC
+# --------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# --------------------------------------------------------------------
+# AI IDE & TOOLS
+# --------------------------------------------------------------------
+.agent/
+.awesome-skills/
+.gemini/
+*.sh
+!ops/local/scripts/*.sh
+.idea
+.sonarlint
+
+# Volatile & Operational Storage
+
+var/
+**/.swc/
+scratch/
+.scannerwork/
+.scripts/

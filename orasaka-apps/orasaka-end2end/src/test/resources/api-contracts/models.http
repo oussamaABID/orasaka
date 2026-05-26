@@ -1,0 +1,29 @@
+### ─────────────────────────────────────────────────────────────────────────
+### models.http — Model Catalog Contract (ADR-040)
+### Validates the gateway model discovery endpoints respond correctly.
+### ─────────────────────────────────────────────────────────────────────────
+
+### List Supported Models
+# @name listSupportedModels
+GET {{$dotenv GATEWAY_TARGET_URL}}/api/v1/models/supported
+Accept: application/json
+
+?? status == 200
+
+###
+
+### List All Providers
+# @name listProviders
+GET {{$dotenv GATEWAY_TARGET_URL}}/api/v1/models/providers
+Accept: application/json
+
+?? status == 200
+
+###
+
+### List Model Catalog
+# @name listModelCatalog
+GET {{$dotenv GATEWAY_TARGET_URL}}/api/v1/models/catalog
+Accept: application/json
+
+?? status == 200

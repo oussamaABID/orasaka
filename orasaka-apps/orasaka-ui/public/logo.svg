@@ -1,0 +1,47 @@
+<svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Style et Animation de l'Isotype de Coin -->
+    <style type="text/css">
+      @keyframes corner-pure-rotation {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .anim-corner-reactor {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: corner-pure-rotation 35s linear infinite;
+      }
+
+      /* Adaptabilité de la structure selon le thème de l'application */
+      .g-shard-pure { stroke: #475569; }
+      @media (prefers-color-scheme: dark) {
+        .g-shard-pure { stroke: #cbd5e1; }
+      }
+    </style>
+
+    <!-- Dégradé Ambre Officiel Orasaka UI -->
+    <linearGradient id="orasaka-amber-pure" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+  </defs>
+
+  <!-- BACKGROUND TRANSPARENT -->
+  <rect width="100%" height="100%" fill="transparent"/>
+
+  <!-- ═══ RÉACTEUR HEXAGONAL SEUL (Centré en 30,30) ═══ -->
+  <g transform="translate(30, 30) scale(0.46)">
+    <!-- Corps en rotation -->
+    <g class="anim-corner-reactor">
+      <!-- Fragment Supérieur Évolutif -->
+      <path d="M -24 -41.5 L 0 -55.4 L 24 -41.5 L 24 -24 L 14 -18.2 L 14 -35.7 L 0 -43.8 L -14 -35.7 L -14 -18.2" fill="none" class="g-shard-pure" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7" />
+      <!-- Fragment Inférieur Gauche Muted -->
+      <path d="M -48 0 L -38 17.3 L -14 31.2 L 0 23.1 L -10 17.3 L -24 9.2 L -24 -9.2" fill="none" class="g-shard-pure" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.4" />
+      <!-- Fragment Inférieur Droite (Signature Ambre) -->
+      <path d="M 48 0 L 38 17.3 L 14 31.2 L 0 23.1 L 10 17.3 L 24 9.2 L 24 -9.2" fill="none" stroke="url(#orasaka-amber-pure)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    
+    <!-- Noyau Central Lumineux (Moteur AI) -->
+    <circle cx="0" cy="0" r="11" fill="url(#orasaka-amber-pure)" />
+  </g>
+</svg>

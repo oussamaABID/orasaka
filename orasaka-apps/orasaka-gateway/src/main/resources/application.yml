@@ -1,0 +1,200 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: orasaka-gateway
+  servlet:
+    multipart:
+      location: ${MEDIA_UPLOAD_DIR:var/orasaka-uploads}
+      max-file-size: 8MB
+      max-request-size: 8MB
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiImageAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiAudioSpeechAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiAudioTranscriptionAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiModerationAutoConfiguration
+      - org.springframework.ai.autoconfigure.openai.OpenAiAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.amqp.RabbitHealthContributorAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.redis.RedisHealthContributorAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.redis.RedisReactiveHealthContributorAutoConfiguration
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:dummy-secret}
+          github:
+            client-id: ${GITHUB_CLIENT_ID:}
+            client-secret: ${GITHUB_CLIENT_SECRET:dummy-secret}
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/orasaka_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      idle-timeout: 30000
+      max-lifetime: 60000
+      minimum-idle: 2
+      leak-detection-threshold: 10000
+      connection-timeout: 5000
+  sql:
+    init:
+      mode: never
+  flyway:
+    enabled: false
+  graphql:
+    graphiql:
+      enabled: ${SPRING_GRAPHQL_GRAPHIQL_ENABLED:true}
+    cors:
+      allowed-origins: ${GATEWAY_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+      allowed-headers: "Authorization,Content-Type,X-Requested-With,X-Orasaka-Context"
+      allow-credentials: true
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        concurrency: 1
+        max-concurrency: 2
+        acknowledge-mode: auto
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: 2
+  mvc:
+    async:
+      request-timeout: ${ASYNC_TIMEOUT_MS:300000}
+  ai:
+    retry:
+      max-attempts: 1
+    ollama:
+      base-url: ${SPRING_AI_OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        options:
+          model: ${SPRING_AI_OLLAMA_CHAT_MODEL:llama3.2:3b}
+          num-ctx: 8192
+    localai:
+      base-url: ${LOCALAI_BASE_URL:http://localhost:8085}
+      api-key: ${LOCALAI_API_KEY:not-required}
+      model: ${LOCALAI_MODEL:tts-1}
+    custom:
+      video:
+        provider: localai-video
+      image:
+        provider: localai-image
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      backendBrokerCB:
+        failure-rate-threshold: ${CB_FAILURE_RATE:50}
+        minimum-number-of-calls: ${CB_MIN_CALLS:5}
+        wait-duration-in-open-state: ${CB_WAIT_TIME:30s}
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        permitted-number-of-calls-in-half-open-state: 3
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  file:
+    name: ${GATEWAY_LOG:var/logs/gateway.log}
+  logback:
+    rollingpolicy:
+      max-file-size: 1MB
+      total-size-cap: 10MB
+      max-history: 7
+  level:
+    root: ${LOGGING_LEVEL_ROOT:INFO}
+    com.orasaka: ${LOGGING_LEVEL_ORASAKA:DEBUG}
+    com.orasaka.core.application.engine.InfrastructureProber: INFO
+    org.springframework.security: ${LOGGING_LEVEL_SECURITY:DEBUG}
+    org.springframework.ai: DEBUG
+
+crypto:
+  key: ${CRYPTO_KEY:}
+  salt: ${CRYPTO_SALT:}
+
+orasaka:
+  gateway:
+    uploads:
+      directory: ${MEDIA_UPLOAD_DIR:var/orasaka-uploads}
+      handler-path: ${UPLOADS_HANDLER_PATH:/uploads/**}
+      cache-period: ${UPLOADS_CACHE_PERIOD:0}
+    async:
+      timeout-ms: ${ASYNC_TIMEOUT_MS:300000}
+  jobs:
+    timeout-seconds: ${JOBS_TIMEOUT_SECONDS:300}
+  core:
+    default-provider: ${DEFAULT_PROVIDER:ollama}
+    rag:
+      enabled: true
+      store-type: pgvector
+      top-k: 3
+    orchestration:
+      enabled: ${ORCHESTRATION_ENABLED:true}
+      user-context:
+        enabled: ${USER_CONTEXT_ENABLED:true}
+      system-context:
+        enabled: ${SYSTEM_CONTEXT_ENABLED:true}
+      refiner:
+        enabled: true
+      router:
+        enabled: true
+  infrastructure:
+    broker:
+      queue:
+        max-length: ${BROKER_QUEUE_MAX_LENGTH:1000}
+        overflow-strategy: ${BROKER_QUEUE_OVERFLOW:rejectPublish}
+    rate-limit:
+      enabled: ${RATE_LIMIT_ENABLED:false}
+      default-tier: ${RATE_LIMIT_DEFAULT_TIER:free}
+  identity:
+    email-verification:
+      enabled: ${EMAIL_VERIFICATION_ENABLED:true}
+    interceptions:
+      enabled: ${INTERCEPTIONS_ENABLED:true}
+      schemas:
+        onboarding: "classpath:config/onboarding-schema.json"
+        feedback: "classpath:config/feedback-schema.json"
+  features:
+    "[orasaka.core.media.video]":
+      enabled: ${VIDEO_ENABLED:true}
+      label: "Video Generation"
+      icon: "video"
+      uri-path: "/api/v1/ai/video"
+      http-method: "POST"
+      payload-template: '{"prompt":"","durationSeconds":5}'
+    "[orasaka.core.media.audio]":
+      enabled: ${AUDIO_ENABLED:true}
+      label: "Audio Generation"
+      icon: "audio"
+      uri-path: "/api/v1/ai/audio"
+      http-method: "POST"
+      payload-template: '{"prompt":"","voice":"alloy"}'
+    "[orasaka.core.media.image]":
+      enabled: ${IMAGE_ENABLED:true}
+      label: "Image Generation"
+      icon: "image"
+      uri-path: "/api/v1/ai/image"
+      http-method: "POST"
+      payload-template: '{"prompt":"","size":"1024x1024"}'
